@@ -47,7 +47,8 @@ converge to `1`.
 * `TauCeti.freeProCPointed.continuous_of`, `TauCeti.freeProCPointed.of_basePoint`: the canonical
   map is continuous and kills the base point.
 * `TauCeti.freeProCPointed.existsUnique_lift`: the universal property.
-* `TauCeti.freeProCPointed.dense_closure_range_of`: the image of `X` generates topologically.
+* `TauCeti.freeProCPointed.topologicalClosure_closure_range_of_eq_top`: the image of `X`
+  generates topologically.
 * `TauCeti.freeProCPointed.fromFreeProC_surjective`: the free pro-`C` group on a type maps onto
   the free pro-`C` group on its pointed one-point compactification.
 * `TauCeti.freeProCPointed.tendsto_of_coe_cofinite_nhds_one`: for a discrete space `S`, the
@@ -213,16 +214,13 @@ theorem continuous_of : Continuous (of C x₀) := by
   exact continuous_of_discreteTopology.comp hU₀.1
 
 /-- The image of the space generates its free pro-`C` group topologically. -/
-theorem dense_closure_range_of :
-    Dense ((Subgroup.closure (Set.range (of C x₀)) : Subgroup (freeProCPointed C x₀)) :
-      Set (freeProCPointed C x₀)) := by
+theorem topologicalClosure_closure_range_of_eq_top :
+    (Subgroup.closure (Set.range (of C x₀))).topologicalClosure = ⊤ := by
   have h := topologicalClosure_closure_image_eq_top
     (freeProC.topologicalClosure_closure_range_of_eq_top C X)
     (f := (mk C x₀ : freeProC C X →* freeProCPointed C x₀)) (map_continuous (mk C x₀))
     (mk_surjective C x₀).denseRange
-  rw [← Set.range_comp, ← SetLike.coe_set_eq, Subgroup.topologicalClosure_coe, Subgroup.coe_top,
-    ← dense_iff_closure_eq] at h
-  exact h
+  rwa [← Set.range_comp] at h
 
 section HomExt
 
@@ -413,7 +411,9 @@ theorem fromFreeProC_of (s : S) : fromFreeProC C S (freeProC.of s) = of C ∞ (s
 /-- **The free pro-`C` group on `S` maps onto the free pro-`C` group on `(S⁺, ∞)`.** -/
 theorem fromFreeProC_surjective : Function.Surjective (fromFreeProC C S) := by
   refine freeProC.lift_surjective _ ?_
-  refine (dense_closure_range_of C (∞ : OnePoint S)).mono (SetLike.coe_subset_coe.mpr ?_)
+  refine (Subgroup.dense_iff_topologicalClosure_eq_top.mpr
+    (topologicalClosure_closure_range_of_eq_top C (∞ : OnePoint S))).mono
+    (SetLike.coe_subset_coe.mpr ?_)
   refine (Subgroup.closure_le _).mpr (Set.range_subset_iff.mpr fun x ↦ ?_)
   induction x using OnePoint.rec with
   | infty => rw [of_basePoint]; exact one_mem _

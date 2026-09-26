@@ -36,8 +36,9 @@ its place restricts along `φ` to the place of the image. Its first half is prov
 `W₁` whose place lies over the point at infinity of `W₂` — a point of the fibre `φ⁻¹(O₂)` — is sent
 to `0`, because its ideal extends to the unit ideal of the intermediate ring
 (`TauCeti.Isogeny.map_XYIdeal_eq_top_of_one_lt_valuation`). The affine half needs the relative norm
-of the prime of the intermediate ring at such a point, which is not computed here; nor is
-functoriality in `φ` beyond the identity.
+of the prime of the intermediate ring at such a point; it is computed in `PointHom/Affine.lean`
+(`TauCeti.Isogeny.toPointHom_some_eq_some_of_isEquiv_comap_pointPlace`), for a separable isogeny
+over a separably closed field. Functoriality in `φ` beyond the identity is not proved here.
 
 ## Main definitions
 

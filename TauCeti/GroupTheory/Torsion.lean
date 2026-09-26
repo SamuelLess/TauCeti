@@ -56,6 +56,7 @@ Unlike a bound on the exponent, the condition is elementwise: for prime `p`,
   `p`-primary torsion exactly when `M` is a `p`-group.
 * `TauCeti.IsPPrimaryTorsion.of_injective`, `TauCeti.IsPPrimaryTorsion.of_surjective`: the
   condition passes to subgroups and to quotients.
+* `TauCeti.IsPPrimaryTorsion.isAddTorsion`: a `p`-primary torsion group is torsion when `p ≠ 0`.
 -/
 
 public section
@@ -209,6 +210,13 @@ theorem of_surjective (h : IsPPrimaryTorsion p M) (f : F) (hf : Function.Surject
   (isPPrimaryTorsion_additive_iff (M := Multiplicative N)).2
     (((isPPrimaryTorsion_additive_iff (M := Multiplicative M)).1 h).of_surjective
       (AddMonoidHom.toMultiplicative (f : M →+ N)) hf)
+
+/-- A `p`-primary torsion group is torsion, for `p ≠ 0`: the power of `p` killing an element is a
+positive natural number. The hypothesis is used, since `0 ^ k • m = 0` holds for `k = 1` and
+every `m`. -/
+theorem isAddTorsion (h : IsPPrimaryTorsion p M) (hp : p ≠ 0) : IsAddTorsion M := fun m ↦ by
+  obtain ⟨k, hk⟩ := isPPrimaryTorsion_iff.1 h m
+  exact isOfFinAddOrder_iff_nsmul_eq_zero.2 ⟨p ^ k, pow_pos (Nat.pos_of_ne_zero hp) k, hk⟩
 
 end IsPPrimaryTorsion
 

@@ -5,6 +5,7 @@ Authors: The Tau Ceti contributors
 -/
 module
 
+public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Basic.Sign.Basic
 public import Mathlib.Data.Set.Card
 public import Mathlib.SetTheory.Cardinal.Finite
@@ -37,8 +38,10 @@ theorem _root_.SignType.ncard_fiber_zero_add_ncard_fiber_neg_add_ncard_fiber_pos
     {ι : Type*} [Finite ι] (u : ι → SignType) :
     {i | u i = 0}.ncard + {i | u i = -1}.ncard + {i | u i = 1}.ncard = Nat.card ι := by
   have hsigma : Nat.card ι = ∑ s : SignType, Nat.card ↥{i | u i = s} := by
-    rw [← Nat.card_sigma]
-    exact Nat.card_congr (Equiv.sigmaFiberEquiv u).symm
+    let := Fintype.ofFinite ι
+    have h := sum_occCount u
+    rw [← Nat.card_eq_fintype_card] at h
+    simpa only [occCount_def, Set.coe_ofPred] using h.symm
   simpa [SignType.univ_eq, add_assoc] using hsigma.symm
 
 end TauCeti

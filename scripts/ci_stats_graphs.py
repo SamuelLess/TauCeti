@@ -26,12 +26,14 @@ import argparse
 import bisect
 import datetime as dt
 import gzip
+import html
 import json
 import shutil
 import sqlite3
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -39,53 +41,82 @@ from chart_style import AXIS, BG, MUTED, PANEL, PALETTE, TEXT, base_css, card_re
 
 UTC = dt.timezone.utc
 HOSTED_CAP = 20
+# Jobs of these names in the build workflows are the builds; everything else is "other".
 BUILD_JOBS = {"sandboxed-build", "verify", "build", "performance-gate"}
+# Queue waits cannot exceed GitHub's 24-hour queue limit, nor runs its 6-hour job limit, so a job
+# overlapping the window was created no more than this long before it.
+LOOKBACK = 30 * 3600
+# Refuse to redraw from data older than this: the freshness report should say so instead.
+MAX_STALENESS = 36 * 3600
 
 # (key, label, colour); stacking order bottom to top.
 SERIES = [
     ("gh-build-pr", "PR builds on GitHub", PALETTE[2]),
-    ("gh-build-main", "main builds on GitHub", PALETTE[10]),
-    ("gh-short", "short jobs on GitHub", PALETTE[0]),
+    ("gh-build-other", "main and scheduled builds on GitHub", PALETTE[10]),
+    ("gh-other", "other GitHub jobs", PALETTE[0]),
     ("ns-pr", "PR builds on Namespace", PALETTE[1]),
     ("ns-mq", "merge queue on Namespace", PALETTE[3]),
+    ("ns-other", "other Namespace jobs", PALETTE[4]),
 ]
-WAIT_SERIES = [("build", "build jobs", PALETTE[1]), ("short", "short jobs", PALETTE[0])]
+WAIT_SERIES = [("build", "builds", PALETTE[1]), ("other", "other jobs", PALETTE[0])]
 
 
 def ts(s: str) -> float:
-    return dt.datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
+    t = dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return (t if t.tzinfo else t.replace(tzinfo=UTC)).timestamp()
+
+
+def iso(t: float) -> str:
+    return dt.datetime.fromtimestamp(t, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def classify(name: str, kind: str, trigger: str) -> tuple[str, str]:
+    build = name in BUILD_JOBS
+    if kind == "namespace":
+        key = {"merge_queue": "ns-mq", "pr": "ns-pr"}.get(trigger, "ns-other")
+    elif build:
+        key = "gh-build-pr" if trigger in ("pr", "workflow_dispatch") else "gh-build-other"
+    else:
+        key = "gh-other"
+    return key, "build" if build else "other"
 
 
 def load_jobs(db: sqlite3.Connection, since: float, until: float) -> list[dict]:
-    """Every job that ran or queued in [since, until], classified. Runs recorded without their jobs
-    (long backfills of the high-volume workflows) stand in as one short GitHub-hosted job spanning
-    the run, which serves occupancy but not waits."""
-    lo = dt.datetime.fromtimestamp(since - 6 * 3600, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-    hi = dt.datetime.fromtimestamp(until, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    """Every job whose queue or run overlaps [since, until], classified and weighted.
+
+    TauCetiCI fetches the jobs of only a sample of the high-volume workflows' runs. A fetched job
+    of such a workflow stands for the unfetched runs of the same workflow in the same UTC hour: its
+    weight is the hour's runs over the hour's fetched runs. The hour, not the day, because how much
+    was sampled changes between collections. A workflow-hour with no fetched run at all (long
+    backfills) is represented by one estimated job per run, placed at the end of the run and lasting
+    the workflow's median job time; those count toward jobs running only, because the time before
+    them mixes waiting for a runner with waiting on a concurrency group."""
+    lo, hi = iso(since - LOOKBACK), iso(until)
+    counts = {}
+    for workflow, day, total, fetched in db.execute("""
+            SELECT workflow, substr(created_at, 1, 13), COUNT(*), SUM(jobs_fetched)
+            FROM runs WHERE created_at BETWEEN ? AND ? AND conclusion != 'skipped'
+            GROUP BY 1, 2""", (lo, hi)):
+        counts[(workflow, day)] = (total, fetched or 0)
+
     out = []
     for name, created, started, completed, kind, trigger, workflow in db.execute("""
             SELECT j.name, j.created_at, j.started_at, j.completed_at, j.runner_kind, r.trigger, r.workflow
             FROM jobs j JOIN runs r USING (repo, run_id)
-            WHERE j.created_at BETWEEN ? AND ? AND j.runner_kind IN ('github', 'namespace')""", (lo, hi)):
+            WHERE j.created_at BETWEEN ? AND ? AND j.runner_kind IN ('github', 'namespace')
+              AND (j.completed_at IS NULL OR j.completed_at >= ?)""", (lo, hi, iso(since))):
         if not created:
             continue
-        build = name in BUILD_JOBS
-        if kind == "namespace":
-            key = "ns-mq" if trigger == "merge_queue" else "ns-pr"
-        elif build:
-            key = "gh-build-main" if trigger in ("main", "push", "schedule") else "gh-build-pr"
-        else:
-            key = "gh-short"
+        key, wait_series = classify(name, kind, trigger)
+        total, fetched = counts.get((workflow, created[:13]), (1, 1))
         out.append({
-            "key": key, "kind": kind, "wait_series": "build" if build else "short",
+            "key": key, "kind": kind, "wait_series": wait_series,
+            "weight": total / fetched if fetched else 1.0,
             "created": ts(created), "started": ts(started) if started else None,
             "completed": ts(completed) if completed else None,
             "picked_ns": kind == "namespace" and trigger == "pr" and name == "sandboxed-build",
         })
-    # A run recorded without its jobs spent most of created..updated waiting for a runner, not
-    # running. Place its job at the end of the run, lasting the workflow's median job time where
-    # jobs were fetched. It counts toward occupancy only: the time before it mixes waiting for a
-    # runner with waiting on a concurrency group, which the queue and wait panels must not conflate.
+
     typical = {}
     for workflow, run_s in db.execute("""
             SELECT r.workflow, j.run_s FROM jobs j JOIN runs r USING (repo, run_id)
@@ -94,16 +125,19 @@ def load_jobs(db: sqlite3.Connection, since: float, until: float) -> list[dict]:
     median = {w: v[len(v) // 2] for w, v in typical.items()}
     for workflow, created, updated in db.execute("""
             SELECT workflow, created_at, updated_at FROM runs
-            WHERE jobs_fetched = 0 AND created_at BETWEEN ? AND ?""", (lo, hi)):
+            WHERE jobs_fetched = 0 AND conclusion != 'skipped' AND created_at BETWEEN ? AND ?
+              AND updated_at >= ?""", (lo, hi, iso(since))):
+        if counts.get((workflow, created[:13]), (0, 0))[1]:
+            continue  # represented by the weighted sample
         c, u = ts(created), ts(updated)
-        start = max(c, u - median.get(workflow, 15.0))
-        out.append({"key": "gh-short", "kind": "github", "wait_series": "short-approx",
-                     "created": c, "started": start, "completed": u, "picked_ns": False})
+        out.append({"key": "gh-other", "kind": "github", "wait_series": None, "weight": 1.0,
+                    "created": c, "started": max(c, u - median.get(workflow, 15.0)), "completed": u,
+                    "picked_ns": False})
     return out
 
 
 def bin_series(jobs: list[dict], since: float, until: float, step: float) -> dict:
-    n = int((until - since) // step)
+    n = int(round((until - since) / step))
     edges = [since + i * step for i in range(n + 1)]
     running = {k: [0.0] * n for k, _, _ in SERIES}
     for j in jobs:
@@ -115,29 +149,34 @@ def bin_series(jobs: list[dict], since: float, until: float, step: float) -> dic
         for i in range(i0, i1 + 1):
             overlap = min(e, edges[i + 1]) - max(s, edges[i])
             if overlap > 0:
-                running[j["key"]][i] += overlap / step
+                running[j["key"]][i] += j["weight"] * overlap / step
 
-    # Peak queue per bin: sweep +1 at creation, -1 at start, per runner kind.
-    queued = {"github": [0] * n, "namespace": [0] * n}
+    # Peak (weighted) number waiting for a runner in each bin. A job waits over [created, started);
+    # at equal times the start is applied before a creation, so a job starting exactly on a bin edge
+    # is not counted in the bin it has already left.
+    queued = {"github": [0.0] * n, "namespace": [0.0] * n}
     for kind in queued:
         events = []
         for j in jobs:
-            if (j["kind"] == kind and j["wait_series"] in ("build", "short")
-                    and j["started"] and j["started"] > j["created"]):
-                events += [(j["created"], 1), (j["started"], -1)]
+            if (j["kind"] == kind and j["wait_series"] and j["started"]
+                    and j["started"] > j["created"]):
+                events += [(j["created"], j["weight"]), (j["started"], -j["weight"])]
         events.sort()
-        depth, k = 0, 0
+        depth, k = 0.0, 0
         for i in range(n):
+            while k < len(events) and (events[k][0] < edges[i] or (events[k][0] == edges[i] and events[k][1] < 0)):
+                depth += events[k][1]
+                k += 1
             peak = depth
             while k < len(events) and events[k][0] < edges[i + 1]:
                 depth += events[k][1]
-                if events[k][0] >= edges[i]:
-                    peak = max(peak, depth)
+                peak = max(peak, depth)
                 k += 1
-            queued[kind][i] = max(peak, depth)
+            queued[kind][i] = max(peak, 0.0)
 
-    # Longest wait among jobs that started in the trailing 30 minutes.
-    window = 30 * 60
+    # Longest wait among jobs that started in the trailing window: thirty minutes, or the bin if
+    # that is longer, so that no job falls between samples.
+    window = max(30 * 60, step)
     waits = {}
     for key, _, _ in WAIT_SERIES:
         started = sorted((j["started"], j["started"] - j["created"]) for j in jobs
@@ -151,8 +190,8 @@ def bin_series(jobs: list[dict], since: float, until: float, step: float) -> dic
         waits[key] = series
 
     ticks = sorted(j["created"] for j in jobs if j["picked_ns"] and since <= j["created"] < until)
-    return {"since": since, "until": until, "step": step, "running": running, "queued": queued,
-            "wait_min": waits, "picked_namespace": ticks}
+    return {"since": since, "until": until, "step": step, "window": window, "running": running,
+            "queued": queued, "wait_min": waits, "picked_namespace": ticks}
 
 
 # --- drawing ------------------------------------------------------------------------------------
@@ -164,9 +203,9 @@ def fmt_time(t: float, with_day: bool) -> str:
 
 
 def render(data: dict, title: str, subtitle: str, annotations: list[tuple[float, str]]) -> str:
-    W, H = 980, 740
+    W, H = 980, 760
     L, R = 64, 20
-    panels = [(100, 350), (410, 520), (570, 680)]   # (top, bottom) for running, queued, wait
+    panels = [(120, 370), (430, 540), (590, 700)]   # (top, bottom) for running, queued, wait
     since, until, step = data["since"], data["until"], data["step"]
     n = len(data["running"][SERIES[0][0]])
     x = lambda t: L + (t - since) / (until - since) * (W - L - R)
@@ -175,7 +214,7 @@ def render(data: dict, title: str, subtitle: str, annotations: list[tuple[float,
            f".note{{font-size:{css_px(W, 11)};fill:{MUTED}}}</style>",
            card_rect(W, H),
            f'<text class="title" x="{L}" y="36">{title}</text>',
-           f'<text class="subtitle" x="{L}" y="58">{subtitle}</text>']
+           f'<text class="subtitle" x="{L}" y="58">{html.escape(subtitle)}</text>']
 
     def yscale(top, bottom, vmax):
         return lambda v: bottom - (v / vmax) * (bottom - top)
@@ -233,12 +272,11 @@ def render(data: dict, title: str, subtitle: str, annotations: list[tuple[float,
                        f'stroke-dasharray="2 3" stroke-width="{svg_unit(W, 1)}"/>')
             right = x(t) > (L + W - R) / 2
             out.append(f'<text class="note" x="{x(t) + (-4 if right else 4):.1f}" y="{top+12}" '
-                       f'text-anchor="{"end" if right else "start"}">{text}</text>')
-    lx = L
-    for key, label, colour in SERIES:
-        out.append(f'<rect x="{lx}" y="72" width="12" height="12" rx="2" fill="{colour}"/>')
-        out.append(f'<text class="legend" x="{lx+17}" y="82">{label}</text>')
-        lx += 30 + len(label) * 7.2
+                       f'text-anchor="{"end" if right else "start"}">{html.escape(text)}</text>')
+    for idx, (key, label, colour) in enumerate(SERIES):
+        lx, ly = L + (idx % 3) * 290, 72 + (idx // 3) * 18
+        out.append(f'<rect x="{lx}" y="{ly}" width="12" height="12" rx="2" fill="{colour}"/>')
+        out.append(f'<text class="legend" x="{lx+17}" y="{ly+10}">{label}</text>')
     out.append(f'<text class="note" x="{W-R}" y="{bottom+26}" text-anchor="end">'
                f'ticks: PR builds the picker sent to Namespace</text>')
 
@@ -311,13 +349,22 @@ def main(argv=None):
     ap.add_argument("--db", default="ci.sqlite")
     ap.add_argument("--download", action="store_true", help="fetch the database from TauCetiCI first")
     ap.add_argument("--out-dir", default=".")
-    ap.add_argument("--until", default=None, help="ISO end time (default: now)")
+    ap.add_argument("--until", default=None,
+                    help="ISO end time, UTC (default: where the data is complete)")
     args = ap.parse_args(argv)
     dbp = Path(args.db)
     if args.download:
         download(dbp)
     db = sqlite3.connect(dbp)
-    until = ts(args.until) if args.until else dt.datetime.now(UTC).timestamp()
+    # End where every repository's runs are recorded, not at the wall clock: past that point an
+    # empty bin would mean "not collected yet", and would draw as an idle fleet.
+    now = dt.datetime.now(UTC).timestamp()
+    covered = [ts(c) for (c,) in db.execute("SELECT complete_to FROM coverage")]
+    watermark = min(covered) if covered else now
+    until = ts(args.until) if args.until else min(now, watermark)
+    if not args.until and now - until > MAX_STALENESS:
+        sys.exit(f"CI data is complete only to {iso(until)}, more than "
+                 f"{MAX_STALENESS // 3600} hours ago; not redrawing the charts from it")
     annotations = []
     try:
         annotations = [(ts(a), text) for a, text in db.execute("SELECT at, text FROM annotations")]
@@ -325,16 +372,20 @@ def main(argv=None):
         pass
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    stats = {}
+    stats, svgs = {}, {}
     for name, hours, step_min, title in [("72h", 72, 10, "CI fleet, last 72 hours"),
                                          ("30d", 30 * 24, 120, "CI fleet, last 30 days")]:
         until_b = until // (step_min * 60) * (step_min * 60)
         since = until_b - hours * 3600
         data = bin_series(load_jobs(db, since, until_b), since, until_b, step_min * 60)
         stats[name] = data
-        subtitle = (f"{step_min}-minute bins to {fmt_time(until_b, True)}; "
+        subtitle = (f"{step_min}-minute bins, data through {fmt_time(until_b, True)}; "
                     "all TauCetiProject repositories")
-        (out / f"ci-fleet-{name}.svg").write_text(render(data, title, subtitle, annotations))
+        svgs[name] = render(data, title, subtitle, annotations)
+        ET.fromstring(svgs[name])  # refuse to publish a malformed SVG
+    # Written only once every chart has rendered and parsed, so a failure leaves the fallbacks.
+    for name, svg in svgs.items():
+        (out / f"ci-fleet-{name}.svg").write_text(svg)
     (out / "ci-stats.json").write_text(json.dumps(stats, separators=(",", ":")))
 
 

@@ -63,7 +63,7 @@ private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
     ∃ r : K[X], Irreducible r ∧ Odd r.natDegree ∧ r.natDegree < p.natDegree ∧
       -1 ∈ extensionCone (algebraMap K (AdjoinRoot r)) := by
   have : Fact (Irreducible p) := ⟨hp⟩
-  obtain ⟨s, hs, hsdeg, hseval⟩ := lift_extensionCone p hp.natDegree_pos hneg
+  obtain ⟨s, hs, hsdeg, hseval⟩ := extensionCone.lift p hp.natDegree_pos hneg
   let w := (1 : K[X]) + s
   have hw : w ∈ extensionCone (C : K →+* K[X]) := add_mem (one_mem _) hs
   have hw0 : w ≠ 0 := by
@@ -103,7 +103,7 @@ private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
 
 /-- The cone of weighted squares stays proper after adjoining a root of an
 irreducible polynomial of odd degree. -/
-theorem _root_.AdjoinRoot.neg_one_notMem_extensionCone (p : K[X]) (hp : Irreducible p)
+theorem extensionCone.neg_one_notMem_adjoinRoot (p : K[X]) (hp : Irreducible p)
     (hodd : Odd p.natDegree) :
     -1 ∉ extensionCone (algebraMap K (AdjoinRoot p)) := by
   induction hn : p.natDegree using Nat.strong_induction_on generalizing p with
@@ -118,6 +118,6 @@ theorem _root_.AdjoinRoot.exists_linearOrder (p : K[X]) [hp : Fact (Irreducible 
     (hodd : Odd p.natDegree) :
     ∃ o : LinearOrder (AdjoinRoot p), letI := o
       IsStrictOrderedRing (AdjoinRoot p) ∧ StrictMono (algebraMap K (AdjoinRoot p)) :=
-  extensionCone.exists_linearOrder _ (AdjoinRoot.neg_one_notMem_extensionCone p hp.out hodd)
+  extensionCone.exists_linearOrder _ (extensionCone.neg_one_notMem_adjoinRoot p hp.out hodd)
 
 end TauCeti.RealClosure

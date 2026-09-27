@@ -31,7 +31,7 @@ variable {K : Type*} [Field K]
 namespace RingPreordering
 
 /-- Adjoin an element whose negative is absent from a field preordering. -/
-private def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :=
+def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :=
   RingPreordering.mk' {x | ∃ u ∈ P, ∃ v ∈ P, x = u + a * v}
     (by
       rintro x y ⟨u, hu, v, hv, rfl⟩ ⟨w, hw, z, hz, rfl⟩
@@ -56,11 +56,14 @@ private def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreorde
           linear_combination heq
         rwa [← hval] at hmem)
 
-private theorem le_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
+@[simp] theorem mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) {x : K} :
+    x ∈ adjoin P a ha ↔ ∃ u ∈ P, ∃ v ∈ P, x = u + a * v := (Iff.rfl)
+
+theorem le_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
     P ≤ adjoin P a ha :=
   fun x hx => ⟨x, hx, 0, zero_mem P, by simp⟩
 
-private theorem mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
+theorem self_mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
     a ∈ adjoin P a ha :=
   ⟨0, zero_mem P, 1, one_mem P, by simp⟩
 
@@ -101,8 +104,14 @@ theorem exists_le_isOrdering (P : RingPreordering K) :
     intro a
     by_cases ha : -a ∈ Q
     · exact Or.inr ha
-    · exact Or.inl ((hQ (le_adjoin Q a ha)) (mem_adjoin Q a ha))⟩
+    · exact Or.inl ((hQ (le_adjoin Q a ha)) (self_mem_adjoin Q a ha))⟩
   exact ⟨Q, hPQ, { htotal with toIsPrime := inferInstance }⟩
+
+/-- An element whose negative is absent can be made nonnegative in an extending ordering. -/
+theorem exists_le_isOrdering_mem (P : RingPreordering K) {a : K} (ha : -a ∉ P) :
+    ∃ Q : RingPreordering K, P ≤ Q ∧ Q.IsOrdering ∧ a ∈ Q := by
+  obtain ⟨Q, hQ, horder⟩ := exists_le_isOrdering (adjoin P a ha)
+  exact ⟨Q, (le_adjoin P a ha).trans hQ, horder, hQ (self_mem_adjoin P a ha)⟩
 
 /-- A preordering on a field is a pointed ring cone. -/
 def toRingCone (P : RingPreordering K) : RingCone K where

@@ -14,7 +14,9 @@ public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 
 A maximal ordered intermediate field of an algebraic closure is closed under
 positive square roots and has a root of every odd-degree polynomial. Both
-extension steps preserve the prescribed base order.
+extension steps preserve the prescribed base order. `exists_realClosure` constructs
+an ordered, algebraic, real closed extension in the base universe with a strictly
+monotone embedding; `exists_intermediateField` realizes it inside the algebraic closure.
 
 ## References
 
@@ -85,7 +87,7 @@ theorem OrderedSubfield.exists_root_of_isMax (P : OrderedSubfield K L) (hP : IsM
   exact hpL
 
 /-- A maximal ordered intermediate field of an algebraically closed field is real closed. -/
-theorem OrderedSubfield.isRealClosed (P : OrderedSubfield K L) (hP : IsMax P) :
+theorem OrderedSubfield.isRealClosed_of_isMax (P : OrderedSubfield K L) (hP : IsMax P) :
     IsRealClosed P.field := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
@@ -100,7 +102,8 @@ theorem exists_intermediateField :
       letI := o
       IsStrictOrderedRing F ∧ IsRealClosed F ∧ StrictMono (algebraMap K F) := by
   obtain ⟨P, hP⟩ := OrderedSubfield.exists_isMax (K := K) (L := AlgebraicClosure K)
-  exact ⟨P.field, P.linearOrder, P.isStrictOrderedRing, P.isRealClosed hP, P.algebraMap_strictMono⟩
+  exact ⟨P.field, P.linearOrder, P.isStrictOrderedRing,
+    P.isRealClosed_of_isMax hP, P.algebraMap_strictMono⟩
 
 /-- An ordered algebraic real closure exists in the universe of the base field.
 The algebraicity assertion uses the algebra induced by the supplied embedding. -/

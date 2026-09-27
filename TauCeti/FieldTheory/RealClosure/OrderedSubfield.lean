@@ -163,7 +163,7 @@ theorem exists_isMax : ∃ P : OrderedSubfield K L, IsMax P :=
 
 /-- An ordered extension embedded in the ambient field gives a larger ordered
 intermediate field, with the original signs preserved. -/
-theorem exists_image (P : OrderedSubfield K L) {E : Type*}
+theorem exists_le_mem (P : OrderedSubfield K L) {E : Type*}
     [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra K E]
     [Algebra P.field E] [IsScalarTower K P.field E] (f : E →ₐ[P.field] L) :
     letI := P.linearOrder
@@ -193,7 +193,7 @@ theorem mem_of_isMax (P : OrderedSubfield K L) (hP : IsMax P) {E : Type*}
     letI := P.linearOrder
     Monotone (algebraMap P.field E) → ∀ x : E, f x ∈ P.field := by
   intro hf x
-  obtain ⟨Q, hPQ, hQ⟩ := P.exists_image f hf
+  obtain ⟨Q, hPQ, hQ⟩ := P.exists_le_mem f hf
   exact (hP hPQ).1 (hQ x)
 
 end OrderedSubfield

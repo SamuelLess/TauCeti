@@ -27,7 +27,7 @@ variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 nonnegative leading coefficient. -/
 private theorem extensionCone.degree {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) :
     Even p.natDegree ∧ 0 ≤ p.leadingCoeff := by
-  induction hp using extensionCone_induction _ with
+  induction hp using extensionCone.induction _ with
   | mem p hp =>
     obtain ⟨a, ha, q, rfl⟩ := (mem_weightedSquares _).mp hp
     by_cases ha0 : a = 0
@@ -78,27 +78,27 @@ extension ring. -/
 theorem extensionCone.aeval_mem {L : Type*} [CommRing L] [Algebra K L]
     {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) (x : L) :
     aeval x p ∈ extensionCone (algebraMap K L) := by
-  induction hp using extensionCone_induction _ with
+  induction hp using extensionCone.induction _ with
   | mem p hp =>
     obtain ⟨a, ha, q, rfl⟩ := (mem_weightedSquares _).mp hp
-    exact subset_extensionCone _ ((mem_weightedSquares _).mpr ⟨a, ha, aeval x q, by simp⟩)
+    exact extensionCone.subset _ ((mem_weightedSquares _).mpr ⟨a, ha, aeval x q, by simp⟩)
   | zero => simpa only [map_zero] using (extensionCone (algebraMap K L)).zero_mem
   | add p q _ _ hp hq => simpa only [map_add] using add_mem hp hq
 
 /-- A weighted-square certificate in a simple algebraic extension lifts to a
 polynomial weighted-square certificate of degree less than twice the defining degree. -/
-theorem lift_extensionCone (p : K[X]) (hdeg : 0 < p.natDegree)
+theorem extensionCone.lift (p : K[X]) (hdeg : 0 < p.natDegree)
     {x : AdjoinRoot p} (hx : x ∈ extensionCone (algebraMap K (AdjoinRoot p))) :
     ∃ q : K[X], q ∈ extensionCone (C : K →+* K[X]) ∧
       q.natDegree < 2 * p.natDegree ∧ aeval (AdjoinRoot.root p) q = x := by
   have hp : p ≠ 0 := ne_zero_of_natDegree_gt hdeg
   have := AdjoinRoot.nontrivial p (natDegree_pos_iff_degree_pos.mp hdeg).ne'
-  induction hx using extensionCone_induction _ with
+  induction hx using extensionCone.induction _ with
   | mem x hx =>
     obtain ⟨a, ha, y, rfl⟩ := (mem_weightedSquares _).mp hx
     obtain ⟨q, hq, hy⟩ := (AdjoinRoot.powerBasis hp).exists_eq_aeval y
     refine ⟨C a * q ^ 2,
-      subset_extensionCone _ ((mem_weightedSquares _).mpr ⟨a, ha, q, rfl⟩), ?_, ?_⟩
+      extensionCone.subset _ ((mem_weightedSquares _).mpr ⟨a, ha, q, rfl⟩), ?_, ?_⟩
     · have hq' : q.natDegree < p.natDegree := by
         simpa only [AdjoinRoot.powerBasis_dim] using hq
       exact (natDegree_C_mul_le a (q ^ 2)).trans_lt (by rw [natDegree_pow]; omega)

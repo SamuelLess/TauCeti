@@ -8,9 +8,9 @@ module
 public import TauCeti.FieldTheory.RealClosure.AlgebraicClosed
 import Mathlib.FieldTheory.Minpoly.Finite
 import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.LinearCombination
+import TauCeti.Algebra.Polynomial.LinearFactor
+import TauCeti.Algebra.Polynomial.RealClosed.Quadratic
 import Mathlib.Tactic.Ring
-import Mathlib.RingTheory.Polynomial.SmallDegreeVieta
 
 /-! # Polynomial intermediate values over an abstract real closed field
 Irreducible factors have degree at most two; quadratic factors have constant
@@ -43,36 +43,14 @@ theorem natDegree_le_two_of_irreducible {p : R[X]} (hp : Irreducible p) : p.natD
   rw [hdeg]
   exact (minpoly.natDegree_le z).trans_eq (QuadraticAlgebra.finrank_eq_two _ _)
 
-omit [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R] in
-/-- A linear polynomial is its leading coefficient times the distance from its root. -/
-theorem _root_.Polynomial.eval_eq_leadingCoeff_mul_sub {p : R[X]}
-    (hp : p.natDegree = 1) {r : R} (hr : p.IsRoot r) (x : R) :
-    p.eval x = p.leadingCoeff * (x - r) := by
-  have heq := eq_X_add_C_of_natDegree_le_one hp.le
-  have hr' := hr
-  rw [IsRoot, heq] at hr'
-  simp only [eval_add, eval_mul, eval_C, eval_X] at hr'
-  simp only [leadingCoeff, hp]
-  conv_lhs => rw [heq]
-  simp only [eval_add, eval_mul, eval_C, eval_X]
-  linear_combination hr'
-
 /-- An irreducible quadratic has the sign of its leading coefficient everywhere. -/
 theorem quadratic_leading_mul_pos {p : R[X]} (hp : Irreducible p)
     (hdeg : p.natDegree = 2) (x : R) : 0 < p.leadingCoeff * p.eval x := by
-  have hdisc : discrim (p.coeff 2) (p.coeff 1) (p.coeff 0) < 0 := by
-    by_contra! h
-    obtain ⟨x, hx⟩ := p.exists_root_of_isSquare_discrim hdeg (IsSquare.of_nonneg h)
-    exact hp.not_isRoot_of_natDegree_ne_one (by omega) hx
-  have hpos : 0 < (4 * p.coeff 2) * p.eval x := by
-    have heval : p.eval x = p.coeff 2 * x ^ 2 + p.coeff 1 * x + p.coeff 0 := by
-      conv_lhs => rw [eq_quadratic_of_degree_le_two (natDegree_le_iff_degree_le.mp hdeg.le)]
-      simp
-    rw [heval]
-    dsimp [discrim] at hdisc
-    nlinarith [sq_nonneg (2 * p.coeff 2 * x + p.coeff 1)]
-  simp only [leadingCoeff, hdeg]
-  nlinarith
+  rcases lt_or_gt_of_ne (leadingCoeff_ne_zero.mpr hp.ne_zero) with hneg | hpos
+  · exact mul_pos_of_neg_of_neg hneg
+      ((irreducible_quadratic_eval_neg_iff_leadingCoeff_neg hp hdeg x).mpr hneg)
+  · exact mul_pos hpos
+      ((irreducible_quadratic_eval_pos_iff_leadingCoeff_pos hp hdeg x).mpr hpos)
 
 /-- An irreducible quadratic has the same nonzero sign at any two points. -/
 theorem quadratic_eval_mul_pos {p : R[X]} (hp : Irreducible p)
@@ -92,9 +70,11 @@ theorem linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
     0 < p.eval a * p.eval b := by
   have hd : p.degree = 1 := (degree_eq_iff_natDegree_eq_of_pos (by decide)).mpr hdeg
   obtain ⟨r, hr⟩ := exists_root_of_degree_eq_one hd
-  have hlead : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr
-    (ne_zero_of_natDegree_gt (show 0 < p.natDegree by omega))
-  have heval := p.eval_eq_leadingCoeff_mul_sub hdeg hr
+  obtain ⟨c, hc⟩ := exists_eq_C_mul_X_sub_C_of_natDegree_le_one hdeg.le hr
+  have hcne : c ≠ 0 := by
+    intro hz
+    apply hroot a ⟨le_rfl, hab⟩
+    simp [hc, hz]
   have hprod : 0 < (a - r) * (b - r) := by
     rcases lt_or_ge r a with h | h
     · exact mul_pos (sub_pos.mpr h) (sub_pos.mpr (h.trans_le hab))
@@ -102,8 +82,8 @@ theorem linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
         by_contra! hb
         exact hroot r ⟨h, hb⟩ hr
       exact mul_pos_of_neg_of_neg (sub_neg.mpr (hab.trans_lt hb)) (sub_neg.mpr hb)
-  rw [heval a, heval b]
-  convert mul_pos (mul_self_pos.mpr hlead) hprod using 1
+  simp only [hc, eval_mul, eval_C, eval_sub, eval_X]
+  convert mul_pos (mul_self_pos.mpr hcne) hprod using 1
   ring
 
 /-- A polynomial has constant nonzero sign on any closed interval containing
@@ -139,12 +119,6 @@ theorem eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
       (fun h => linear_eval_mul_pos h hab hq')
       (fun h => quadratic_eval_mul_pos hq h a b)
     simpa only [eval_mul, mul_mul_mul_comm] using mul_pos hqpos (ih hp')
-
-/-- The endpoint-product theorem also fixes the sign at every point of a root-free interval. -/
-theorem eval_mul_pos_on (p : R[X]) {a b : R}
-    (hroot : ∀ x ∈ Set.Icc a b, p.eval x ≠ 0) {x : R} (hx : x ∈ Set.Icc a b) :
-    0 < p.eval a * p.eval x :=
-  eval_mul_pos_of_no_roots p hx.1 (fun y hy => hroot y ⟨hy.1, hy.2.trans hx.2⟩)
 
 /-- Polynomial IVT over an arbitrary real closed ordered field, including
 non-Archimedean fields. -/

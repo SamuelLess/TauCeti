@@ -9,10 +9,8 @@ public import Mathlib.FieldTheory.IsRealClosed.Basic
 public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.FieldTheory.PrimitiveElement
-public import Mathlib.Algebra.QuadraticDiscriminant
+import TauCeti.Algebra.Polynomial.QuadraticDiscriminant
 import Mathlib.FieldTheory.Minpoly.Finite
-import Mathlib.RingTheory.Polynomial.SmallDegreeVieta
-import Mathlib.Tactic.NormNum
 
 /-! # Finite extensions of an abstract real closed field -/
 
@@ -38,25 +36,6 @@ section Quadratic
 
 variable {K L : Type*} [Field K] [NeZero (2 : K)]
 
-/-- A quadratic polynomial whose discriminant is a square has a root. -/
-theorem _root_.Polynomial.exists_root_of_isSquare_discrim {p : K[X]} (hp : p.natDegree = 2)
-    (hsq : IsSquare (discrim (p.coeff 2) (p.coeff 1) (p.coeff 0))) :
-    ∃ x, p.IsRoot x := by
-  have hlead : p.coeff 2 ≠ 0 := by
-    rw [← hp]
-    have hpos : 0 < p.natDegree := by omega
-    exact leadingCoeff_ne_zero.mpr (ne_zero_of_natDegree_gt hpos)
-  obtain ⟨x, hx⟩ := exists_quadratic_eq_zero hlead hsq
-  refine ⟨x, ?_⟩
-  rw [Polynomial.IsRoot, eq_quadratic_of_degree_le_two
-    (natDegree_le_iff_degree_le.mp hp.le)]
-  simpa [pow_two] using hx
-
-/-- A quadratic polynomial has a root in a field in which every element is a square. -/
-theorem quadratic_has_root (hsq : ∀ x : K, IsSquare x) {p : K[X]}
-    (hp : p.natDegree = 2) : ∃ x, p.IsRoot x :=
-  exists_root_of_isSquare_discrim hp (hsq _)
-
 /-- A square-closed field of characteristic different from two has no quadratic extension. -/
 theorem finrank_ne_two_of_isSquare [Field L] [Algebra K L]
     [FiniteDimensional K L] (hsq : ∀ x : K, IsSquare x) : finrank K L ≠ 2 := by
@@ -68,7 +47,7 @@ theorem finrank_ne_two_of_isSquare [Field L] [Algebra K L]
     have hle := (minpoly.natDegree_le x).trans_eq htwo
     by_contra hne
     have hdeg : (minpoly K x).natDegree = 2 := by omega
-    obtain ⟨a, ha⟩ := quadratic_has_root hsq hdeg
+    obtain ⟨a, ha⟩ := exists_root_of_isSquare_discrim hdeg (hsq _)
     have hone : (minpoly K x).natDegree = 1 := natDegree_eq_of_degree_eq_some
       (degree_eq_one_of_irreducible_of_root (minpoly.irreducible (IsIntegral.of_finite K x)) ha)
     omega

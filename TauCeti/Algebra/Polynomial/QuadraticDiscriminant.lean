@@ -9,6 +9,7 @@ public import Mathlib.Algebra.QuadraticDiscriminant
 public import Mathlib.FieldTheory.Perfect
 import TauCeti.Algebra.QuadraticDiscriminant
 
+import Mathlib.RingTheory.Polynomial.SmallDegreeVieta
 import Mathlib.Algebra.Polynomial.SpecificDegree
 import Mathlib.Tactic
 
@@ -167,6 +168,22 @@ theorem splits_quadratic_iff_isSquare {k : Type*} [Field k] [NeZero (2 : k)] {a 
   · rintro ⟨s, hs⟩
     obtain ⟨x, hx⟩ := exists_quadratic_eq_zero ha ⟨s, by rw [hs]⟩
     exact ⟨x, by linear_combination hx⟩
+
+/-- A quadratic polynomial whose discriminant is a square has a root. -/
+theorem exists_root_of_isSquare_discrim {K : Type*} [Field K] [NeZero (2 : K)]
+    {p : K[X]} (hp : p.natDegree = 2)
+    (hsq : IsSquare (discrim (p.coeff 2) (p.coeff 1) (p.coeff 0))) :
+    ∃ x, p.IsRoot x := by
+  have hlead : p.coeff 2 ≠ 0 := by
+    rw [← hp]
+    have hpos : 0 < p.natDegree := by omega
+    exact leadingCoeff_ne_zero.mpr (ne_zero_of_natDegree_gt hpos)
+  obtain ⟨x, hx⟩ := (splits_quadratic_iff_exists_root hlead).mp
+    ((splits_quadratic_iff_isSquare hlead).mpr hsq)
+  refine ⟨x, ?_⟩
+  rw [Polynomial.IsRoot, eq_quadratic_of_degree_le_two
+    (natDegree_le_iff_degree_le.mp hp.le)]
+  simpa [pow_two] using hx
 
 /-- Over a field of characteristic `2`, a quadratic `a X² + b X + c` with `a, b ≠ 0` splits
 exactly when its Artin-Schreier invariant `a c / b²` lies in the image of `z ↦ z² + z`, written

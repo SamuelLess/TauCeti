@@ -9,7 +9,6 @@ public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Data.Fintype.EquivFin
 public import Mathlib.Data.List.GetD
-public import Mathlib.SetTheory.Cardinal.Finite
 public import Mathlib.Logic.Equiv.Basic
 
 /-!

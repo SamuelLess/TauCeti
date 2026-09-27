@@ -5,7 +5,6 @@ Authors: The Tau Ceti contributors, Kim Morrison
 -/
 module
 
-import Mathlib.Algebra.BigOperators.Ring.Nat
 public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 public import Mathlib.Data.Fintype.Card
 public import Mathlib.SetTheory.Cardinal.Finite

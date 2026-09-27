@@ -14,7 +14,7 @@ public import Mathlib.SetTheory.Cardinal.Finite
 `occCount f y` counts the indices at which a family `f` takes the value `y`.
 For an infinite fiber its value is zero, following the convention of `Nat.card`.
 Occurrence counts regroup sums over a finite family by fibers: candidate values containing the
-observed range can be weighted by their multiplicities instead of summing over every index.
+range can be weighted by their occurrence counts instead of summing over every index.
 -/
 
 public section
@@ -26,15 +26,15 @@ namespace Function
 variable {X S : Type*}
 
 /-- The cardinality of a fiber, counting occurrences of a value in a family. -/
-noncomputable def occCount (obs : X → S) (σ : S) : ℕ := Nat.card {x // obs x = σ}
+noncomputable def occCount (f : X → S) (y : S) : ℕ := Nat.card {x // f x = y}
 
 /-- Occurrence counts are natural cardinalities of fibers. -/
-theorem occCount_def (obs : X → S) (σ : S) :
-    occCount obs σ = Nat.card {x // obs x = σ} := (rfl)
+theorem occCount_def (f : X → S) (y : S) :
+    occCount f y = Nat.card {x // f x = y} := (rfl)
 
-/-- Multiplicity is the cardinality of the corresponding finite fiber. -/
-theorem occCount_eq_card_filter [Fintype X] [DecidableEq S] (obs : X → S) (σ : S) :
-    occCount obs σ = (Finset.univ.filter (fun x => obs x = σ)).card := by
+/-- The occurrence count is the cardinality of the corresponding finite fiber. -/
+theorem occCount_eq_card_filter [Fintype X] [DecidableEq S] (f : X → S) (y : S) :
+    occCount f y = (Finset.univ.filter (fun x => f x = y)).card := by
   rw [occCount_def, Nat.card_eq_fintype_card, Fintype.card_subtype]
 
 /-- The occurrence count as a sum of indicators over the positions. -/
@@ -42,7 +42,7 @@ theorem occCount_eq_sum [Fintype X] [DecidableEq S] (w : X → S) (a : S) :
     occCount w a = ∑ i : X, if w i = a then 1 else 0 := by
   rw [occCount_eq_card_filter, card_filter]
 
-/-- Multiplicity grows along an embedding preserving the observed values. -/
+/-- Occurrence counts grow along an embedding preserving the values. -/
 theorem occCount_le_of_comp {Y : Type*} {u : X → S} {v : Y → S}
     (e : X ↪ Y) (he : ∀ i, v (e i) = u i) (a : S) [Finite {y // v y = a}] :
     occCount u a ≤ occCount v a := by
@@ -50,7 +50,7 @@ theorem occCount_le_of_comp {Y : Type*} {u : X → S} {v : Y → S}
     e.subtypeMap (fun {x} hx => (he x).trans hx)
   exact Nat.card_le_card_of_injective f f.injective
 
-/-- An embedding that misses an occurrence gives strictly smaller multiplicity. -/
+/-- An embedding that misses an occurrence gives a strictly smaller occurrence count. -/
 theorem occCount_lt_of_comp {Y : Type*} {u : X → S} {v : Y → S} {a : S}
     [Finite {y // v y = a}] {j : Y} (e : X ↪ Y) (he : ∀ i, v (e i) = u i)
     (hj : v j = a) (hmiss : ∀ i, e i ≠ j) : occCount u a < occCount v a := by
@@ -65,41 +65,53 @@ theorem occCount_lt_of_comp {Y : Type*} {u : X → S} {v : Y → S} {a : S}
   obtain ⟨x, hx⟩ := hsurj ⟨j, hj⟩
   exact hmiss x (congrArg Subtype.val hx)
 
-/-- Positive multiplicity means the value occurs. -/
+/-- A positive occurrence count means the value occurs. -/
 @[simp, grind =]
-theorem occCount_pos (obs : X → S) (σ : S) [Finite {x // obs x = σ}] :
-    0 < occCount obs σ ↔ ∃ x, obs x = σ := by
+theorem occCount_pos (f : X → S) (y : S) [Finite {x // f x = y}] :
+    0 < occCount f y ↔ ∃ x, f x = y := by
   simp only [occCount_def, Nat.card_pos_iff, nonempty_subtype,
-    and_iff_left (inferInstance : Finite {x // obs x = σ})]
+    and_iff_left (inferInstance : Finite {x // f x = y})]
+
+/-- A value outside the range has occurrence count zero. -/
+@[simp]
+theorem occCount_eq_zero (f : X → S) (y : S) (h : ∀ x, f x ≠ y) :
+    occCount f y = 0 := by
+  have hnot : y ∉ Set.range f := by simpa only [Set.mem_range, not_exists] using h
+  have he := Set.preimage_singleton_eq_empty.mpr hnot
+  simpa [occCount_def, Set.preimage, Set.coe_ofPred] using
+    congrArg (fun s : Set X => Nat.card s) he
 
 open scoped Classical in
-/-- An injective observation map gives multiplicity one precisely on its range. -/
-@[simp]
-theorem occCount_of_injective (obs : X → S) (hinj : Function.Injective obs) (σ : S) :
-    occCount obs σ = if ∃ x, obs x = σ then 1 else 0 := by
+/-- An injective function gives occurrence count one precisely on its range. -/
+theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S) :
+    occCount f y = if ∃ x, f x = y then 1 else 0 := by
   rw [occCount_def]
   split_ifs with h
   · have hc := Nat.card_preimage_of_injective hinj (Set.singleton_subset_iff.mpr h)
     simpa only [Set.preimage, Set.mem_singleton_iff, Set.coe_ofPred, Nat.card_unique] using hc
-  · have he := Set.preimage_singleton_eq_empty.mpr h
-    simpa [Set.preimage, Set.coe_ofPred] using congrArg (fun s : Set X => Nat.card s) he
+  · exact occCount_eq_zero f y (not_exists.mp h)
 
-/-- Multiplicity-weighted sums over a finite set containing the observed range equal sums over
-all indices. -/
+/-- Every value of an injective function occurs exactly once. -/
+@[simp]
+theorem occCount_eq_one (f : X → S) (hinj : Function.Injective f) (x : X) :
+    occCount f (f x) = 1 := by
+  rw [occCount_of_injective f hinj, ite_eq_left ⟨x, rfl⟩]
+
+/-- Weighting each value by its occurrence count gives the sum of the weights over all indices. -/
 theorem sum_occCount_nsmul [Fintype X] {K : Type*} [AddCommMonoid K]
-    (obs : X → S) {T : Finset S} (hT : ∀ x, obs x ∈ T) (weight : S → K) :
-    ∑ σ ∈ T, occCount obs σ • weight σ = ∑ x, weight (obs x) := by
+    (f : X → S) {T : Finset S} (hT : ∀ x, f x ∈ T) (weight : S → K) :
+    ∑ y ∈ T, occCount f y • weight y = ∑ x, weight (f x) := by
   classical
   simpa only [Finset.sum_const, occCount_eq_card_filter] using
-    Finset.sum_fiberwise_of_maps_to' (s := Finset.univ) (t := T) (g := obs)
+    Finset.sum_fiberwise_of_maps_to' (s := Finset.univ) (t := T) (g := f)
       (fun x _ => hT x) weight
 
-/-- Occurrence counts over a finite candidate set containing the observed range sum to the size of
+/-- Occurrence counts over a finite set containing the range sum to the size of
 the original family. -/
-theorem sum_occCount_eq_card [Finite X] (obs : X → S) {T : Finset S}
-    (hT : ∀ x, obs x ∈ T) : ∑ σ ∈ T, occCount obs σ = Nat.card X := by
+theorem sum_occCount_eq_card [Finite X] (f : X → S) {T : Finset S}
+    (hT : ∀ x, f x ∈ T) : ∑ y ∈ T, occCount f y = Nat.card X := by
   classical
   let _ := Fintype.ofFinite X
-  simpa [Nat.card_eq_fintype_card] using sum_occCount_nsmul obs hT (fun _ => (1 : ℕ))
+  simpa [Nat.card_eq_fintype_card] using sum_occCount_nsmul f hT (fun _ => (1 : ℕ))
 
 end Function

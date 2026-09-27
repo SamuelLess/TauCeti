@@ -6,6 +6,7 @@ Authors: The Tau Ceti contributors
 module
 
 public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Data.Fintype.Card
 public import Mathlib.SetTheory.Cardinal.Finite
 
@@ -91,9 +92,9 @@ theorem occCount_eq_zero (f : X → S) (y : S) (h : ∀ x, f x ≠ y) :
   simpa [occCount_def, Set.preimage, Set.coe_ofPred] using
     congrArg (fun s : Set X => Nat.card s) he
 
-open scoped Classical in
 /-- An injective function gives occurrence count one precisely on its range. -/
-theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S) :
+theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S)
+    [Decidable (∃ x, f x = y)] :
     occCount f y = if ∃ x, f x = y then 1 else 0 := by
   rw [occCount_def]
   split_ifs with h
@@ -105,6 +106,7 @@ theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S
 @[simp]
 theorem occCount_eq_one (f : X → S) (hinj : Function.Injective f) (x : X) :
     occCount f (f x) = 1 := by
+  classical
   rw [occCount_of_injective f hinj, ite_eq_left ⟨x, rfl⟩]
 
 /-- Weighting each value by its occurrence count gives the sum of the weights over all indices. -/
@@ -123,5 +125,19 @@ theorem sum_occCount_eq_card [Finite X] (f : X → S) {T : Finset S}
   classical
   let _ := Fintype.ofFinite X
   simpa [Nat.card_eq_fintype_card] using sum_occCount_nsmul f hT (fun _ => (1 : ℕ))
+
+/-- Splitting off the last position: the occurrences of `a` in a word are those in its initial
+segment together with a possible occurrence at the last position. -/
+theorem occCount_castSucc [DecidableEq S] {n : ℕ} (w : Fin (n + 1) → S) (a : S) :
+    occCount (w ∘ Fin.castSucc) a + (if w (Fin.last n) = a then 1 else 0) = occCount w a := by
+  rw [occCount_eq_sum, occCount_eq_sum, Fin.sum_univ_castSucc]
+  rfl
+
+/-- Splitting off the first position: the occurrences of `a` in a word are those in its final
+segment together with a possible occurrence at the first position. -/
+theorem occCount_succ [DecidableEq S] {n : ℕ} (w : Fin (n + 1) → S) (a : S) :
+    occCount (w ∘ Fin.succ) a + (if w 0 = a then 1 else 0) = occCount w a := by
+  rw [occCount_eq_sum, occCount_eq_sum, Fin.sum_univ_succ, Nat.add_comm]
+  rfl
 
 end Function

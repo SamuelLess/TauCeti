@@ -68,7 +68,7 @@ noncomputable section
 
 open Finset
 
-open Function (occCount occCount_def occCount_eq_card_filter occCount_eq_sum)
+open Function (occCount occCount_def occCount_eq_card_filter occCount_castSucc occCount_succ)
 
 namespace TauCeti
 
@@ -84,13 +84,6 @@ theorem transitionCount_eq_card_filter [DecidableEq α] {n : ℕ} (w : Fin (n + 
     transitionCount w a b = #{i : Fin n | w i.castSucc = a ∧ w i.succ = b} := by
   rw [transitionCount, Nat.card_eq_fintype_card, Fintype.card_subtype]
 
-/-- Splitting off the last position: the occurrences of `a` in a word are those in its initial
-segment together with a possible occurrence at the last position. -/
-theorem occCount_comp_castSucc_add_last [DecidableEq α] {n : ℕ} (w : Fin (n + 1) → α) (a : α) :
-    occCount (w ∘ Fin.castSucc) a + (if w (Fin.last n) = a then 1 else 0) = occCount w a := by
-  rw [occCount_eq_sum, occCount_eq_sum, Fin.sum_univ_castSucc]
-  rfl
-
 /-- Splitting off the last transition: the transitions in a word are those in its initial segment
 together with a possible transition at the final position. -/
 theorem transitionCount_comp_castSucc_add_last [DecidableEq α] {n : ℕ}
@@ -100,13 +93,6 @@ theorem transitionCount_comp_castSucc_add_last [DecidableEq α] {n : ℕ}
       transitionCount w a b := by
   rw [transitionCount_eq_card_filter, transitionCount_eq_card_filter, Finset.card_filter,
     Finset.card_filter, Fin.sum_univ_castSucc]
-  rfl
-
-/-- Splitting off the first position: the occurrences of `a` in a word are those in its final
-segment together with a possible occurrence at the first position. -/
-theorem occCount_comp_succ_add_zero [DecidableEq α] {n : ℕ} (w : Fin (n + 1) → α) (a : α) :
-    occCount (w ∘ Fin.succ) a + (if w 0 = a then 1 else 0) = occCount w a := by
-  rw [occCount_eq_sum, occCount_eq_sum, Fin.sum_univ_succ, Nat.add_comm]
   rfl
 
 /-- Splitting off the first transition: the transitions in a word are those in its final segment
@@ -243,10 +229,10 @@ theorem occCount_eq_of_transitionCount_eq {n : ℕ} {u v : Fin (n + 1) → α} (
     rw [← sum_transitionCount_left u (fun i => hSu i.castSucc) a,
       ← sum_transitionCount_left v (fun i => hSv i.castSucc) a]
     exact sum_congr rfl fun c _ => h c a
-  have hu_last := occCount_comp_castSucc_add_last u a
-  have hu_zero := occCount_comp_succ_add_zero u a
-  have hv_last := occCount_comp_castSucc_add_last v a
-  have hv_zero := occCount_comp_succ_add_zero v a
+  have hu_last := occCount_castSucc u a
+  have hu_zero := occCount_succ u a
+  have hv_last := occCount_castSucc v a
+  have hv_zero := occCount_succ v a
   rw [h0] at hu_zero
   omega
 

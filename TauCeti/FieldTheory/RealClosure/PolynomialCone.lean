@@ -84,7 +84,8 @@ theorem extensionCone.aeval_mem {L : Type*} [CommRing L] [Algebra K L]
   induction hp using extensionCone.induction _ with
   | mem p hp =>
     obtain ⟨a, ha, q, rfl⟩ := (mem_weightedSquares _).mp hp
-    exact extensionCone.subset _ ((mem_weightedSquares _).mpr ⟨a, ha, aeval x q, by simp⟩)
+    exact extensionCone.weightedSquares_subset _
+      ((mem_weightedSquares _).mpr ⟨a, ha, aeval x q, by simp⟩)
   | zero => simpa only [map_zero] using (extensionCone (algebraMap K L)).zero_mem
   | add p q _ _ hp hq => simpa only [map_add] using add_mem hp hq
 
@@ -101,7 +102,7 @@ theorem extensionCone.exists_aeval_root_eq (p : K[X]) (hdeg : 0 < p.natDegree)
     obtain ⟨a, ha, y, rfl⟩ := (mem_weightedSquares _).mp hx
     obtain ⟨q, hq, hy⟩ := (AdjoinRoot.powerBasis hp).exists_eq_aeval y
     refine ⟨C a * q ^ 2,
-      extensionCone.subset _ ((mem_weightedSquares _).mpr ⟨a, ha, q, rfl⟩), ?_, ?_⟩
+      extensionCone.weightedSquares_subset _ ((mem_weightedSquares _).mpr ⟨a, ha, q, rfl⟩), ?_, ?_⟩
     · have hq' : q.natDegree < p.natDegree := by
         simpa only [AdjoinRoot.powerBasis_dim] using hq
       exact (natDegree_C_mul_le a (q ^ 2)).trans_lt (by rw [natDegree_pow]; omega)

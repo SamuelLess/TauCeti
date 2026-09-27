@@ -109,6 +109,14 @@ omit [IsStrictOrderedRing R] in
   simp [signCount_eq_card_filter]
 
 omit [IsStrictOrderedRing R] in
+/-- The sign conditions partition the original finite set of points. -/
+theorem sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
+    (Z : Finset R) (Q : J → R[X]) : ∑ σ, signCount Z Q σ = Z.card := by
+  classical
+  simpa only [signCount_eq_fiberCount, Fintype.card_coe] using
+    sum_fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val))
+
+omit [IsStrictOrderedRing R] in
 /-- A positive sign count is equivalent to realization at a point of the finite set. -/
 @[simp] theorem signCount_pos {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
@@ -117,12 +125,12 @@ omit [IsStrictOrderedRing R] in
   simp [signCount_eq_card_filter, Finset.card_pos, Finset.Nonempty]
 
 /-- The sign sum of a product is the sum of the products of its pointwise signs. -/
-theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
+private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
   simp only [signSum, map_prod, signEval_apply]
 
 /-- The sign sum of a product of powers is the sum of the pointwise sign products. -/
-theorem signSum_prod_pow {J : Type*} [Fintype J]
+private theorem signSum_prod_pow {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
     signSum Z (∏ j, Q j ^ e j) =
       ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) ^ e j := by

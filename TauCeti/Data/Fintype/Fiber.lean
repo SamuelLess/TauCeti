@@ -66,4 +66,10 @@ theorem sum_mul_fiberCount {C K : Type*} [Fintype C] [Semiring K]
     simp [hne]
   · simp
 
+/-- The total multiplicity is the number of indices in the family. -/
+theorem sum_fiberCount [Fintype S] (obs : X → S) :
+    ∑ σ, fiberCount obs σ = Fintype.card X := by
+  simpa using sum_mul_fiberCount obs id Function.injective_id
+    (fun x => ⟨obs x, rfl⟩) (fun _ => (1 : ℕ))
+
 end TauCeti

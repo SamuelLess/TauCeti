@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 The Tau Ceti contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: The Tau Ceti contributors, Kim Morrison
+Authors: The Tau Ceti contributors
 -/
 module
 
@@ -13,8 +13,17 @@ public import Mathlib.SetTheory.Cardinal.Finite
 
 `occCount f y` counts the indices at which a family `f` takes the value `y`.
 For an infinite fiber its value is zero, following the convention of `Nat.card`.
-Occurrence counts regroup sums over a finite family by fibers: candidate values containing the
-range can be weighted by their occurrence counts instead of summing over every index.
+Occurrence counts regroup sums over a finite family by fibers: each value in a finite set
+covering the range is weighted by its occurrence count.
+
+## Main results
+
+* `Function.occCount_pos`: for a finite fiber, the count is positive exactly when it is nonempty.
+* `Function.occCount_of_injective`: an injective function has count one on its range and zero outside.
+* `Function.occCount_le_of_comp`, `Function.occCount_lt_of_comp`: comparison along embeddings.
+* `Function.sum_occCount_nsmul`: regroup a sum by counting the occurrences of each value.
+* `Function.sum_occCount_eq_card`: the total occurrence count is the cardinality of the index type.
+
 -/
 
 public section
@@ -32,7 +41,7 @@ noncomputable def occCount (f : X → S) (y : S) : ℕ := Nat.card {x // f x = y
 theorem occCount_def (f : X → S) (y : S) :
     occCount f y = Nat.card {x // f x = y} := (rfl)
 
-/-- The occurrence count is the cardinality of the corresponding finite fiber. -/
+/-- The occurrence count is the `Finset.card` of the indices taking the given value. -/
 theorem occCount_eq_card_filter [Fintype X] [DecidableEq S] (f : X → S) (y : S) :
     occCount f y = (Finset.univ.filter (fun x => f x = y)).card := by
   rw [occCount_def, Nat.card_eq_fintype_card, Fintype.card_subtype]
@@ -65,7 +74,7 @@ theorem occCount_lt_of_comp {Y : Type*} {u : X → S} {v : Y → S} {a : S}
   obtain ⟨x, hx⟩ := hsurj ⟨j, hj⟩
   exact hmiss x (congrArg Subtype.val hx)
 
-/-- A positive occurrence count means the value occurs. -/
+/-- For a finite fiber, positive occurrence count is equivalent to the value being attained. -/
 @[simp, grind =]
 theorem occCount_pos (f : X → S) (y : S) [Finite {x // f x = y}] :
     0 < occCount f y ↔ ∃ x, f x = y := by

@@ -16,6 +16,13 @@ A proper preordering on a field extends to a total ordering. The proof adjoins
 one element to a preordering and then applies Zorn's lemma. In particular, it
 preserves the prescribed positive elements, as required when ordering a field
 extension of an already ordered field.
+
+## References
+
+This is the classical preordering extension argument; see Salma Kuhlmann,
+[Real Algebraic Geometry, Lecture 3](https://www.math.uni-konstanz.de/algebra/WS0910/Notes03.pdf),
+Lemma 2.1 and Corollaries 3.2 and 3.4. The Lean construction uses Mathlib's
+`RingPreordering` and `RingCone` interfaces.
 -/
 
 @[expose] public section
@@ -25,7 +32,7 @@ variable {K : Type*} [Field K]
 namespace RingPreordering
 
 /-- Adjoin an element whose negative is absent from a field preordering. -/
-def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :=
+private def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :=
   RingPreordering.mk' {x | ∃ u ∈ P, ∃ v ∈ P, x = u + a * v}
     (by
       rintro x y ⟨u, hu, v, hv, rfl⟩ ⟨w, hw, z, hz, rfl⟩
@@ -50,16 +57,16 @@ def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :
           linear_combination heq
         rwa [← hval] at hmem)
 
-theorem le_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
+private theorem le_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
     P ≤ adjoin P a ha :=
   fun x hx => ⟨x, hx, 0, zero_mem P, by simp⟩
 
-theorem mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
+private theorem mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
     a ∈ adjoin P a ha :=
   ⟨0, zero_mem P, 1, one_mem P, by simp⟩
 
 /-- The union of a nonempty chain of preorderings is a preordering. -/
-def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
+private def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : RingPreordering K :=
   RingPreordering.mk' {x | ∃ P ∈ c, x ∈ P}
     (by
@@ -80,7 +87,7 @@ def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
       rintro ⟨P, _, hP⟩
       exact P.neg_one_notMem hP)
 
-theorem le_chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
+private theorem le_chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) {P : RingPreordering K} (hP : P ∈ c) :
     P ≤ chainUnion c hc hne :=
   fun _ hx => ⟨P, hP, hx⟩
@@ -122,6 +129,8 @@ theorem isStrictOrderedRing (P : RingPreordering K) [P.IsOrdering] :
 theorem nonneg_iff (P : RingPreordering K) [P.IsOrdering] (x : K) :
     letI := order P
     0 ≤ x ↔ x ∈ P := by
+  -- Unfold the locally constructed order and cone together: the order's relation
+  -- is defined by difference membership, and the cone retains precisely P's carrier.
   change x - 0 ∈ P ↔ x ∈ P
   rw [sub_zero]
 
@@ -134,7 +143,7 @@ theorem exists_linearOrder (P : RingPreordering K) :
   exact ⟨order Q, isStrictOrderedRing Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
 
 /-- The sums of squares form a proper preordering in a formally real field. -/
-def sumsOfSquares [IsSemireal K] : RingPreordering K where
+def sumSq [IsSemireal K] : RingPreordering K where
   __ := Subsemiring.sumSq K
   mem_of_isSquare' hx := by simpa using hx.isSumSq
   neg_one_notMem' := by simpa using IsSemireal.not_isSumSq_neg_one K
@@ -145,5 +154,5 @@ end RingPreordering
 theorem IsSemireal.exists_linearOrder [IsSemireal K] :
     ∃ o : LinearOrder K, letI := o
       IsStrictOrderedRing K := by
-  obtain ⟨o, ho, _⟩ := RingPreordering.exists_linearOrder (RingPreordering.sumsOfSquares (K := K))
+  obtain ⟨o, ho, _⟩ := RingPreordering.exists_linearOrder (RingPreordering.sumSq (K := K))
   exact ⟨o, ho⟩

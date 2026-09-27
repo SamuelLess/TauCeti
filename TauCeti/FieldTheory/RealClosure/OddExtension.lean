@@ -13,6 +13,12 @@ public import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 The proof descends in odd degree. A putative negative weighted-square
 certificate lifts to an even-degree polynomial; division by the defining
 odd-degree polynomial produces a smaller odd-degree obstruction.
+
+## References
+
+The odd-degree descent is the classical Artin–Schreier argument; see Salma Kuhlmann,
+[Real Algebraic Geometry, Lecture 4](https://www.math.uni-konstanz.de/algebra/WS0910/Notes04.pdf),
+§3.
 -/
 
 public section
@@ -50,7 +56,7 @@ theorem odd_cone_proper (p : K[X]) (hp : Irreducible p) (hodd : Odd p.natDegree)
   | h n ih =>
     have : Fact (Irreducible p) := ⟨hp⟩
     intro hneg
-    obtain ⟨s, hs, hsdeg, hseval⟩ := lift_polynomialCone p hneg
+    obtain ⟨s, hs, hsdeg, hseval⟩ := lift_extensionCone p hneg
     let w := (1 : K[X]) + s
     have hw : w ∈ extensionCone (C : K →+* K[X]) := add_mem (one_mem _) hs
     have hw0 : w ≠ 0 := by
@@ -58,7 +64,7 @@ theorem odd_cone_proper (p : K[X]) (hp : Irreducible p) (hodd : Odd p.natDegree)
       have hpos : 0 < w.eval 0 := by
         dsimp [w]
         simp only [eval_add, eval_one]
-        linarith [polynomialCone_eval hs 0]
+        linarith [extensionCone_eval hs 0]
       simp [hz] at hpos
     have hwdeg : w.natDegree < 2 * p.natDegree := by
       simpa only [w, natDegree_one_add] using hsdeg
@@ -71,7 +77,7 @@ theorem odd_cone_proper (p : K[X]) (hp : Irreducible p) (hodd : Odd p.natDegree)
       rw [hq, natDegree_mul hp.ne_zero hq0]
     have hqdeg : q.natDegree < p.natDegree := by omega
     have hqodd : Odd q.natDegree := by
-      have heven := (polynomialCone_degree hw).1
+      have heven := (extensionCone_degree hw).1
       rw [Nat.even_iff, hdegrees] at heven
       rw [Nat.odd_iff] at hodd ⊢
       omega
@@ -88,7 +94,7 @@ theorem odd_cone_proper (p : K[X]) (hp : Irreducible p) (hodd : Odd p.natDegree)
       have hsum : 1 + aeval (AdjoinRoot.root r) s = 0 := by
         simpa only [w, map_add, map_one] using hwr
       exact eq_neg_of_add_eq_zero_right hsum
-    exact hproper (hsr ▸ polynomialCone_map hs (AdjoinRoot.root r))
+    exact hproper (hsr ▸ extensionCone_map hs (AdjoinRoot.root r))
 
 /-- An odd-degree simple field extension admits an order preserving the
 given order of the base field. -/

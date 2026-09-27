@@ -52,6 +52,8 @@ def preordering (P : OrderedSubfield K L) : RingPreordering P.field where
   __ := P.nonneg.comap P.field.val.toRingHom
   mem_of_isSquare' := by
     rintro x ⟨y, rfl⟩
+    -- The inherited carrier field is still wrapped by `comap` in this constructor goal;
+    -- reducing it exposes ambient membership. `simp [mem_comap, map_mul]` does not unfold it.
     change y.val * y.val ∈ P.nonneg
     rcases P.total y.val y.property with hy | hy
     · exact mul_mem hy hy
@@ -87,7 +89,7 @@ theorem base_strictMono (P : OrderedSubfield K L) : letI := P.order
 
 /-- The image of an ordered extension under an embedding into the ambient field. -/
 def image {E : Type*} [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra K E]
-    (hf : StrictMono (algebraMap K E)) (f : E →ₐ[K] L) : OrderedSubfield K L where
+    (hf : Monotone (algebraMap K E)) (f : E →ₐ[K] L) : OrderedSubfield K L where
   field := f.fieldRange
   nonneg := (Subsemiring.nonneg E).map f.toRingHom
   nonneg_subset := by
@@ -102,15 +104,15 @@ def image {E : Type*} [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra
     rintro ⟨y, hy, heq⟩
     have : y = -1 := f.injective (by simpa using heq)
     exact (not_le_of_gt zero_lt_one) (by simpa [this] using hy)
-  base_nonneg x hx := ⟨algebraMap K E x, by simpa using hf.monotone hx, f.commutes x⟩
+  base_nonneg x hx := ⟨algebraMap K E x, by simpa using hf hx, f.commutes x⟩
 
 /-- The base field as an ordered intermediate field. -/
-def base : OrderedSubfield K L := image (by simpa using strictMono_id) (Algebra.ofId K L)
+def base : OrderedSubfield K L := image (by simpa using monotone_id) (Algebra.ofId K L)
 
 instance : Nonempty (OrderedSubfield K L) := ⟨base⟩
 
 /-- The union of a nonempty chain of compatible ordered intermediate fields. -/
-def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
+private def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : OrderedSubfield K L where
   field :=
     { carrier := {x | ∃ P ∈ c, x ∈ P.field}
@@ -156,7 +158,7 @@ def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
     exact ⟨P, hP, P.base_nonneg x hx⟩
 
 omit [IsStrictOrderedRing K] in
-theorem le_chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
+private theorem le_chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) {P : OrderedSubfield K L} (hP : P ∈ c) :
     P ≤ chainUnion c hc hne :=
   ⟨fun _ hx => ⟨P, hP, hx⟩, fun _ hx => ⟨P, hP, hx⟩⟩
@@ -180,7 +182,7 @@ theorem exists_image (P : OrderedSubfield K L) {E : Type*}
   have hbase : StrictMono (algebraMap K E) := by
     intro a b hab
     simpa only [← IsScalarTower.algebraMap_apply K P.field E] using hf (P.base_strictMono hab)
-  let Q := image hbase (f.restrictScalars K)
+  let Q := image hbase.monotone (f.restrictScalars K)
   refine ⟨Q, ⟨?_, ?_⟩, fun x => ⟨x, rfl⟩⟩
   · intro x hx
     exact ⟨algebraMap P.field E ⟨x, hx⟩, f.commutes ⟨x, hx⟩⟩

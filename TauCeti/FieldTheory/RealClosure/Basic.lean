@@ -15,6 +15,13 @@ public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 A maximal ordered intermediate field of an algebraic closure is closed under
 positive square roots and has a root of every odd-degree polynomial. Both
 extension steps preserve the prescribed base order.
+
+## References
+
+This is the classical Artin–Schreier construction; see Salma Kuhlmann,
+[Real Algebraic Geometry, Lecture 8](https://www.math.uni-konstanz.de/algebra/WS0910/Notes08.pdf),
+Theorem 1.2, together with the ordered extension results in
+[Lecture 4](https://www.math.uni-konstanz.de/algebra/WS0910/Notes04.pdf), §§2–4.
 -/
 
 public section
@@ -47,13 +54,14 @@ theorem OrderedSubfield.isRealClosed (P : OrderedSubfield K L) (hP : IsMax P) :
     apply hn
     refine ⟨⟨f y, hy⟩, ?_⟩
     apply Subtype.ext
+    -- Reduce projections of the freshly constructed subtype witness after Subtype.ext,
+    -- so the ambient algebra homomorphism's multiplication lemma applies.
     change (a : L) = f y * f y
     rw [← map_mul]
     have hy2 : y * y = algebraMap P.field E a := by
       simpa only [map_zero, zero_mul, add_zero] using
         (QuadraticAlgebra.omega_mul_omega_eq_algebraMap (a := a) (b := 0))
-    rw [hy2, f.commutes]
-    rfl
+    rw [hy2, f.commutes, IntermediateField.algebraMap_apply]
   · intro p hp
     obtain ⟨q, hq, hqodd, hqp⟩ := exists_odd_factor p hp
     have : Fact (Irreducible q) := ⟨hq⟩

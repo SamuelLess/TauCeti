@@ -16,7 +16,7 @@ describes precisely the obstruction to extending an order. For a positive
 quadratic extension, its scalar coordinate proves that this cone is proper.
 -/
 
-@[expose] public section
+public section
 
 namespace RealClosure
 
@@ -27,7 +27,7 @@ section CommRing
 variable [CommRing L]
 
 /-- Nonnegative scalar multiples of squares in an extension. -/
-def weightedSquares (f : K →+* L) : Set L :=
+@[expose] def weightedSquares (f : K →+* L) : Set L :=
   {x | ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2}
 
 private theorem weightedSquares_mul (f : K →+* L) {x y : L}
@@ -51,19 +51,32 @@ def extensionCone (f : K →+* L) : Subsemiring L where
     | zero => simp
     | add x z _ _ hx hz => simpa [add_mul] using add_mem hx hz
 
+/-- A generating weighted square belongs to the extension cone. -/
+theorem mem_extensionCone (f : K →+* L) {x : L} (hx : x ∈ weightedSquares f) :
+    x ∈ extensionCone f := AddSubmonoid.subset_closure hx
+
+/-- Induction on finite sums of generating weighted squares. -/
+@[elab_as_elim] theorem extensionCone_induction (f : K →+* L)
+    {motive : (x : L) → x ∈ extensionCone f → Prop}
+    (mem : ∀ x (hx : x ∈ weightedSquares f), motive x (mem_extensionCone f hx))
+    (zero : motive 0 (zero_mem _))
+    (add : ∀ x y hx hy, motive x hx → motive y hy → motive (x + y) (add_mem hx hy))
+    {x : L} (hx : x ∈ extensionCone f) : motive x hx :=
+  AddSubmonoid.closure_induction mem zero add hx
+
 theorem square_mem_extensionCone (f : K →+* L) (x : L) : x * x ∈ extensionCone f :=
-  AddSubmonoid.subset_closure ⟨1, zero_le_one, x, by simp [pow_two]⟩
+  mem_extensionCone f ⟨1, zero_le_one, x, by simp [pow_two]⟩
 
 theorem nonneg_mem_extensionCone (f : K →+* L) {x : K} (hx : 0 ≤ x) :
     f x ∈ extensionCone f :=
-  AddSubmonoid.subset_closure ⟨x, hx, 1, by simp⟩
+  mem_extensionCone f ⟨x, hx, 1, by simp⟩
 
 /-- A linear functional nonnegative on the generating weighted squares is
 nonnegative on the entire extension cone. -/
 theorem extensionCone_nonneg (f : K →+* L) (g : L →+ K)
     (hg : ∀ a : K, 0 ≤ a → ∀ y : L, 0 ≤ g (f a * y ^ 2))
     {x : L} (hx : x ∈ extensionCone f) : 0 ≤ g x := by
-  induction hx using AddSubmonoid.closure_induction with
+  induction hx using extensionCone_induction f with
   | mem x hx =>
     obtain ⟨a, ha, y, rfl⟩ := hx
     exact hg a ha y
@@ -79,11 +92,11 @@ variable [Field L]
 /-- Every element of the generated cone is nonnegative in any order extending
 the base order. -/
 theorem nonneg_of_mem_extensionCone [LinearOrder L] [IsStrictOrderedRing L]
-    (f : K →+* L) (hf : StrictMono f) {x : L} (hx : x ∈ extensionCone f) : 0 ≤ x := by
-  induction hx using AddSubmonoid.closure_induction with
+    (f : K →+* L) (hf : Monotone f) {x : L} (hx : x ∈ extensionCone f) : 0 ≤ x := by
+  induction hx using extensionCone_induction f with
   | mem x hx =>
     obtain ⟨a, ha, y, rfl⟩ := hx
-    exact mul_nonneg (by simpa only [map_zero] using hf.monotone ha) (sq_nonneg y)
+    exact mul_nonneg (by simpa only [map_zero] using hf ha) (sq_nonneg y)
   | zero => exact le_rfl
   | add x y _ _ hx hy => exact add_nonneg hx hy
 
@@ -120,7 +133,9 @@ theorem quadratic_cone_proper (ha : 0 ≤ a) :
   have hnonneg := extensionCone_nonneg (algebraMap K (QuadraticAlgebra K a 0))
     (QuadraticAlgebra.reₗ (R := K) (a := a) (b := 0)).toAddMonoidHom (fun b hb y => ?_) h
   · exact (not_le_of_gt zero_lt_one) (by simpa [QuadraticAlgebra.re_one] using hnonneg)
-  · change 0 ≤ (algebraMap K (QuadraticAlgebra K a 0) b * y ^ 2).re
+  · -- The functional passed above is the scalar projection, bundled as an additive hom.
+    -- Reducing those projections exposes `re_mul`, whose API is stated for `.re`.
+    change 0 ≤ (algebraMap K (QuadraticAlgebra K a 0) b * y ^ 2).re
     simp only [pow_two, QuadraticAlgebra.re_mul, QuadraticAlgebra.algebraMap_re,
       QuadraticAlgebra.algebraMap_im, zero_mul, mul_zero, add_zero]
     simpa only [mul_assoc] using

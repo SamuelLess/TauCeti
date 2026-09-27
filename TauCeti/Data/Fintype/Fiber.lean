@@ -40,25 +40,20 @@ theorem occCount_eq_card_filter [Fintype X] [DecidableEq S] (obs : X → S) (σ 
 @[simp, grind =]
 theorem occCount_pos (obs : X → S) (σ : S) [Finite {x // obs x = σ}] :
     0 < occCount obs σ ↔ ∃ x, obs x = σ := by
-  rw [occCount_def, Nat.card_pos_iff]
-  constructor
-  · rintro ⟨⟨⟨x, hx⟩⟩, _⟩
-    exact ⟨x, hx⟩
-  · rintro ⟨x, hx⟩
-    exact ⟨⟨⟨x, hx⟩⟩, inferInstance⟩
+  simp only [occCount_def, Nat.card_pos_iff, nonempty_subtype,
+    and_iff_left (inferInstance : Finite {x // obs x = σ})]
 
 open scoped Classical in
 /-- An injective observation map gives multiplicity one precisely on its range. -/
 @[simp]
 theorem occCount_of_injective (obs : X → S) (hinj : Function.Injective obs) (σ : S) :
     occCount obs σ = if ∃ x, obs x = σ then 1 else 0 := by
+  rw [occCount_def]
   split_ifs with h
-  · let _ : Nonempty {x // obs x = σ} := ⟨⟨h.choose, h.choose_spec⟩⟩
-    let _ : Subsingleton {x // obs x = σ} :=
-      ⟨fun x y ↦ Subtype.ext (hinj (x.property.trans y.property.symm))⟩
-    exact Nat.card_unique
-  · rw [occCount_def, Nat.card_eq_zero]
-    exact Or.inl ⟨fun x ↦ h ⟨x, x.property⟩⟩
+  · have hc := Nat.card_preimage_of_injective hinj (Set.singleton_subset_iff.mpr h)
+    simpa only [Set.preimage, Set.mem_singleton_iff, Set.coe_ofPred, Nat.card_unique] using hc
+  · have he := Set.preimage_singleton_eq_empty.mpr h
+    simpa [Set.preimage, Set.coe_ofPred] using congrArg (fun s : Set X => Nat.card s) he
 
 /-- The multiplicity-weighted sum over a complete injective set of candidate values equals the sum
 over the original family. -/

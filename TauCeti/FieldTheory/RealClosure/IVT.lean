@@ -120,16 +120,20 @@ theorem eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
       (fun h => quadratic_eval_mul_pos hq h a b)
     simpa only [eval_mul, mul_mul_mul_comm] using mul_pos hqpos (ih hp')
 
+/-- Weakly opposite endpoint signs give a root on the closed interval. -/
+theorem exists_root_Icc (p : R[X]) {a b : R} (hab : a ≤ b)
+    (ha : p.eval a ≤ 0) (hb : 0 ≤ p.eval b) :
+    ∃ c ∈ Set.Icc a b, p.eval c = 0 := by
+  by_contra! h
+  exact not_le_of_gt (eval_mul_pos_of_no_roots p hab h)
+    (mul_nonpos_of_nonpos_of_nonneg ha hb)
+
 /-- Polynomial IVT over an arbitrary real closed ordered field, including
 non-Archimedean fields. -/
 theorem ivt (p : R[X]) {a b : R} (hab : a < b)
     (ha : p.eval a < 0) (hb : 0 < p.eval b) :
     ∃ c ∈ Set.Ioo a b, p.eval c = 0 := by
-  have hroot : ∃ c ∈ Set.Icc a b, p.eval c = 0 := by
-    by_contra! h
-    have hpos := eval_mul_pos_of_no_roots p hab.le h
-    exact (mul_neg_of_neg_of_pos ha hb).not_gt hpos
-  obtain ⟨c, ⟨hac, hcb⟩, hc⟩ := hroot
+  obtain ⟨c, ⟨hac, hcb⟩, hc⟩ := exists_root_Icc p hab.le ha.le hb.le
   refine ⟨c, ⟨hac.lt_of_ne ?_, hcb.lt_of_ne ?_⟩, hc⟩
   · rintro rfl
     exact ha.ne hc
@@ -148,15 +152,16 @@ theorem ivt_of_mul_neg (p : R[X]) {a b : R} (hab : a < b)
 theorem _root_.Polynomial.intermediate_value_Icc (p : R[X]) {a b : R} (hab : a ≤ b) :
     Set.Icc (p.eval a) (p.eval b) ⊆ p.eval '' Set.Icc a b := by
   rintro y ⟨hay, hyb⟩
-  rcases hay.eq_or_lt with rfl | hay
-  · exact ⟨a, ⟨le_rfl, hab⟩, rfl⟩
-  rcases hyb.eq_or_lt with rfl | hyb
-  · exact ⟨b, ⟨hab, le_rfl⟩, rfl⟩
-  have hab' : a < b := hab.lt_of_ne (by
-    rintro rfl
-    exact (hay.trans hyb).false)
-  obtain ⟨c, hc, he⟩ := ivt (p - C y) hab'
-    (by simpa using sub_neg.mpr hay) (by simpa using sub_pos.mpr hyb)
-  exact ⟨c, ⟨hc.1.le, hc.2.le⟩, by simpa only [eval_sub, eval_C, sub_eq_zero] using he⟩
+  obtain ⟨c, hc, he⟩ := exists_root_Icc (p - C y) hab
+    (by simpa using sub_nonpos.mpr hay) (by simpa using sub_nonneg.mpr hyb)
+  exact ⟨c, hc, by simpa only [eval_sub, eval_C, sub_eq_zero] using he⟩
+
+/-- Every value between the endpoint values in reversed order is attained. -/
+theorem _root_.Polynomial.intermediate_value_Icc' (p : R[X]) {a b : R} (hab : a ≤ b) :
+    Set.Icc (p.eval b) (p.eval a) ⊆ p.eval '' Set.Icc a b := by
+  rintro y ⟨hby, hya⟩
+  obtain ⟨c, hc, he⟩ := exists_root_Icc (C y - p) hab
+    (by simpa using sub_nonpos.mpr hya) (by simpa using sub_nonneg.mpr hby)
+  exact ⟨c, hc, (by simpa only [eval_sub, eval_C, sub_eq_zero] using he : y = p.eval c).symm⟩
 
 end TauCeti.RealClosure

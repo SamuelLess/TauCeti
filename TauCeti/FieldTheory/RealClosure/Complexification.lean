@@ -17,6 +17,11 @@ import Mathlib.Tactic.Ring
 
 The usual algebraic square-root formula uses only square roots of nonnegative
 elements of the base field. No completeness or Archimedean property is used.
+
+Use `open scoped TauCeti.RealClosure` to synthesize the field instance on
+`QuadraticAlgebra R (-1) 0` outside this namespace. The scope supplies
+`Fact (¬ IsSquare (-1 : R))` from `IsSemireal R`, which activates Mathlib's
+quadratic-algebra field instance.
 -/
 
 public section

@@ -24,11 +24,23 @@ open Polynomial Set
 namespace TauCeti.RealClosure
 
 /-- Polynomial Rolle, stated without topology or completeness hypotheses. -/
-@[expose] def Rolle (R : Type*) [Field R] [LinearOrder R] : Prop :=
+def Rolle (R : Type*) [Field R] [LinearOrder R] : Prop :=
   ∀ (p : R[X]) (a b : R), a < b → p.eval a = p.eval b →
     ∃ c ∈ Ioo a b, p.derivative.eval c = 0
 
-variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+variable {R : Type*} [Field R] [LinearOrder R]
+
+/-- Construct the polynomial Rolle property from its quantified statement. -/
+theorem Rolle.of_forall
+    (h : ∀ (p : R[X]) (a b : R), a < b → p.eval a = p.eval b →
+      ∃ c ∈ Ioo a b, p.derivative.eval c = 0) : Rolle R := h
+
+/-- Equal polynomial values at distinct endpoints give an interior derivative root. -/
+theorem Rolle.exists_deriv_eq_zero (h : Rolle R) (p : R[X]) {a b : R}
+    (hab : a < b) (heq : p.eval a = p.eval b) :
+    ∃ c ∈ Ioo a b, p.derivative.eval c = 0 := h p a b hab heq
+
+variable [IsStrictOrderedRing R]
 
 /-- Subtracting the secant line reduces polynomial mean value to Rolle. -/
 theorem Rolle.mean_value (h : Rolle R) (p : R[X]) {a b : R} (hab : a < b) :
@@ -39,7 +51,7 @@ theorem Rolle.mean_value (h : Rolle R) (p : R[X]) {a b : R} (hab : a < b) :
   have heq : (p - C m * X).eval a = (p - C m * X).eval b := by
     simp only [eval_sub, eval_mul, eval_C, eval_X]
     linear_combination hm
-  obtain ⟨c, hc, hd⟩ := h (p - C m * X) a b hab heq
+  obtain ⟨c, hc, hd⟩ := h.exists_deriv_eq_zero (p - C m * X) hab heq
   refine ⟨c, hc, ?_⟩
   have hd' : p.derivative.eval c = m := by
     simpa [sub_eq_zero] using hd

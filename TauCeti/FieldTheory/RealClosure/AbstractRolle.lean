@@ -7,6 +7,7 @@ module
 
 public import TauCeti.FieldTheory.RealClosure.IVT
 public import TauCeti.FieldTheory.RealClosure.Rolle
+import TauCeti.Algebra.Polynomial.LinearFactor
 import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.Data.Finset.Max
 import Mathlib.Tactic.Linarith
@@ -34,24 +35,17 @@ open Polynomial Set
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
 
-omit [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R] in
-private theorem factor_root {p : R[X]} (hp : p ≠ 0) {a : R} (ha : p.eval a = 0) :
-    ∃ m : ℕ, ∃ q : R[X], p = (X - C a) ^ (m + 1) * q ∧ q.eval a ≠ 0 := by
-  obtain ⟨q, hq, hn⟩ := p.exists_eq_pow_rootMultiplicity_mul_and_not_dvd hp a
-  obtain ⟨m, hm⟩ := Nat.exists_eq_succ_of_ne_zero ((rootMultiplicity_pos hp).mpr ha).ne'
-  exact ⟨m, q, by simpa only [hm] using hq, fun h => hn (dvd_iff_isRoot.mpr h)⟩
-
 /-- Rolle between consecutive distinct roots, allowing arbitrary endpoint multiplicities. -/
 theorem rolle_consecutive (p : R[X]) (hp : p ≠ 0) {a b : R} (hab : a < b)
     (ha : p.eval a = 0) (hb : p.eval b = 0)
     (hroot : ∀ x ∈ Ioo a b, p.eval x ≠ 0) :
     ∃ c ∈ Ioo a b, p.derivative.eval c = 0 := by
-  obtain ⟨m, q, hpq, hqa⟩ := factor_root hp ha
+  obtain ⟨m, q, hpq, hqa⟩ := IsRoot.exists_pow_mul ha hp
   have hq0 : q ≠ 0 := by intro h; exact hqa (by simp [h])
   have hqb : q.eval b = 0 := by
     rw [hpq, eval_mul, eval_pow, eval_sub, eval_X, eval_C] at hb
     exact (mul_eq_zero.mp hb).resolve_left (pow_ne_zero _ (sub_ne_zero.mpr hab.ne'))
-  obtain ⟨n, r, hqr, hrb⟩ := factor_root hq0 hqb
+  obtain ⟨n, r, hqr, hrb⟩ := IsRoot.exists_pow_mul hqb hq0
   have hra : r.eval a ≠ 0 := by
     intro h
     apply hqa
@@ -111,6 +105,7 @@ theorem rolle_roots (p : R[X]) {a b : R} (hab : a < b)
 
 /-- Polynomial Rolle follows from the abstract real-closed-field axioms. -/
 theorem rolle_realClosed : Rolle R := by
+  apply Rolle.of_forall
   intro p a b hab heq
   obtain ⟨c, hc, hd⟩ := rolle_roots (p - C (p.eval a)) hab
     (by simp) (by simp [heq])

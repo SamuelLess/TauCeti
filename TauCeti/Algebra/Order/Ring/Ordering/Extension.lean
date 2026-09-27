@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Algebra.Order.Ring.Ordering.Basic
 public import Mathlib.Algebra.Order.Ring.Cone
-public import Mathlib.Algebra.Ring.Semireal.Defs
 public import Mathlib.Order.Zorn
 
 /-! # Extending field preorderings to orderings
@@ -25,7 +24,7 @@ Lemma 2.1 and Corollaries 3.2 and 3.4. The Lean construction uses Mathlib's
 `RingPreordering` and `RingCone` interfaces.
 -/
 
-@[expose] public section
+public section
 
 variable {K : Type*} [Field K]
 
@@ -67,25 +66,25 @@ private theorem mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
 
 /-- The union of a nonempty chain of preorderings is a preordering. -/
 private def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
-    (hne : c.Nonempty) : RingPreordering K :=
-  RingPreordering.mk' {x | ∃ P ∈ c, x ∈ P}
-    (by
-      rintro x y ⟨P, hP, hx⟩ ⟨Q, hQ, hy⟩
-      rcases hc.total hP hQ with h | h
-      · exact ⟨Q, hQ, add_mem (h hx) hy⟩
-      · exact ⟨P, hP, add_mem hx (h hy)⟩)
-    (by
-      rintro x y ⟨P, hP, hx⟩ ⟨Q, hQ, hy⟩
-      rcases hc.total hP hQ with h | h
-      · exact ⟨Q, hQ, mul_mem (h hx) hy⟩
-      · exact ⟨P, hP, mul_mem hx (h hy)⟩)
-    (by
-      intro x
-      obtain ⟨P, hP⟩ := hne
-      exact ⟨P, hP, P.mul_self_mem x⟩)
-    (by
-      rintro ⟨P, _, hP⟩
-      exact P.neg_one_notMem hP)
+    (hne : c.Nonempty) : RingPreordering K := by
+  have := hne.to_subtype
+  have hd : Directed (· ≤ ·) (fun P : c => P.val.toSubsemiring) := by
+    intro P Q
+    rcases hc.total P.property Q.property with h | h
+    · exact ⟨Q, h, le_rfl⟩
+    · exact ⟨P, le_rfl, h⟩
+  exact
+    { (⨆ P : c, P.val.toSubsemiring).copy {x | ∃ P ∈ c, x ∈ P} (by
+        rw [Subsemiring.coe_iSup_of_directed hd]
+        ext x
+        simp) with
+      mem_of_isSquare' := by
+        rintro x ⟨y, rfl⟩
+        obtain ⟨P, hP⟩ := hne
+        exact ⟨P, hP, P.mul_self_mem y⟩
+      neg_one_notMem' := by
+        rintro ⟨P, _, hP⟩
+        exact P.neg_one_notMem hP }
 
 private theorem le_chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) {P : RingPreordering K} (hP : P ∈ c) :
@@ -129,10 +128,8 @@ theorem isStrictOrderedRing (P : RingPreordering K) [P.IsOrdering] :
 theorem nonneg_iff (P : RingPreordering K) [P.IsOrdering] (x : K) :
     letI := order P
     0 ≤ x ↔ x ∈ P := by
-  -- Unfold the locally constructed order and cone together: the order's relation
-  -- is defined by difference membership, and the cone retains precisely P's carrier.
-  change x - 0 ∈ P ↔ x ∈ P
-  rw [sub_zero]
+  rw [PartialOrder.mkOfAddGroupCone_le_iff, sub_zero]
+  rfl
 
 /-- Order a field while respecting all signs in a specified preordering. -/
 theorem exists_linearOrder (P : RingPreordering K) :
@@ -142,17 +139,4 @@ theorem exists_linearOrder (P : RingPreordering K) :
   let := hQ
   exact ⟨order Q, isStrictOrderedRing Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
 
-/-- The sums of squares form a proper preordering in a formally real field. -/
-def sumSq [IsSemireal K] : RingPreordering K where
-  __ := Subsemiring.sumSq K
-  mem_of_isSquare' hx := by simpa using hx.isSumSq
-  neg_one_notMem' := by simpa using IsSemireal.not_isSumSq_neg_one K
-
 end RingPreordering
-
-/-- A formally real field admits a compatible linear order. -/
-theorem IsSemireal.exists_linearOrder [IsSemireal K] :
-    ∃ o : LinearOrder K, letI := o
-      IsStrictOrderedRing K := by
-  obtain ⟨o, ho, _⟩ := RingPreordering.exists_linearOrder (RingPreordering.sumSq (K := K))
-  exact ⟨o, ho⟩

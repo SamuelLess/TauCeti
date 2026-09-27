@@ -17,7 +17,7 @@ This is the degree argument needed for odd-degree order extension.
 
 public section
 
-namespace RealClosure
+namespace TauCeti.RealClosure
 
 open Polynomial
 
@@ -25,7 +25,7 @@ variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
 /-- A polynomial sum of nonnegatively weighted squares has even degree and
 nonnegative leading coefficient. -/
-theorem extensionCone_degree {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) :
+private theorem extensionCone.degree {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) :
     Even p.natDegree ∧ 0 ≤ p.leadingCoeff := by
   induction hp using extensionCone_induction _ with
   | mem p hp =>
@@ -57,21 +57,31 @@ theorem extensionCone_degree {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K
     · rw [natDegree_add_eq_left_of_degree_lt hgt, leadingCoeff_add_of_degree_lt' hgt]
       exact hp
 
+/-- A polynomial sum of weighted squares has even degree. -/
+theorem extensionCone.even_natDegree {p : K[X]}
+    (hp : p ∈ extensionCone (C : K →+* K[X])) : Even p.natDegree :=
+  (extensionCone.degree hp).1
+
+/-- A polynomial sum of weighted squares has nonnegative leading coefficient. -/
+theorem extensionCone.leadingCoeff_nonneg {p : K[X]}
+    (hp : p ∈ extensionCone (C : K →+* K[X])) : 0 ≤ p.leadingCoeff :=
+  (extensionCone.degree hp).2
+
 /-- Evaluation of a polynomial sum of weighted squares is nonnegative. -/
-theorem extensionCone_eval {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X]))
+theorem extensionCone.eval_nonneg {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X]))
     (x : K) : 0 ≤ p.eval x :=
-  extensionCone_nonneg C (evalRingHom x).toAddMonoidHom
+  extensionCone.map_nonneg C (evalRingHom x).toAddMonoidHom
     (fun a ha q => by simpa using mul_nonneg ha (sq_nonneg (q.eval x))) hp
 
 /-- Evaluating weighted polynomial squares gives weighted squares in any
 extension ring. -/
-theorem extensionCone_map {L : Type*} [CommRing L] [Algebra K L]
+theorem extensionCone.aeval_mem {L : Type*} [CommRing L] [Algebra K L]
     {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) (x : L) :
     aeval x p ∈ extensionCone (algebraMap K L) := by
   induction hp using extensionCone_induction _ with
   | mem p hp =>
     obtain ⟨a, ha, q, rfl⟩ := hp
-    exact mem_extensionCone _ ⟨a, ha, aeval x q, by simp⟩
+    exact subset_extensionCone _ ⟨a, ha, aeval x q, by simp⟩
   | zero => simpa only [map_zero] using (extensionCone (algebraMap K L)).zero_mem
   | add p q _ _ hp hq => simpa only [map_add] using add_mem hp hq
 
@@ -87,8 +97,9 @@ theorem lift_extensionCone (p : K[X]) [Fact (Irreducible p)]
   | mem x hx =>
     obtain ⟨a, ha, y, rfl⟩ := hx
     obtain ⟨q, hq, hy⟩ := (AdjoinRoot.powerBasis hp).exists_eq_aeval y
-    refine ⟨C a * q ^ 2, mem_extensionCone _ ⟨a, ha, q, rfl⟩, ?_, ?_⟩
-    · have hq' : q.natDegree < p.natDegree := hq
+    refine ⟨C a * q ^ 2, subset_extensionCone _ ⟨a, ha, q, rfl⟩, ?_, ?_⟩
+    · have hq' : q.natDegree < p.natDegree := by
+        simpa only [AdjoinRoot.powerBasis_dim] using hq
       exact (natDegree_C_mul_le a (q ^ 2)).trans_lt (by rw [natDegree_pow]; omega)
     · simpa only [map_mul, map_pow, aeval_C, AdjoinRoot.powerBasis_gen] using
         congrArg (fun z => algebraMap K (AdjoinRoot p) a * z ^ 2) hy.symm
@@ -99,4 +110,4 @@ theorem lift_extensionCone (p : K[X]) [Fact (Irreducible p)]
     exact ⟨q + r, add_mem hq hr,
       (natDegree_add_le q r).trans_lt (max_lt hqd hrd), by simp only [map_add, hqx, hry]⟩
 
-end RealClosure
+end TauCeti.RealClosure

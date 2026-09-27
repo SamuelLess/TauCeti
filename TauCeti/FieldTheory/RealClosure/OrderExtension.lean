@@ -7,6 +7,7 @@ module
 
 public import TauCeti.Algebra.Order.Ring.Ordering.Extension
 public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Hom.Monoid
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 
 /-! # Preserving an order under field extension
@@ -18,7 +19,7 @@ quadratic extension, its scalar coordinate proves that this cone is proper.
 
 public section
 
-namespace RealClosure
+namespace TauCeti.RealClosure
 
 variable {K L : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
@@ -52,28 +53,28 @@ def extensionCone (f : K →+* L) : Subsemiring L where
     | add x z _ _ hx hz => simpa [add_mul] using add_mem hx hz
 
 /-- A generating weighted square belongs to the extension cone. -/
-theorem mem_extensionCone (f : K →+* L) {x : L} (hx : x ∈ weightedSquares f) :
+theorem subset_extensionCone (f : K →+* L) {x : L} (hx : x ∈ weightedSquares f) :
     x ∈ extensionCone f := AddSubmonoid.subset_closure hx
 
 /-- Induction on finite sums of generating weighted squares. -/
 @[elab_as_elim] theorem extensionCone_induction (f : K →+* L)
     {motive : (x : L) → x ∈ extensionCone f → Prop}
-    (mem : ∀ x (hx : x ∈ weightedSquares f), motive x (mem_extensionCone f hx))
+    (mem : ∀ x (hx : x ∈ weightedSquares f), motive x (subset_extensionCone f hx))
     (zero : motive 0 (zero_mem _))
     (add : ∀ x y hx hy, motive x hx → motive y hy → motive (x + y) (add_mem hx hy))
     {x : L} (hx : x ∈ extensionCone f) : motive x hx :=
   AddSubmonoid.closure_induction mem zero add hx
 
-theorem square_mem_extensionCone (f : K →+* L) (x : L) : x * x ∈ extensionCone f :=
-  mem_extensionCone f ⟨1, zero_le_one, x, by simp [pow_two]⟩
+theorem extensionCone.mul_self_mem (f : K →+* L) (x : L) : x * x ∈ extensionCone f :=
+  subset_extensionCone f ⟨1, zero_le_one, x, by simp [pow_two]⟩
 
 theorem nonneg_mem_extensionCone (f : K →+* L) {x : K} (hx : 0 ≤ x) :
     f x ∈ extensionCone f :=
-  mem_extensionCone f ⟨x, hx, 1, by simp⟩
+  subset_extensionCone f ⟨x, hx, 1, by simp⟩
 
 /-- A linear functional nonnegative on the generating weighted squares is
 nonnegative on the entire extension cone. -/
-theorem extensionCone_nonneg (f : K →+* L) (g : L →+ K)
+theorem extensionCone.map_nonneg (f : K →+* L) (g : L →+ K)
     (hg : ∀ a : K, 0 ≤ a → ∀ y : L, 0 ≤ g (f a * y ^ 2))
     {x : L} (hx : x ∈ extensionCone f) : 0 ≤ g x := by
   induction hx using extensionCone_induction f with
@@ -82,12 +83,6 @@ theorem extensionCone_nonneg (f : K →+* L) (g : L →+ K)
     exact hg a ha y
   | zero => simp
   | add x y _ _ hx hy => simpa only [map_add] using add_nonneg hx hy
-
-end CommRing
-
-section Field
-
-variable [Field L]
 
 /-- Every element of the generated cone is nonnegative in any order extending
 the base order. -/
@@ -100,6 +95,12 @@ theorem nonneg_of_mem_extensionCone [LinearOrder L] [IsStrictOrderedRing L]
   | zero => exact le_rfl
   | add x y _ _ hx hy => exact add_nonneg hx hy
 
+end CommRing
+
+section Field
+
+variable [Field L]
+
 /-- The order of the base field extends whenever its generated cone is proper. -/
 theorem exists_order_extension (f : K →+* L) (h : -1 ∉ extensionCone f) :
     ∃ o : LinearOrder L, letI := o
@@ -108,16 +109,14 @@ theorem exists_order_extension (f : K →+* L) (h : -1 ∉ extensionCone f) :
     { extensionCone f with
       mem_of_isSquare' := by
         rintro x ⟨y, rfl⟩
-        exact square_mem_extensionCone f y
+        exact extensionCone.mul_self_mem f y
       neg_one_notMem' := h }
   obtain ⟨o, ho, hP⟩ := RingPreordering.exists_linearOrder P
   let := o
   have := ho
   refine ⟨o, ho, ?_⟩
-  intro a b hab
-  have hn : 0 ≤ f (b - a) := hP _ (nonneg_mem_extensionCone f (sub_nonneg.mpr hab.le))
-  have hz : f (b - a) ≠ 0 := (map_ne_zero f).mpr (sub_ne_zero.mpr hab.ne')
-  simpa only [map_sub, sub_pos] using lt_of_le_of_ne hn hz.symm
+  exact ((monotone_iff_map_nonneg f).mpr fun x hx =>
+    hP _ (nonneg_mem_extensionCone f hx)).strictMono_of_injective f.injective
 
 end Field
 
@@ -125,17 +124,15 @@ section Quadratic
 
 variable {a : K}
 
-/-- Positive quadratic adjunction does not force a sum of weighted squares to
-equal `-1`; its scalar coordinate is nonnegative. -/
-theorem quadratic_cone_proper (ha : 0 ≤ a) :
+/-- Adjoining a square root of a nonnegative element does not force a sum of weighted
+squares to equal `-1`. -/
+theorem extensionCone.neg_one_notMem_quadratic (ha : 0 ≤ a) :
     -1 ∉ extensionCone (algebraMap K (QuadraticAlgebra K a 0)) := by
   intro h
-  have hnonneg := extensionCone_nonneg (algebraMap K (QuadraticAlgebra K a 0))
+  have hnonneg := extensionCone.map_nonneg (algebraMap K (QuadraticAlgebra K a 0))
     (QuadraticAlgebra.reₗ (R := K) (a := a) (b := 0)).toAddMonoidHom (fun b hb y => ?_) h
   · exact (not_le_of_gt zero_lt_one) (by simpa [QuadraticAlgebra.re_one] using hnonneg)
-  · -- The functional passed above is the scalar projection, bundled as an additive hom.
-    -- Reducing those projections exposes `re_mul`, whose API is stated for `.re`.
-    change 0 ≤ (algebraMap K (QuadraticAlgebra K a 0) b * y ^ 2).re
+  · simp only [LinearMap.toAddMonoidHom_coe, QuadraticAlgebra.reₗ_apply]
     simp only [pow_two, QuadraticAlgebra.re_mul, QuadraticAlgebra.algebraMap_re,
       QuadraticAlgebra.algebraMap_im, zero_mul, mul_zero, add_zero]
     simpa only [mul_assoc] using
@@ -147,8 +144,8 @@ theorem exists_quadratic_order (ha : 0 ≤ a) [Fact (¬ IsSquare a)] :
     ∃ o : LinearOrder (QuadraticAlgebra K a 0), letI := o
       IsStrictOrderedRing (QuadraticAlgebra K a 0) ∧
         StrictMono (algebraMap K (QuadraticAlgebra K a 0)) :=
-  exists_order_extension _ (quadratic_cone_proper ha)
+  exists_order_extension _ (extensionCone.neg_one_notMem_quadratic ha)
 
 end Quadratic
 
-end RealClosure
+end TauCeti.RealClosure

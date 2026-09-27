@@ -28,7 +28,7 @@ public section
 
 universe u
 
-namespace RealClosure
+namespace TauCeti.RealClosure
 
 open Polynomial
 
@@ -39,7 +39,7 @@ variable {K L : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 theorem OrderedSubfield.isRealClosed (P : OrderedSubfield K L) (hP : IsMax P) :
     IsRealClosed P.field := by
   let := P.order
-  have := P.ordered
+  have := P.isStrictOrderedRing
   apply IsRealClosed.of_linearOrderedField
   · intro a ha
     by_contra hn
@@ -50,27 +50,24 @@ theorem OrderedSubfield.isRealClosed (P : OrderedSubfield K L) (hP : IsMax P) :
     have := ho
     let f : E →ₐ[P.field] L := IsAlgClosed.lift
     let y : E := QuadraticAlgebra.omega
-    have hy := P.mem_of_maximal hP f hf y
+    have hy := P.mem_of_isMax hP f hf y
     apply hn
     refine ⟨⟨f y, hy⟩, ?_⟩
-    apply Subtype.ext
-    -- Reduce projections of the freshly constructed subtype witness after Subtype.ext,
-    -- so the ambient algebra homomorphism's multiplication lemma applies.
-    change (a : L) = f y * f y
+    rw [Subtype.ext_iff, IntermediateField.coe_mul]
     rw [← map_mul]
     have hy2 : y * y = algebraMap P.field E a := by
       simpa only [map_zero, zero_mul, add_zero] using
         (QuadraticAlgebra.omega_mul_omega_eq_algebraMap (a := a) (b := 0))
     rw [hy2, f.commutes, IntermediateField.algebraMap_apply]
   · intro p hp
-    obtain ⟨q, hq, hqodd, hqp⟩ := exists_odd_factor p hp
+    obtain ⟨q, hq, hqodd, hqp⟩ := exists_irreducible_factor_of_odd_natDegree p hp
     have : Fact (Irreducible q) := ⟨hq⟩
     have : FiniteDimensional P.field (AdjoinRoot q) := (AdjoinRoot.powerBasis hq.ne_zero).finite
     obtain ⟨o, ho, hf⟩ := exists_odd_order q hqodd
     let := o
     have := ho
     let f : AdjoinRoot q →ₐ[P.field] L := IsAlgClosed.lift
-    have hy := P.mem_of_maximal hP f hf (AdjoinRoot.root q)
+    have hy := P.mem_of_isMax hP f hf (AdjoinRoot.root q)
     let y : P.field := ⟨f (AdjoinRoot.root q), hy⟩
     refine ⟨y, ?_⟩
     have hpval : aeval (AdjoinRoot.root q) p = 0 := by
@@ -89,11 +86,11 @@ theorem exists_intermediateField :
       letI := o
       IsStrictOrderedRing F ∧ IsRealClosed F ∧ StrictMono (algebraMap K F) := by
   obtain ⟨P, hP⟩ := OrderedSubfield.exists_maximal (K := K) (L := AlgebraicClosure K)
-  exact ⟨P.field, P.order, P.ordered, P.isRealClosed hP, P.base_strictMono⟩
+  exact ⟨P.field, P.order, P.isStrictOrderedRing, P.isRealClosed hP, P.base_strictMono⟩
 
 /-- An ordered algebraic real closure exists in the universe of the base field.
 The algebraicity assertion uses the algebra induced by the supplied embedding. -/
-theorem exists_ordered_extension (K : Type u) [Field K] [LinearOrder K]
+theorem exists_realClosure (K : Type u) [Field K] [LinearOrder K]
     [IsStrictOrderedRing K] :
     ∃ (R : Type u) (field : Field R) (order : LinearOrder R),
       letI : Field R := field
@@ -107,4 +104,4 @@ theorem exists_ordered_extension (K : Type u) [Field K] [LinearOrder K]
   rw [toAlgebra_algebraMap]
   infer_instance
 
-end RealClosure
+end TauCeti.RealClosure

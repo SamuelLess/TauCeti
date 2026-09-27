@@ -31,6 +31,11 @@ noncomputable def tarskiQuery (p q : R[X]) : ℤ := signSum p.roots.toFinset q
 theorem tarskiQuery_eq_signSum (p q : R[X]) :
     tarskiQuery p q = signSum p.roots.toFinset q := (rfl)
 
+/-- The Tarski query expressed as a sum over distinct polynomial roots. -/
+theorem tarskiQuery_eq_sum (p q : R[X]) :
+    tarskiQuery p q = ∑ x ∈ p.roots.toFinset, (sign (q.eval x) : ℤ) := by
+  rw [tarskiQuery_eq_signSum, signSum_eq_sum]
+
 /-- The Tarski query is the positive root count minus the negative root count. -/
 theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
     tarskiQuery p q = ((p.roots.toFinset.filter (fun x => 0 < q.eval x)).card : ℤ) -
@@ -38,7 +43,7 @@ theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
   rw [tarskiQuery_eq_signSum, signSum_eq_card_sub_card]
 
 @[simp] theorem tarskiQuery_zero_left (q : R[X]) : tarskiQuery 0 q = 0 := by
-  simp [tarskiQuery_eq_signSum, signSum_eq_sum]
+  simp [tarskiQuery_eq_signSum]
 
 @[simp] theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
   simp [tarskiQuery_eq_signSum]

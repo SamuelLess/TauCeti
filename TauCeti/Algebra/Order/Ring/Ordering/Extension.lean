@@ -92,7 +92,7 @@ private theorem le_chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· �
   fun _ hx => ⟨P, hP, hx⟩
 
 /-- A field preordering extends to an ordering, retaining every prescribed sign. -/
-theorem exists_ordering (P : RingPreordering K) :
+theorem exists_le_isOrdering (P : RingPreordering K) :
     ∃ Q : RingPreordering K, P ≤ Q ∧ Q.IsOrdering := by
   obtain ⟨Q, hPQ, hQ⟩ := zorn_le_nonempty_Ici₀ P
     (fun c _ hc y hy =>
@@ -105,38 +105,41 @@ theorem exists_ordering (P : RingPreordering K) :
   exact ⟨Q, hPQ, { htotal with toIsPrime := inferInstance }⟩
 
 /-- A preordering on a field is a pointed ring cone. -/
-def cone (P : RingPreordering K) : RingCone K where
+def toRingCone (P : RingPreordering K) : RingCone K where
   __ := P.toSubsemiring
   eq_zero_of_mem_of_neg_mem' := P.eq_zero_of_mem_of_neg_mem
 
-instance (P : RingPreordering K) [P.IsOrdering] : HasMemOrNegMem (cone P) where
+@[simp] theorem mem_toRingCone (P : RingPreordering K) {x : K} :
+    x ∈ toRingCone P ↔ x ∈ P := (Iff.rfl)
+
+instance (P : RingPreordering K) [P.IsOrdering] : HasMemOrNegMem (toRingCone P) where
   mem_or_neg_mem := mem_or_neg_mem P
 
 /-- The linear order associated to a field ordering. -/
-@[instance_reducible] noncomputable def order (P : RingPreordering K)
+@[instance_reducible] noncomputable def linearOrder (P : RingPreordering K)
     [P.IsOrdering] : LinearOrder K := by
   classical
-  exact .mkOfAddGroupCone (cone P)
+  exact .mkOfAddGroupCone (toRingCone P)
 
 theorem isStrictOrderedRing (P : RingPreordering K) [P.IsOrdering] :
-    letI := order P
+    letI := linearOrder P
     IsStrictOrderedRing K := by
-  let := order P
-  have : IsOrderedRing K := .mkOfCone (cone P)
+  let := linearOrder P
+  have : IsOrderedRing K := .mkOfCone (toRingCone P)
   infer_instance
 
 theorem nonneg_iff (P : RingPreordering K) [P.IsOrdering] (x : K) :
-    letI := order P
+    letI := linearOrder P
     0 ≤ x ↔ x ∈ P := by
   rw [PartialOrder.mkOfAddGroupCone_le_iff, sub_zero]
-  rfl
+  exact mem_toRingCone P
 
 /-- Order a field while respecting all signs in a specified preordering. -/
 theorem exists_linearOrder (P : RingPreordering K) :
     ∃ o : LinearOrder K, letI := o
       IsStrictOrderedRing K ∧ ∀ x ∈ P, 0 ≤ x := by
-  obtain ⟨Q, hPQ, hQ⟩ := exists_ordering P
+  obtain ⟨Q, hPQ, hQ⟩ := exists_le_isOrdering P
   let := hQ
-  exact ⟨order Q, isStrictOrderedRing Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
+  exact ⟨linearOrder Q, isStrictOrderedRing Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
 
 end RingPreordering

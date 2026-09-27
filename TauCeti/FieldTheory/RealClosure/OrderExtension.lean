@@ -28,8 +28,12 @@ section CommRing
 variable [CommRing L]
 
 /-- Nonnegative scalar multiples of squares in an extension. -/
-@[expose] def weightedSquares (f : K →+* L) : Set L :=
+def weightedSquares (f : K →+* L) : Set L :=
   {x | ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2}
+
+omit [IsStrictOrderedRing K] in
+@[simp] theorem mem_weightedSquares (f : K →+* L) {x : L} :
+    x ∈ weightedSquares f ↔ ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2 := (Iff.rfl)
 
 private theorem weightedSquares_mul (f : K →+* L) {x y : L}
     (hx : x ∈ weightedSquares f) (hy : y ∈ weightedSquares f) :
@@ -72,7 +76,7 @@ theorem nonneg_mem_extensionCone (f : K →+* L) {x : K} (hx : 0 ≤ x) :
     f x ∈ extensionCone f :=
   subset_extensionCone f ⟨x, hx, 1, by simp⟩
 
-/-- A linear functional nonnegative on the generating weighted squares is
+/-- An additive map nonnegative on the generating weighted squares is
 nonnegative on the entire extension cone. -/
 theorem extensionCone.map_nonneg (f : K →+* L) (g : L →+ K)
     (hg : ∀ a : K, 0 ≤ a → ∀ y : L, 0 ≤ g (f a * y ^ 2))
@@ -102,7 +106,7 @@ section Field
 variable [Field L]
 
 /-- The order of the base field extends whenever its generated cone is proper. -/
-theorem exists_order_extension (f : K →+* L) (h : -1 ∉ extensionCone f) :
+theorem extensionCone.exists_linearOrder (f : K →+* L) (h : -1 ∉ extensionCone f) :
     ∃ o : LinearOrder L, letI := o
       IsStrictOrderedRing L ∧ StrictMono f := by
   let P : RingPreordering L :=
@@ -126,7 +130,7 @@ variable {a : K}
 
 /-- Adjoining a square root of a nonnegative element does not force a sum of weighted
 squares to equal `-1`. -/
-theorem extensionCone.neg_one_notMem_quadratic (ha : 0 ≤ a) :
+theorem _root_.QuadraticAlgebra.neg_one_notMem_extensionCone (ha : 0 ≤ a) :
     -1 ∉ extensionCone (algebraMap K (QuadraticAlgebra K a 0)) := by
   intro h
   have hnonneg := extensionCone.map_nonneg (algebraMap K (QuadraticAlgebra K a 0))
@@ -140,11 +144,11 @@ theorem extensionCone.neg_one_notMem_quadratic (ha : 0 ≤ a) :
 
 /-- A nonnegative nonsquare can be adjoined while preserving the base ordering.
 Nonsquareness excludes zero, so the radicand is necessarily positive. -/
-theorem exists_quadratic_order (ha : 0 ≤ a) [Fact (¬ IsSquare a)] :
+theorem _root_.QuadraticAlgebra.exists_linearOrder (ha : 0 ≤ a) [Fact (¬ IsSquare a)] :
     ∃ o : LinearOrder (QuadraticAlgebra K a 0), letI := o
       IsStrictOrderedRing (QuadraticAlgebra K a 0) ∧
         StrictMono (algebraMap K (QuadraticAlgebra K a 0)) :=
-  exists_order_extension _ (extensionCone.neg_one_notMem_quadratic ha)
+  extensionCone.exists_linearOrder _ (QuadraticAlgebra.neg_one_notMem_extensionCone ha)
 
 end Quadratic
 

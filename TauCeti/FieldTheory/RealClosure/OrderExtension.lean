@@ -47,11 +47,6 @@ theorem extensionCone.weightedSquares_subset (f : K →+* L) :
     (weightedSquares f : Set L) ⊆ extensionCone f :=
   AddSubmonoid.subset_closure
 
-/-- The additive carrier is the closure of the generating weighted squares. -/
-theorem extensionCone.toAddSubmonoid_eq (f : K →+* L) :
-    (extensionCone f).toAddSubmonoid = AddSubmonoid.closure (weightedSquares f : Set L) :=
-  Submonoid.subsemiringClosure_toAddSubmonoid _
-
 /-- The generated cone is contained in a subsemiring exactly when its generators are. -/
 @[simp] theorem extensionCone.le_iff (f : K →+* L) {S : Subsemiring L} :
     extensionCone f ≤ S ↔ (weightedSquares f : Set L) ⊆ S :=
@@ -88,7 +83,8 @@ theorem extensionCone.map_mem {M : Type*} [CommRing M] [Algebra K L] [Algebra K 
 
 /-- An additive map nonnegative on the generating weighted squares is
 nonnegative on the entire extension cone. -/
-theorem extensionCone.map_nonneg (f : K →+* L) (g : L →+ K)
+theorem extensionCone.map_nonneg {M : Type*} [AddCommMonoid M] [PartialOrder M]
+    [IsOrderedAddMonoid M] (f : K →+* L) (g : L →+ M)
     (hg : ∀ a : K, 0 ≤ a → ∀ y : L, 0 ≤ g (f a * y ^ 2))
     {x : L} (hx : x ∈ extensionCone f) : 0 ≤ g x := by
   induction hx using extensionCone.induction f with
@@ -100,7 +96,7 @@ theorem extensionCone.map_nonneg (f : K →+* L) (g : L →+ K)
 
 /-- Every element of the generated cone is nonnegative in any order extending
 the base order. -/
-theorem extensionCone.nonneg [LinearOrder L] [IsStrictOrderedRing L]
+theorem extensionCone.nonneg [LinearOrder L] [IsOrderedRing L]
     (f : K →+* L) (hf : Monotone f) {x : L} (hx : x ∈ extensionCone f) : 0 ≤ x := by
   induction hx using extensionCone.induction f with
   | mem x hx =>

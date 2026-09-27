@@ -29,11 +29,14 @@ public section
 
 namespace TauCeti.RealClosure
 
+/-- In a formally real ring, `-1` is not a square. This supplies the square obstruction
+used by the quadratic-algebra field instance. -/
 scoped instance {R : Type*} [Ring R] [IsSemireal R] : Fact (¬ IsSquare (-1 : R)) :=
   ⟨fun h => IsSemireal.not_isSumSq_neg_one R h.isSumSq⟩
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
 
+/-- Every nonnegative element of an ordered real closed field has a nonnegative square root. -/
 theorem exists_nonneg_sq {a : R} (ha : 0 ≤ a) : ∃ r : R, 0 ≤ r ∧ r ^ 2 = a := by
   obtain ⟨r, hr⟩ := IsRealClosed.exists_eq_pow_of_nonneg ha (n := 2) (by decide)
   exact ⟨|r|, abs_nonneg r, by simpa using hr.symm⟩
@@ -69,7 +72,7 @@ private theorem complex_isSquare_aux (z : QuadraticAlgebra R (-1) 0) : IsSquare 
 
 omit [LinearOrder R] [IsStrictOrderedRing R] in
 /-- Every element of `R[i]` is a square when `R` is real closed, without choosing an order. -/
-theorem complex_isSquare (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
+theorem _root_.QuadraticAlgebra.isSquare (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
   obtain ⟨o, ho⟩ := IsSemireal.exists_linearOrder (K := R)
   let := o
   have := ho

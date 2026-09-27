@@ -100,7 +100,7 @@ theorem irreducible_quadratic_eval_neg_iff_leadingCoeff_neg {p : R[X]} (hi : Irr
   simpa only [leadingCoeff, hdeg] using h
 
 /-- An irreducible quadratic has the sign of its leading coefficient everywhere. -/
-theorem quadratic_leading_mul_pos {p : R[X]} (hp : Irreducible p)
+theorem irreducible_quadratic_leadingCoeff_mul_eval_pos {p : R[X]} (hp : Irreducible p)
     (hdeg : p.natDegree = 2) (x : R) : 0 < p.leadingCoeff * p.eval x := by
   rcases lt_or_gt_of_ne (leadingCoeff_ne_zero.mpr hp.ne_zero) with hneg | hpos
   · exact mul_pos_of_neg_of_neg hneg
@@ -109,9 +109,9 @@ theorem quadratic_leading_mul_pos {p : R[X]} (hp : Irreducible p)
       ((irreducible_quadratic_eval_pos_iff_leadingCoeff_pos hp hdeg x).mpr hpos)
 
 /-- An irreducible quadratic has the same nonzero sign at any two points. -/
-theorem quadratic_eval_mul_pos {p : R[X]} (hp : Irreducible p)
+theorem irreducible_quadratic_eval_mul_pos {p : R[X]} (hp : Irreducible p)
     (hdeg : p.natDegree = 2) (a b : R) : 0 < p.eval a * p.eval b := by
-  have hpos := quadratic_leading_mul_pos hp hdeg
+  have hpos := irreducible_quadratic_leadingCoeff_mul_eval_pos hp hdeg
   rcases mul_pos_iff.mp (hpos a) with ha | ha <;>
     rcases mul_pos_iff.mp (hpos b) with hb | hb
   · exact mul_pos ha.2 hb.2

@@ -13,6 +13,11 @@ import TauCeti.Algebra.Polynomial.RealClosed.Quadratic
 import Mathlib.Tactic.Ring
 
 /-! # Polynomial intermediate values over an abstract real closed field
+
+The polynomial API gives roots from strict or weak endpoint sign changes and both
+orientations of closed-interval image inclusion. `Polynomial.eval_mul_pos_of_no_roots`
+is the constant-sign result used by polynomial Rolle.
+
 Irreducible factors have degree at most two; quadratic factors have constant
 nonzero sign, so a sign change forces a root of a linear factor.
 
@@ -33,8 +38,9 @@ variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealCl
 
 omit [LinearOrder R] [IsStrictOrderedRing R] in
 /-- Irreducible polynomials over a real closed field have degree at most two. -/
-theorem natDegree_le_two_of_irreducible {p : R[X]} (hp : Irreducible p) : p.natDegree ≤ 2 := by
-  have := complex_isAlgClosed (R := R)
+theorem _root_.Polynomial.natDegree_le_two_of_irreducible {p : R[X]} (hp : Irreducible p) :
+    p.natDegree ≤ 2 := by
+  have := isAlgClosed_quadraticAlgebra (R := R)
   obtain ⟨z, hz⟩ := IsAlgClosed.exists_aeval_eq_zero
     (QuadraticAlgebra R (-1) 0) p (degree_pos_of_irreducible hp).ne'
   have heq := minpoly.eq_of_irreducible hp hz
@@ -45,7 +51,7 @@ theorem natDegree_le_two_of_irreducible {p : R[X]} (hp : Irreducible p) : p.natD
 
 omit [IsRealClosed R] in
 /-- A linear polynomial has constant nonzero sign on an interval without a root. -/
-theorem linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
+theorem _root_.Polynomial.linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
     (hab : a ≤ b) (hroot : ∀ x ∈ Set.Icc a b, p.eval x ≠ 0) :
     0 < p.eval a * p.eval b := by
   have hd : p.degree = 1 := (degree_eq_iff_natDegree_eq_of_pos (by decide)).mpr hdeg
@@ -68,7 +74,7 @@ theorem linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
 
 /-- A polynomial has constant nonzero sign on any closed interval containing
 none of its roots. -/
-theorem eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
+theorem _root_.Polynomial.eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
     (hroot : ∀ x ∈ Set.Icc a b, p.eval x ≠ 0) : 0 < p.eval a * p.eval b := by
   revert hroot
   induction p using WfDvdMonoid.induction_on_irreducible with
@@ -97,11 +103,11 @@ theorem eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
       omega
     have hqpos : 0 < q.eval a * q.eval b := hdeg.elim
       (fun h => linear_eval_mul_pos h hab hq')
-      (fun h => quadratic_eval_mul_pos hq h a b)
+      (fun h => irreducible_quadratic_eval_mul_pos hq h a b)
     simpa only [eval_mul, mul_mul_mul_comm] using mul_pos hqpos (ih hp')
 
 /-- Weakly opposite endpoint signs give a root on the closed interval. -/
-theorem exists_root_Icc (p : R[X]) {a b : R} (hab : a ≤ b)
+theorem _root_.Polynomial.exists_root_Icc (p : R[X]) {a b : R} (hab : a ≤ b)
     (ha : p.eval a ≤ 0) (hb : 0 ≤ p.eval b) :
     ∃ c ∈ Set.Icc a b, p.eval c = 0 := by
   by_contra! h
@@ -110,7 +116,7 @@ theorem exists_root_Icc (p : R[X]) {a b : R} (hab : a ≤ b)
 
 /-- Polynomial IVT over an arbitrary real closed ordered field, including
 non-Archimedean fields. -/
-theorem ivt (p : R[X]) {a b : R} (hab : a < b)
+theorem _root_.Polynomial.exists_root_Ioo (p : R[X]) {a b : R} (hab : a < b)
     (ha : p.eval a < 0) (hb : 0 < p.eval b) :
     ∃ c ∈ Set.Ioo a b, p.eval c = 0 := by
   obtain ⟨c, ⟨hac, hcb⟩, hc⟩ := exists_root_Icc p hab.le ha.le hb.le
@@ -121,14 +127,14 @@ theorem ivt (p : R[X]) {a b : R} (hab : a < b)
     exact hb.ne' hc
 
 /-- The symmetric sign-change form of polynomial IVT. -/
-theorem ivt_of_mul_neg (p : R[X]) {a b : R} (hab : a < b)
+theorem _root_.Polynomial.exists_root_Ioo_of_mul_neg (p : R[X]) {a b : R} (hab : a < b)
     (h : p.eval a * p.eval b < 0) : ∃ c ∈ Set.Ioo a b, p.eval c = 0 := by
   rcases mul_neg_iff.mp h with h | h
-  · obtain ⟨c, hc, he⟩ := ivt (-p) hab (by simpa using h.1) (by simpa using h.2)
+  · obtain ⟨c, hc, he⟩ := exists_root_Ioo (-p) hab (by simpa using h.1) (by simpa using h.2)
     exact ⟨c, hc, by simpa using he⟩
-  · exact ivt p hab h.1 h.2
+  · exact exists_root_Ioo p hab h.1 h.2
 
-/-- Every value between the endpoint values is attained on the closed interval. -/
+/-- Polynomial intermediate value on a closed interval, for `p.eval a ≤ y ≤ p.eval b`. -/
 theorem _root_.Polynomial.intermediate_value_Icc (p : R[X]) {a b : R} (hab : a ≤ b) :
     Set.Icc (p.eval a) (p.eval b) ⊆ p.eval '' Set.Icc a b := by
   rintro y ⟨hay, hyb⟩
@@ -136,7 +142,7 @@ theorem _root_.Polynomial.intermediate_value_Icc (p : R[X]) {a b : R} (hab : a �
     (by simpa using sub_nonpos.mpr hay) (by simpa using sub_nonneg.mpr hyb)
   exact ⟨c, hc, by simpa only [eval_sub, eval_C, sub_eq_zero] using he⟩
 
-/-- Every value between the endpoint values in reversed order is attained. -/
+/-- Polynomial intermediate value on a closed interval, for `p.eval b ≤ y ≤ p.eval a`. -/
 theorem _root_.Polynomial.intermediate_value_Icc' (p : R[X]) {a b : R} (hab : a ≤ b) :
     Set.Icc (p.eval b) (p.eval a) ⊆ p.eval '' Set.Icc a b := by
   rintro y ⟨hby, hya⟩

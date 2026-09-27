@@ -35,7 +35,7 @@ variable {R C L : Type*} [Field R] [IsRealClosed R] [Field C] [Algebra R C]
 include R in
 /-- Every finite extension of a finite square-closed extension of a real
 closed field is trivial. -/
-theorem SquareClosed.finrank_eq_one (hsq : ∀ x : C, IsSquare x) :
+theorem finrank_eq_one_of_forall_isSquare (hsq : ∀ x : C, IsSquare x) :
     finrank C L = 1 := by
   let M := AlgebraicClosure L
   have : FiniteDimensional R L := FiniteDimensional.trans R C L
@@ -47,25 +47,25 @@ theorem SquareClosed.finrank_eq_one (hsq : ∀ x : C, IsSquare x) :
   have : IsScalarTower R C N := .of_algebraMap_eq' (by
     rw [IsScalarTower.algebraMap_eq R L N, IsScalarTower.algebraMap_eq R C L]
     rfl)
-  have hN : Module.finrank C N = 1 := SquareClosed.finrank_eq_one_of_isGalois (R := R) hsq
+  have hN : Module.finrank C N = 1 := finrank_eq_one_of_isGalois_of_forall_isSquare (R := R) hsq
   exact Nat.eq_one_of_dvd_one (hN ▸ finrank_dvd_finrank_right C L N)
 
 include R in
 /-- A finite square-closed extension of a real closed field is algebraically closed. -/
-theorem SquareClosed.isAlgClosed (hsq : ∀ x : C, IsSquare x) : IsAlgClosed C := by
+theorem isAlgClosed_of_forall_isSquare (hsq : ∀ x : C, IsSquare x) : IsAlgClosed C := by
   apply IsAlgClosed.of_exists_root
   intro p _ hp
   have : Fact (Irreducible p) := ⟨hp⟩
   have : FiniteDimensional C (AdjoinRoot p) :=
     (AdjoinRoot.powerBasis hp.ne_zero).finite
-  have hdim := SquareClosed.finrank_eq_one (R := R) (L := AdjoinRoot p) hsq
+  have hdim := finrank_eq_one_of_forall_isSquare (R := R) (L := AdjoinRoot p) hsq
   have hdeg : p.natDegree = 1 := by
     rwa [(AdjoinRoot.powerBasis hp.ne_zero).finrank] at hdim
   exact Polynomial.exists_root_of_degree_eq_one
     (by rw [Polynomial.degree_eq_natDegree hp.ne_zero, hdeg]; rfl)
 
 /-- The complexification `R[i]` of a real closed field is algebraically closed. -/
-theorem complex_isAlgClosed : IsAlgClosed (QuadraticAlgebra R (-1) 0) :=
-  SquareClosed.isAlgClosed (R := R) complex_isSquare
+theorem isAlgClosed_quadraticAlgebra : IsAlgClosed (QuadraticAlgebra R (-1) 0) :=
+  isAlgClosed_of_forall_isSquare (R := R) QuadraticAlgebra.isSquare
 
 end TauCeti.RealClosure

@@ -16,6 +16,10 @@ import Mathlib.FieldTheory.Minpoly.Finite
 
 /-! # Finite extensions of an abstract real closed field
 
+Odd-degree finite extensions of a real closed field are trivial. A field of
+characteristic different from two in which every element is a square has no quadratic
+extension. These are the degree reductions used by the Sylow argument in `Galois.lean`.
+
 ## References
 
 The odd-degree and quadratic-extension steps of the Artin–Schreier argument; see
@@ -47,7 +51,7 @@ section Quadratic
 variable {K L : Type*} [Field K] [NeZero (2 : K)]
 
 /-- A square-closed field of characteristic different from two has no quadratic extension. -/
-theorem finrank_ne_two_of_isSquare [Field L] [Algebra K L]
+theorem finrank_ne_two_of_forall_isSquare [Field L] [Algebra K L]
     [FiniteDimensional K L] (hsq : ∀ x : K, IsSquare x) : finrank K L ≠ 2 := by
   intro htwo
   have : Algebra.IsQuadraticExtension K L := ⟨htwo⟩

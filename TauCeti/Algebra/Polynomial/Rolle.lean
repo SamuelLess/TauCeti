@@ -40,8 +40,10 @@ theorem Rolle.exists_deriv_eq_zero (h : Rolle R) (p : R[X]) {a b : R}
 
 variable [IsStrictOrderedRing R]
 
-/-- Subtracting the secant line reduces polynomial mean value to Rolle. -/
-theorem Rolle.mean_value (h : Rolle R) (p : R[X]) {a b : R} (hab : a < b) :
+/-- Polynomial Rolle implies the mean value equality
+`p.eval b - p.eval a = p.derivative.eval c * (b - a)` at some point `c ∈ Ioo a b`. -/
+theorem Rolle.exists_eval_sub_eq_derivative_eval_mul (h : Rolle R) (p : R[X]) {a b : R}
+    (hab : a < b) :
     ∃ c ∈ Ioo a b, p.eval b - p.eval a = p.derivative.eval c * (b-a) := by
   let m := (p.eval b - p.eval a) / (b-a)
   have hba : b-a ≠ 0 := sub_ne_zero.mpr hab.ne'
@@ -57,38 +59,38 @@ theorem Rolle.mean_value (h : Rolle R) (p : R[X]) {a b : R} (hab : a < b) :
   exact hm.symm
 
 /-- Polynomial Rolle implies monotonicity where the derivative is nonnegative. -/
-theorem Rolle.monotone (h : Rolle R) (p : R[X]) {a b : R}
+theorem Rolle.monotoneOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, 0 ≤ p.derivative.eval x) : MonotoneOn p.eval (Icc a b) := by
   intro u hu v hv huv
   rcases huv.eq_or_lt with rfl | huv
   · exact le_rfl
-  obtain ⟨c, hc, he⟩ := h.mean_value p huv
+  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
   have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
   exact sub_nonneg.mp (he.symm ▸ mul_nonneg hdc (sub_pos.mpr huv).le)
 
 /-- Polynomial Rolle implies antitonicity where the derivative is nonpositive. -/
-theorem Rolle.antitone (h : Rolle R) (p : R[X]) {a b : R}
+theorem Rolle.antitoneOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, p.derivative.eval x ≤ 0) : AntitoneOn p.eval (Icc a b) := by
   intro u hu v hv huv
   rcases huv.eq_or_lt with rfl | huv
   · exact le_rfl
-  obtain ⟨c, hc, he⟩ := h.mean_value p huv
+  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
   have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
   exact sub_nonpos.mp (he.symm ▸ mul_nonpos_of_nonpos_of_nonneg hdc (sub_pos.mpr huv).le)
 
 /-- Strict positivity of the derivative gives strict monotonicity. -/
-theorem Rolle.strictMono (h : Rolle R) (p : R[X]) {a b : R}
+theorem Rolle.strictMonoOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, 0 < p.derivative.eval x) : StrictMonoOn p.eval (Icc a b) := by
   intro u hu v hv huv
-  obtain ⟨c, hc, he⟩ := h.mean_value p huv
+  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
   have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
   exact sub_pos.mp (he.symm ▸ mul_pos hdc (sub_pos.mpr huv))
 
 /-- Strict negativity of the derivative gives strict antitonicity. -/
-theorem Rolle.strictAnti (h : Rolle R) (p : R[X]) {a b : R}
+theorem Rolle.strictAntiOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, p.derivative.eval x < 0) : StrictAntiOn p.eval (Icc a b) := by
   intro u hu v hv huv
-  obtain ⟨c, hc, he⟩ := h.mean_value p huv
+  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
   have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
   exact sub_neg.mp (he.symm ▸ mul_neg_of_neg_of_pos hdc (sub_pos.mpr huv))
 

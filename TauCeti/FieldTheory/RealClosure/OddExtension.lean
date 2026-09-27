@@ -13,7 +13,7 @@ import Mathlib.FieldTheory.PrimitiveElement
 /-! # Extending an ordering across odd-degree algebraic adjunctions
 
 An ordering extends across an irreducible odd-degree adjunction (`AdjoinRoot.exists_linearOrder`).
-Every odd-degree polynomial has an irreducible factor of odd degree.
+The descent uses the odd-degree irreducible factor supplied by `OddDegreeFactor`.
 The primitive element theorem gives order extension for every finite odd-degree field extension.
 
 The proof descends in odd degree. A putative negative weighted-square

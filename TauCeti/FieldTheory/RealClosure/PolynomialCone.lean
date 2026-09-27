@@ -14,8 +14,8 @@ public import Mathlib.RingTheory.AdjoinRoot
 The leading terms of sums of nonnegatively weighted squares cannot cancel.
 This is the degree argument needed for odd-degree order extension.
 `extensionCone.exists_aeval_root_eq` lifts cone certificates in `AdjoinRoot p`
-to polynomial certificates of bounded degree; `extensionCone.map_mem`
-specializes polynomial certificates into any algebra over the base field.
+to polynomial certificates of bounded degree. The imported `extensionCone.map_mem`
+from `OrderExtension` specializes these certificates into any algebra over the base field.
 -/
 
 public section

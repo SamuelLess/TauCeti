@@ -28,46 +28,33 @@ section CommRing
 
 variable [CommRing L]
 
-/-- Nonnegative scalar multiples of squares in an extension. -/
-def weightedSquares (f : K →+* L) : Set L :=
-  {x | ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2}
+/-- Nonnegative scalar multiples of squares in an extension form a submonoid. -/
+def weightedSquares (f : K →+* L) : Submonoid L where
+  carrier := {x | ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2}
+  one_mem' := ⟨1, zero_le_one, 1, by simp⟩
+  mul_mem' := by
+    rintro x y ⟨a, ha, u, rfl⟩ ⟨b, hb, v, rfl⟩
+    exact ⟨a * b, mul_nonneg ha hb, u * v, by rw [map_mul]; ring⟩
 
-omit [IsStrictOrderedRing K] in
 @[simp] theorem mem_weightedSquares (f : K →+* L) {x : L} :
     x ∈ weightedSquares f ↔ ∃ a : K, 0 ≤ a ∧ ∃ y : L, x = f a * y ^ 2 := (Iff.rfl)
 
-private theorem weightedSquares_mul (f : K →+* L) {x y : L}
-    (hx : x ∈ weightedSquares f) (hy : y ∈ weightedSquares f) :
-    x * y ∈ weightedSquares f := by
-  obtain ⟨a, ha, u, rfl⟩ := hx
-  obtain ⟨b, hb, v, rfl⟩ := hy
-  exact ⟨a * b, mul_nonneg ha hb, u * v, by rw [map_mul]; ring⟩
-
 /-- Finite sums of nonnegative scalar multiples of squares. -/
-def extensionCone (f : K →+* L) : Subsemiring L where
-  __ := AddSubmonoid.closure (weightedSquares f)
-  one_mem' := AddSubmonoid.subset_closure ⟨1, zero_le_one, 1, by simp⟩
-  mul_mem' {x y} hx hy := by
-    induction hx using AddSubmonoid.closure_induction with
-    | mem x hx =>
-      induction hy using AddSubmonoid.closure_induction with
-      | mem y hy => exact AddSubmonoid.subset_closure (weightedSquares_mul f hx hy)
-      | zero => simp
-      | add y z _ _ hy hz => simpa [mul_add] using add_mem hy hz
-    | zero => simp
-    | add x z _ _ hx hz => simpa [add_mul] using add_mem hx hz
+def extensionCone (f : K →+* L) : Subsemiring L := (weightedSquares f).subsemiringClosure
 
 /-- A generating weighted square belongs to the extension cone. -/
-theorem extensionCone.weightedSquares_subset (f : K →+* L) : weightedSquares f ⊆ extensionCone f :=
+theorem extensionCone.weightedSquares_subset (f : K →+* L) :
+    (weightedSquares f : Set L) ⊆ extensionCone f :=
   AddSubmonoid.subset_closure
 
 /-- The additive carrier is the closure of the generating weighted squares. -/
 theorem extensionCone.toAddSubmonoid_eq (f : K →+* L) :
-    (extensionCone f).toAddSubmonoid = AddSubmonoid.closure (weightedSquares f) := (rfl)
+    (extensionCone f).toAddSubmonoid = AddSubmonoid.closure (weightedSquares f : Set L) :=
+  Submonoid.subsemiringClosure_toAddSubmonoid _
 
 /-- The generated cone is contained in a subsemiring exactly when its generators are. -/
 @[simp] theorem extensionCone.le_iff (f : K →+* L) {S : Subsemiring L} :
-    extensionCone f ≤ S ↔ weightedSquares f ⊆ S :=
+    extensionCone f ≤ S ↔ (weightedSquares f : Set L) ⊆ S :=
   ⟨fun h _ hx => h (extensionCone.weightedSquares_subset f hx),
     fun h => (AddSubmonoid.closure_le (S := S.toAddSubmonoid)).mpr h⟩
 

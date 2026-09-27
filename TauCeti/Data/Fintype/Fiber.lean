@@ -53,7 +53,8 @@ theorem occCount_eq_sum [Fintype X] [DecidableEq S] (w : X → S) (a : S) :
     occCount w a = ∑ i : X, if w i = a then 1 else 0 := by
   rw [occCount_eq_card_filter, card_filter]
 
-/-- Occurrence counts grow along an embedding preserving the values. -/
+/-- When the target fiber is finite, occurrence counts grow along an embedding
+preserving the values. -/
 theorem occCount_le_of_comp {Y : Type*} {u : X → S} {v : Y → S}
     (e : X ↪ Y) (he : ∀ i, v (e i) = u i) (a : S) [Finite {y // v y = a}] :
     occCount u a ≤ occCount v a := by
@@ -61,7 +62,8 @@ theorem occCount_le_of_comp {Y : Type*} {u : X → S} {v : Y → S}
     e.subtypeMap (fun {x} hx => (he x).trans hx)
   exact Nat.card_le_card_of_injective f f.injective
 
-/-- An embedding that misses an occurrence gives a strictly smaller occurrence count. -/
+/-- When the target fiber is finite, an embedding that misses an occurrence gives a
+strictly smaller occurrence count. -/
 theorem occCount_lt_of_comp {Y : Type*} {u : X → S} {v : Y → S} {a : S}
     [Finite {y // v y = a}] {j : Y} (e : X ↪ Y) (he : ∀ i, v (e i) = u i)
     (hj : v j = a) (hmiss : ∀ i, e i ≠ j) : occCount u a < occCount v a := by
@@ -85,10 +87,9 @@ theorem occCount_pos (f : X → S) (y : S) [Finite {x // f x = y}] :
 
 /-- A value outside the range has occurrence count zero. -/
 @[simp]
-theorem occCount_eq_zero (f : X → S) (y : S) (h : ∀ x, f x ≠ y) :
+theorem occCount_of_notMem_range (f : X → S) (y : S) (h : y ∉ Set.range f) :
     occCount f y = 0 := by
-  have hnot : y ∉ Set.range f := by simpa only [Set.mem_range, not_exists] using h
-  have he := Set.preimage_singleton_eq_empty.mpr hnot
+  have he := Set.preimage_singleton_eq_empty.mpr h
   simpa [occCount_def, Set.preimage, Set.coe_ofPred] using
     congrArg (fun s : Set X => Nat.card s) he
 
@@ -100,11 +101,11 @@ theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S
   split_ifs with h
   · have hc := Nat.card_preimage_of_injective hinj (Set.singleton_subset_iff.mpr h)
     simpa only [Set.preimage, Set.mem_singleton_iff, Set.coe_ofPred, Nat.card_unique] using hc
-  · exact occCount_eq_zero f y (not_exists.mp h)
+  · exact occCount_of_notMem_range f y h
 
 /-- Every value of an injective function occurs exactly once. -/
 @[simp]
-theorem occCount_eq_one (f : X → S) (hinj : Function.Injective f) (x : X) :
+theorem occCount_apply_of_injective (f : X → S) (hinj : Function.Injective f) (x : X) :
     occCount f (f x) = 1 := by
   classical
   rw [occCount_of_injective f hinj, ite_eq_left ⟨x, rfl⟩]

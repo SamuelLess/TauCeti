@@ -37,8 +37,9 @@ open Polynomial
 variable {K L : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     [Field L] [Algebra K L] [IsAlgClosed L]
 
-/-- Every nonnegative element of a maximal ordered intermediate field is a square. -/
-theorem OrderedSubfield.isSquare_of_isMax (P : OrderedSubfield K L) (hP : IsMax P)
+/-- Every nonnegative element of a maximal ordered intermediate field
+of an algebraically closed field is a square. -/
+theorem _root_.IsMax.isSquare_of_nonneg {P : OrderedSubfield K L} (hP : IsMax P)
     (a : P.toIntermediateField) : letI := P.linearOrder
       0 ≤ a → IsSquare a := by
   let := P.linearOrder
@@ -62,9 +63,11 @@ theorem OrderedSubfield.isSquare_of_isMax (P : OrderedSubfield K L) (hP : IsMax 
       (QuadraticAlgebra.omega_mul_omega_eq_algebraMap (a := a) (b := 0))
   rw [hy2, f.commutes, IntermediateField.algebraMap_apply]
 
-/-- Every odd-degree polynomial over a maximal ordered intermediate field has a root. -/
-theorem OrderedSubfield.exists_root_of_isMax (P : OrderedSubfield K L) (hP : IsMax P)
-    (p : P.toIntermediateField[X]) (hp : Odd p.natDegree) : ∃ x, p.eval x = 0 := by
+/-- Every odd-degree polynomial over a maximal ordered intermediate field
+of an algebraically closed field has a root. -/
+theorem _root_.IsMax.exists_isRoot_of_odd_natDegree
+    {P : OrderedSubfield K L} (hP : IsMax P)
+    (p : P.toIntermediateField[X]) (hp : Odd p.natDegree) : ∃ x, p.IsRoot x := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   obtain ⟨q, hq, hqodd, hqp⟩ := exists_irreducible_factor_of_odd_natDegree p hp
@@ -88,23 +91,23 @@ theorem OrderedSubfield.exists_root_of_isMax (P : OrderedSubfield K L) (hP : IsM
   exact hpL
 
 /-- A maximal ordered intermediate field of an algebraically closed field is real closed. -/
-theorem OrderedSubfield.isRealClosed_of_isMax (P : OrderedSubfield K L) (hP : IsMax P) :
+theorem _root_.IsMax.isRealClosed {P : OrderedSubfield K L} (hP : IsMax P) :
     IsRealClosed P.toIntermediateField := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   exact IsRealClosed.of_linearOrderedField
-    (fun {a} ha => P.isSquare_of_isMax hP a ha)
-    (fun {p} hp => by simpa only [IsRoot.def] using P.exists_root_of_isMax hP p hp)
+    (fun {a} ha => hP.isSquare_of_nonneg a ha)
+    (fun {p} hp => hP.exists_isRoot_of_odd_natDegree p hp)
 
-/-- Every ordered field has an algebraic real closed extension with an order
-extending its given order, realized inside its algebraic closure. -/
+/-- An ordered field inside an algebraically closed field has a real closed
+intermediate extension with a compatible order. -/
 theorem exists_intermediateField :
-    ∃ F : IntermediateField K (AlgebraicClosure K), ∃ o : LinearOrder F,
+    ∃ F : IntermediateField K L, ∃ o : LinearOrder F,
       letI := o
       IsStrictOrderedRing F ∧ IsRealClosed F ∧ StrictMono (algebraMap K F) := by
-  obtain ⟨P, hP⟩ := OrderedSubfield.exists_isMax (K := K) (L := AlgebraicClosure K)
+  obtain ⟨P, hP⟩ := OrderedSubfield.exists_isMax (K := K) (L := L)
   exact ⟨P.toIntermediateField, P.linearOrder, P.isStrictOrderedRing,
-    P.isRealClosed_of_isMax hP, P.algebraMap_strictMono⟩
+    hP.isRealClosed, P.algebraMap_strictMono⟩
 
 /-- An ordered algebraic real closure exists in the universe of the base field.
 The algebraicity assertion uses the algebra induced by the supplied embedding. -/
@@ -117,7 +120,7 @@ theorem exists_realClosure (K : Type u) [Field K] [LinearOrder K]
         ∃ ι : K →+* R, StrictMono ι ∧
           (letI : Algebra K R := ι.toAlgebra
            Algebra.IsAlgebraic K R) := by
-  obtain ⟨F, o, ho, hr, hm⟩ := exists_intermediateField (K := K)
+  obtain ⟨F, o, ho, hr, hm⟩ := exists_intermediateField (K := K) (L := AlgebraicClosure K)
   refine ⟨F, F.toField, o, ho, hr, algebraMap K F, hm, ?_⟩
   rw [toAlgebra_algebraMap]
   infer_instance

@@ -61,6 +61,16 @@ def extensionCone (f : K →+* L) : Subsemiring L where
 theorem extensionCone.subset (f : K →+* L) : weightedSquares f ⊆ extensionCone f :=
   AddSubmonoid.subset_closure
 
+/-- The additive carrier is the closure of the generating weighted squares. -/
+theorem extensionCone.toAddSubmonoid_eq (f : K →+* L) :
+    (extensionCone f).toAddSubmonoid = AddSubmonoid.closure (weightedSquares f) := (rfl)
+
+/-- The generated cone is contained in a subsemiring exactly when its generators are. -/
+@[simp] theorem extensionCone.le_iff (f : K →+* L) {S : Subsemiring L} :
+    extensionCone f ≤ S ↔ weightedSquares f ⊆ S :=
+  ⟨fun h _ hx => h (extensionCone.subset f hx),
+    fun h => (AddSubmonoid.closure_le (S := S.toAddSubmonoid)).mpr h⟩
+
 /-- Induction on finite sums of generating weighted squares. -/
 @[elab_as_elim] theorem extensionCone.induction (f : K →+* L)
     {motive : (x : L) → x ∈ extensionCone f → Prop}

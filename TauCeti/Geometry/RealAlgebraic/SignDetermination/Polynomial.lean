@@ -144,19 +144,54 @@ private theorem signSum_prod_pow {J : Type*} [Fintype J]
 
 /-- The polynomial moment identity on any complete restricted column set and
 any selected exponent rows. Exponents need not be bounded by two. -/
-theorem mulVec_signCount {J C I : Type*} [Fintype J]
+theorem mulVec_signCount {K : Type*} [CommRing K] {J C I : Type*} [Fintype J]
     [Fintype C] (Z : Finset R) (Q : J → R[X])
     (columns : C → (J → SignType)) (rows : I → J → ℕ)
     (hinj : Function.Injective columns)
     (cover : ∀ x ∈ Z, ∃ c, columns c = fun j => sign ((Q j).eval x)) :
-    (Matrix.of fun i c => ∏ j, (columns c j : ℤ) ^ rows i j) *ᵥ
-        (fun c => (signCount Z Q (columns c) : ℤ)) =
-      fun i => signSum Z (∏ j, Q j ^ rows i j) := by
+    (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ
+        (fun c => (signCount Z Q (columns c) : K)) =
+      fun i => (signSum Z (∏ j, Q j ^ rows i j) : K) := by
   classical
   simp_rw [signSum_prod_pow]
-  simpa only [signCount_eq_fiberCount] using
+  simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow, SignType.intCast_cast,
+    signCount_eq_fiberCount] using
     mulVec_fiberCount _ columns hinj (fun x : Z => cover x.val x.property)
-      (fun i σ => ∏ j, (σ j : ℤ) ^ rows i j)
+      (fun i σ => ∏ j, (σ j : K) ^ rows i j)
+
+/-- A left inverse recovers polynomial sign counts on complete candidate columns.
+Coverage remains a separate hypothesis from the matrix identity. -/
+theorem eq_signCount {K : Type*} [CommRing K] {J C I : Type*}
+    [Fintype J] [Fintype C] [DecidableEq C] [Fintype I]
+    (Z : Finset R) (Q : J → R[X]) (columns : C → (J → SignType)) (rows : I → J → ℕ)
+    (hinj : Function.Injective columns)
+    (cover : ∀ x ∈ Z, ∃ c, columns c = fun j => sign ((Q j).eval x))
+    (A : Matrix C I K)
+    (hA : A * (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) = 1)
+    (proposed : C → K)
+    (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
+      fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) :
+    proposed = fun c => (signCount Z Q (columns c) : K) := by
+  have hm := mulVec_signCount (K := K) Z Q columns rows hinj cover
+  have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
+  simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
+
+/-- Positive entries of a solved, complete polynomial moment system are exactly
+its realizable candidate sign conditions. -/
+theorem solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
+    [IsOrderedRing K] [Nontrivial K] {J C I : Type*}
+    [Fintype J] [Fintype C] [DecidableEq C] [Fintype I]
+    (Z : Finset R) (Q : J → R[X]) (columns : C → (J → SignType)) (rows : I → J → ℕ)
+    (hinj : Function.Injective columns)
+    (cover : ∀ x ∈ Z, ∃ c, columns c = fun j => sign ((Q j).eval x))
+    (A : Matrix C I K)
+    (hA : A * (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) = 1)
+    (proposed : C → K)
+    (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
+      fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) (c : C) :
+    0 < proposed c ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = columns c j := by
+  rw [eq_signCount Z Q columns rows hinj cover A hA proposed hsolve]
+  simp only [Nat.cast_pos, signCount_pos]
 
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
 theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]

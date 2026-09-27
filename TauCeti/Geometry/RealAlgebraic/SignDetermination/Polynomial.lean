@@ -19,6 +19,12 @@ These statements hold over any linearly ordered commutative ring. For root sign 
 take the finite set to be the distinct roots of a nonzero polynomial, possibly
 restricted to an interval. The zero polynomial must be handled separately:
 its zero set is not represented by its empty `Polynomial.roots` multiset.
+
+## References
+
+M. Ben-Or, D. Kozen, and J. Reif,
+[The complexity of elementary algebra and geometry](https://doi.org/10.1016/0022-0000(86)90029-2),
+Journal of Computer and System Sciences 32 (1986), 251–264, for BKR sign determination.
 -/
 
 public section
@@ -39,6 +45,10 @@ noncomputable def signEval {K : Type*} [Ring K] (x : R) : R[X] →*₀ K :=
 
 /-- The integer sum of signs at a specified finite set of points. -/
 noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, signEval x.val p
+
+/-- Sign sums are integer sums of pointwise polynomial signs. -/
+@[simp] theorem signSum_eq_sum (Z : Finset R) (p : R[X]) :
+    signSum Z p = ∑ x : Z, (sign (p.eval x.val) : ℤ) := (rfl)
 
 /-- The number of points realizing a specified polynomial sign condition. -/
 noncomputable def signCount {J : Type*} [Fintype J]

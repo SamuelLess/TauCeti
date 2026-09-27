@@ -116,6 +116,15 @@ def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
   | .neg => if e = 1 then -1/2 else if e = 2 then 1/2 else 0
   | .pos => if e = 1 then 1/2 else if e = 2 then 1/2 else 0
 
+@[simp] theorem inverseCoeff_zero (e : Fin 3) :
+    inverseCoeff .zero e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
+
+@[simp] theorem inverseCoeff_neg (e : Fin 3) :
+    inverseCoeff .neg e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
+
+@[simp] theorem inverseCoeff_pos (e : Fin 3) :
+    inverseCoeff .pos e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
+
 /-- The one-coordinate moment matrix has an explicit rational left inverse. -/
 theorem inverseCoeff_sum (s t : SignType) :
     ∑ e : Fin 3, inverseCoeff s e * (t : ℚ) ^ e.val = if s = t then 1 else 0 := by

@@ -5,6 +5,7 @@ Authors: The Tau Ceti contributors
 -/
 module
 
+import Mathlib.Algebra.BigOperators.Ring.Nat
 import Mathlib.GroupTheory.Perm.Finite
 public import TauCeti.Combinatorics.Enumerative.SuccessorArray
 
@@ -386,11 +387,19 @@ private theorem exists_maximal_visitCount_lt (π : α → Equiv.Perm ℕ) (x : �
       rw [← reindexStepEmbedding_source π x m t hused hmaps j]
       exact hxS _
     have hsumy : ∑ a ∈ S, visitCount (pathOfReindexedSuccessors π x) a t = t := by
-      simpa only [visitCount_def, Fintype.card_fin] using
-        sum_occCount_eq_card (fun j : Fin t => pathOfReindexedSuccessors π x j.val) hyS
+      have h := Finset.card_preimage_eq_sum_card_image_eq
+        (f := fun j : Fin t => pathOfReindexedSuccessors π x j.val) (s := S)
+        (fun _ _ ↦ Set.toFinite _)
+      rw [show (fun j : Fin t => pathOfReindexedSuccessors π x j.val) ⁻¹' (S : Set α) =
+          Set.univ by ext j; simp [hyS j]] at h
+      simpa only [visitCount_def, occCount_def, Nat.card_univ, Nat.card_fin] using h.symm
     have hsumx : ∑ a ∈ S, visitCount x a m = m := by
-      simpa only [visitCount_def, Fintype.card_fin] using
-        sum_occCount_eq_card (fun j : Fin m => x j.val) hxS
+      have h := Finset.card_preimage_eq_sum_card_image_eq (f := fun j : Fin m => x j.val)
+        (s := S) (fun _ _ ↦ Set.toFinite _)
+      rw [show (fun j : Fin m => x j.val) ⁻¹' (S : Set α) = Set.univ by
+        ext j
+        simp [hxS j]] at h
+      simpa only [visitCount_def, occCount_def, Nat.card_univ, Nat.card_fin] using h.symm
     have hsumEq : ∑ a ∈ S, visitCount (pathOfReindexedSuccessors π x) a t =
         ∑ a ∈ S, visitCount x a m := Finset.sum_congr rfl hall
     omega

@@ -29,11 +29,11 @@ variable (K L : Type*) [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 /-- An ordered intermediate field whose order extends that of the base. -/
 @[ext] structure OrderedSubfield where
   /-- The underlying intermediate field. -/
-  field : IntermediateField K L
+  toIntermediateField : IntermediateField K L
   /-- The nonnegative elements, represented in the ambient field. -/
   nonneg : Subsemiring L
-  nonneg_subset : ∀ x ∈ nonneg, x ∈ field
-  mem_or_neg_mem : ∀ x ∈ field, x ∈ nonneg ∨ -x ∈ nonneg
+  nonneg_subset : ∀ x ∈ nonneg, x ∈ toIntermediateField
+  mem_or_neg_mem : ∀ x ∈ toIntermediateField, x ∈ nonneg ∨ -x ∈ nonneg
   neg_one_notMem : -1 ∉ nonneg
   algebraMap_mem_nonneg : ∀ x : K, 0 ≤ x → algebraMap K L x ∈ nonneg
 
@@ -42,18 +42,18 @@ namespace OrderedSubfield
 variable {K L}
 
 instance : PartialOrder (OrderedSubfield K L) :=
-  PartialOrder.lift (fun P => (P.field, P.nonneg)) (by
+  PartialOrder.lift (fun P => (P.toIntermediateField, P.nonneg)) (by
     intro P Q h
     obtain ⟨hf, hn⟩ := Prod.mk.inj h
     exact OrderedSubfield.ext hf hn)
 
 omit [IsStrictOrderedRing K] in
 theorem le_iff (P Q : OrderedSubfield K L) :
-    P ≤ Q ↔ P.field ≤ Q.field ∧ P.nonneg ≤ Q.nonneg := Iff.rfl
+    P ≤ Q ↔ P.toIntermediateField ≤ Q.toIntermediateField ∧ P.nonneg ≤ Q.nonneg := Iff.rfl
 
 /-- The positive cone viewed inside its own intermediate field. -/
-def preordering (P : OrderedSubfield K L) : RingPreordering P.field where
-  __ := P.nonneg.comap P.field.val.toRingHom
+def preordering (P : OrderedSubfield K L) : RingPreordering P.toIntermediateField where
+  __ := P.nonneg.comap P.toIntermediateField.val.toRingHom
   mem_of_isSquare' := by
     rintro x ⟨y, rfl⟩
     -- The inherited carrier field is still wrapped by `comap` in this constructor goal;
@@ -65,7 +65,7 @@ def preordering (P : OrderedSubfield K L) : RingPreordering P.field where
   neg_one_notMem' := P.neg_one_notMem
 
 omit [IsStrictOrderedRing K] in
-@[simp] theorem mem_preordering (P : OrderedSubfield K L) (x : P.field) :
+@[simp] theorem mem_preordering (P : OrderedSubfield K L) (x : P.toIntermediateField) :
     x ∈ P.preordering ↔ x.val ∈ P.nonneg := (Iff.rfl)
 
 instance (P : OrderedSubfield K L) : (preordering P).IsOrdering where
@@ -74,29 +74,29 @@ instance (P : OrderedSubfield K L) : (preordering P).IsOrdering where
 
 /-- The induced linear order on the intermediate field. -/
 @[instance_reducible] noncomputable def linearOrder (P : OrderedSubfield K L) :
-    LinearOrder P.field := RingPreordering.linearOrder P.preordering
+    LinearOrder P.toIntermediateField := RingPreordering.linearOrder P.preordering
 
 omit [IsStrictOrderedRing K] in
 theorem isStrictOrderedRing (P : OrderedSubfield K L) : letI := P.linearOrder
-    IsStrictOrderedRing P.field := RingPreordering.isStrictOrderedRing P.preordering
+    IsStrictOrderedRing P.toIntermediateField := RingPreordering.isStrictOrderedRing P.preordering
 
 omit [IsStrictOrderedRing K] in
-theorem nonneg_iff (P : OrderedSubfield K L) (x : P.field) : letI := P.linearOrder
+theorem nonneg_iff (P : OrderedSubfield K L) (x : P.toIntermediateField) : letI := P.linearOrder
     0 ≤ x ↔ x.val ∈ P.nonneg :=
   (RingPreordering.nonneg_iff P.preordering x).trans (P.mem_preordering x)
 
 theorem algebraMap_strictMono (P : OrderedSubfield K L) : letI := P.linearOrder
-    StrictMono (algebraMap K P.field) := by
+    StrictMono (algebraMap K P.toIntermediateField) := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
-  exact ((monotone_iff_map_nonneg (algebraMap K P.field)).mpr fun x hx =>
+  exact ((monotone_iff_map_nonneg (algebraMap K P.toIntermediateField)).mpr fun x hx =>
     (P.nonneg_iff _).mpr (P.algebraMap_mem_nonneg x hx)).strictMono_of_injective
-      (algebraMap K P.field).injective
+      (algebraMap K P.toIntermediateField).injective
 
 /-- The image of an ordered extension under an embedding into the ambient field. -/
 private def image {E : Type*} [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra K E]
     (hf : Monotone (algebraMap K E)) (f : E →ₐ[K] L) : OrderedSubfield K L where
-  field := f.fieldRange
+  toIntermediateField := f.fieldRange
   nonneg := (Subsemiring.nonneg E).map f.toRingHom
   nonneg_subset := by
     rintro x ⟨y, _, rfl⟩
@@ -121,7 +121,7 @@ instance : Nonempty (OrderedSubfield K L) := ⟨base⟩
 private def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : OrderedSubfield K L := by
   have := hne.to_subtype
-  have hf : Directed (· ≤ ·) (fun P : c => P.val.field) := by
+  have hf : Directed (· ≤ ·) (fun P : c => P.val.toIntermediateField) := by
     intro P Q
     rcases hc.total P.property Q.property with h | h
     · exact ⟨Q, h.1, le_rfl⟩
@@ -132,7 +132,8 @@ private def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·)
     · exact ⟨Q, h.2, le_rfl⟩
     · exact ⟨P, le_rfl, h.2⟩
   exact
-    { field := (⨆ P : c, P.val.field).copy {x | ∃ P ∈ c, x ∈ P.field} (by
+    { toIntermediateField :=
+        (⨆ P : c, P.val.toIntermediateField).copy {x | ∃ P ∈ c, x ∈ P.toIntermediateField} (by
         rw [IntermediateField.coe_iSup_of_directed hf]
         ext x
         simp)
@@ -165,33 +166,35 @@ theorem exists_isMax : ∃ P : OrderedSubfield K L, IsMax P :=
 intermediate field, with the original signs preserved. -/
 theorem exists_le_mem (P : OrderedSubfield K L) {E : Type*}
     [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra K E]
-    [Algebra P.field E] [IsScalarTower K P.field E] (f : E →ₐ[P.field] L) :
+    [Algebra P.toIntermediateField E] [IsScalarTower K P.toIntermediateField E]
+    (f : E →ₐ[P.toIntermediateField] L) :
     letI := P.linearOrder
-    Monotone (algebraMap P.field E) →
-      ∃ Q : OrderedSubfield K L, P ≤ Q ∧ ∀ x : E, f x ∈ Q.field := by
+    Monotone (algebraMap P.toIntermediateField E) →
+      ∃ Q : OrderedSubfield K L, P ≤ Q ∧ ∀ x : E, f x ∈ Q.toIntermediateField := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   intro hf
   have hbase : Monotone (algebraMap K E) := by
     intro a b hab
-    simpa only [← IsScalarTower.algebraMap_apply K P.field E] using
+    simpa only [← IsScalarTower.algebraMap_apply K P.toIntermediateField E] using
       hf (P.algebraMap_strictMono.monotone hab)
   let Q := image hbase (f.restrictScalars K)
   refine ⟨Q, ⟨?_, ?_⟩, fun x => ⟨x, rfl⟩⟩
   · intro x hx
-    exact ⟨algebraMap P.field E ⟨x, hx⟩, f.commutes ⟨x, hx⟩⟩
+    exact ⟨algebraMap P.toIntermediateField E ⟨x, hx⟩, f.commutes ⟨x, hx⟩⟩
   · intro x hx
-    let y : P.field := ⟨x, P.nonneg_subset x hx⟩
+    let y : P.toIntermediateField := ⟨x, P.nonneg_subset x hx⟩
     have hy : 0 ≤ y := (P.nonneg_iff y).mpr hx
-    exact ⟨algebraMap P.field E y, by simpa using hf hy, f.commutes y⟩
+    exact ⟨algebraMap P.toIntermediateField E y, by simpa using hf hy, f.commutes y⟩
 
 /-- Every embedding of an ordered extension of a maximal ordered intermediate field `P`
-into the ambient field has its image inside `P.field`. -/
+into the ambient field has its image inside `P.toIntermediateField`. -/
 theorem mem_of_isMax (P : OrderedSubfield K L) (hP : IsMax P) {E : Type*}
     [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra K E]
-    [Algebra P.field E] [IsScalarTower K P.field E] (f : E →ₐ[P.field] L) :
+    [Algebra P.toIntermediateField E] [IsScalarTower K P.toIntermediateField E]
+    (f : E →ₐ[P.toIntermediateField] L) :
     letI := P.linearOrder
-    Monotone (algebraMap P.field E) → ∀ x : E, f x ∈ P.field := by
+    Monotone (algebraMap P.toIntermediateField E) → ∀ x : E, f x ∈ P.toIntermediateField := by
   intro hf x
   obtain ⟨Q, hPQ, hQ⟩ := P.exists_le_mem f hf
   exact (hP hPQ).1 (hQ x)

@@ -87,7 +87,7 @@ theorem extensionCone.aeval_mem {L : Type*} [CommRing L] [Algebra K L]
 
 /-- A weighted-square certificate in a simple algebraic extension lifts to a
 polynomial weighted-square certificate of degree less than twice the defining degree. -/
-theorem extensionCone.lift (p : K[X]) (hdeg : 0 < p.natDegree)
+theorem extensionCone.exists_aeval_root_eq (p : K[X]) (hdeg : 0 < p.natDegree)
     {x : AdjoinRoot p} (hx : x ∈ extensionCone (algebraMap K (AdjoinRoot p))) :
     ∃ q : K[X], q ∈ extensionCone (C : K →+* K[X]) ∧
       q.natDegree < 2 * p.natDegree ∧ aeval (AdjoinRoot.root p) q = x := by

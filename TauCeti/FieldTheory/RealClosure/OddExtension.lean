@@ -28,7 +28,7 @@ public section
 
 namespace Polynomial
 
-variable {K : Type*} [Field K]
+variable {K : Type*} [CommSemiring K] [NoZeroDivisors K] [WfDvdMonoid K]
 
 /-- An odd-degree polynomial has an odd-degree irreducible factor. -/
 theorem exists_irreducible_factor_of_odd_natDegree (p : K[X]) (hp : Odd p.natDegree) :
@@ -63,7 +63,7 @@ private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
     ∃ r : K[X], Irreducible r ∧ Odd r.natDegree ∧ r.natDegree < p.natDegree ∧
       -1 ∈ extensionCone (algebraMap K (AdjoinRoot r)) := by
   have : Fact (Irreducible p) := ⟨hp⟩
-  obtain ⟨s, hs, hsdeg, hseval⟩ := extensionCone.lift p hp.natDegree_pos hneg
+  obtain ⟨s, hs, hsdeg, hseval⟩ := extensionCone.exists_aeval_root_eq p hp.natDegree_pos hneg
   let w := (1 : K[X]) + s
   have hw : w ∈ extensionCone (C : K →+* K[X]) := add_mem (one_mem _) hs
   have hw0 : w ≠ 0 := by

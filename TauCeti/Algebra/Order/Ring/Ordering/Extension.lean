@@ -67,6 +67,17 @@ theorem self_mem_adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) :
     a ∈ adjoin P a ha :=
   ⟨0, zero_mem P, 1, one_mem P, by simp⟩
 
+/-- The generated preordering is contained in every preordering containing its generators. -/
+theorem adjoin_le {P Q : RingPreordering K} {a : K} {ha : -a ∉ P}
+    (hPQ : P ≤ Q) (haQ : a ∈ Q) : adjoin P a ha ≤ Q := by
+  rintro x ⟨u, hu, v, hv, rfl⟩
+  exact add_mem (hPQ hu) (mul_mem haQ (hPQ hv))
+
+@[simp] theorem adjoin_le_iff {P Q : RingPreordering K} {a : K} {ha : -a ∉ P} :
+    adjoin P a ha ≤ Q ↔ P ≤ Q ∧ a ∈ Q :=
+  ⟨fun h => ⟨(le_adjoin P a ha).trans h, h (self_mem_adjoin P a ha)⟩,
+    fun h => adjoin_le h.1 h.2⟩
+
 /-- The union of a nonempty chain of preorderings is a preordering. -/
 private def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : RingPreordering K := by

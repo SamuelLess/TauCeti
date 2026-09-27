@@ -39,56 +39,57 @@ variable {K L : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
 /-- Every nonnegative element of a maximal ordered intermediate field is a square. -/
 theorem OrderedSubfield.isSquare_of_isMax (P : OrderedSubfield K L) (hP : IsMax P)
-    (a : P.field) : letI := P.linearOrder
+    (a : P.toIntermediateField) : letI := P.linearOrder
       0 ≤ a → IsSquare a := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   intro ha
   by_contra hn
   have : Fact (¬ IsSquare a) := ⟨hn⟩
-  let E := QuadraticAlgebra P.field a 0
+  let E := QuadraticAlgebra P.toIntermediateField a 0
   obtain ⟨o, ho, hf⟩ := QuadraticAlgebra.exists_linearOrder ha
   let := o
   have := ho
-  let f : E →ₐ[P.field] L := IsAlgClosed.lift
+  let f : E →ₐ[P.toIntermediateField] L := IsAlgClosed.lift
   let y : E := QuadraticAlgebra.omega
   have hy := P.mem_of_isMax hP f hf.monotone y
   apply hn
   refine ⟨⟨f y, hy⟩, ?_⟩
   rw [Subtype.ext_iff, IntermediateField.coe_mul]
   rw [← map_mul]
-  have hy2 : y * y = algebraMap P.field E a := by
+  have hy2 : y * y = algebraMap P.toIntermediateField E a := by
     simpa only [map_zero, zero_mul, add_zero] using
       (QuadraticAlgebra.omega_mul_omega_eq_algebraMap (a := a) (b := 0))
   rw [hy2, f.commutes, IntermediateField.algebraMap_apply]
 
 /-- Every odd-degree polynomial over a maximal ordered intermediate field has a root. -/
 theorem OrderedSubfield.exists_root_of_isMax (P : OrderedSubfield K L) (hP : IsMax P)
-    (p : P.field[X]) (hp : Odd p.natDegree) : ∃ x, p.eval x = 0 := by
+    (p : P.toIntermediateField[X]) (hp : Odd p.natDegree) : ∃ x, p.eval x = 0 := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   obtain ⟨q, hq, hqodd, hqp⟩ := exists_irreducible_factor_of_odd_natDegree p hp
   have : Fact (Irreducible q) := ⟨hq⟩
-  have : FiniteDimensional P.field (AdjoinRoot q) := (AdjoinRoot.powerBasis hq.ne_zero).finite
+  have : FiniteDimensional P.toIntermediateField (AdjoinRoot q) :=
+    (AdjoinRoot.powerBasis hq.ne_zero).finite
   obtain ⟨o, ho, hf⟩ := AdjoinRoot.exists_linearOrder q hqodd
   let := o
   have := ho
-  let f : AdjoinRoot q →ₐ[P.field] L := IsAlgClosed.lift
+  let f : AdjoinRoot q →ₐ[P.toIntermediateField] L := IsAlgClosed.lift
   have hy := P.mem_of_isMax hP f hf.monotone (AdjoinRoot.root q)
-  let y : P.field := ⟨f (AdjoinRoot.root q), hy⟩
+  let y : P.toIntermediateField := ⟨f (AdjoinRoot.root q), hy⟩
   refine ⟨y, ?_⟩
   have hpval : aeval (AdjoinRoot.root q) p = 0 := by
     rw [AdjoinRoot.aeval_eq]
     exact AdjoinRoot.mk_eq_zero.mpr hqp
   have hpL : aeval (f (AdjoinRoot.root q)) p = 0 := by
     rw [aeval_algHom_apply, hpval, map_zero]
-  apply (algebraMap P.field L).injective
+  apply (algebraMap P.toIntermediateField L).injective
   rw [map_zero, ← aeval_algebraMap_apply_eq_algebraMap_eval]
   exact hpL
 
 /-- A maximal ordered intermediate field of an algebraically closed field is real closed. -/
 theorem OrderedSubfield.isRealClosed_of_isMax (P : OrderedSubfield K L) (hP : IsMax P) :
-    IsRealClosed P.field := by
+    IsRealClosed P.toIntermediateField := by
   let := P.linearOrder
   have := P.isStrictOrderedRing
   exact IsRealClosed.of_linearOrderedField
@@ -102,7 +103,7 @@ theorem exists_intermediateField :
       letI := o
       IsStrictOrderedRing F ∧ IsRealClosed F ∧ StrictMono (algebraMap K F) := by
   obtain ⟨P, hP⟩ := OrderedSubfield.exists_isMax (K := K) (L := AlgebraicClosure K)
-  exact ⟨P.field, P.linearOrder, P.isStrictOrderedRing,
+  exact ⟨P.toIntermediateField, P.linearOrder, P.isStrictOrderedRing,
     P.isRealClosed_of_isMax hP, P.algebraMap_strictMono⟩
 
 /-- An ordered algebraic real closure exists in the universe of the base field.

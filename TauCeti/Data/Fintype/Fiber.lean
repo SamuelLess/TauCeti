@@ -20,7 +20,7 @@ observed range can be weighted by their multiplicities instead of summing over e
 
 public section
 
-namespace TauCeti
+namespace Function
 
 variable {X S : Type*}
 
@@ -80,12 +80,7 @@ the original family. -/
 theorem sum_occCount_eq_card [Fintype X] (obs : X → S) {T : Finset S}
     (hT : ∀ x, obs x ∈ T) : ∑ σ ∈ T, occCount obs σ = Fintype.card X := by
   classical
-  have h := Finset.card_preimage_eq_sum_card_image_eq (f := obs) (s := T)
-    (fun _ _ ↦ Set.toFinite _)
-  rw [show obs ⁻¹' (T : Set S) = Set.univ by ext x; simp [hT x]] at h
-  calc
-    ∑ σ ∈ T, occCount obs σ = Nat.card X := by
-      simpa only [occCount_def, Nat.card_univ] using h.symm
-    _ = Fintype.card X := Nat.card_eq_fintype_card
+  simpa only [occCount_eq_card_filter, hT, Finset.filter_true, Finset.card_univ] using
+    Finset.sum_card_fiberwise_eq_card_filter Finset.univ T obs
 
-end TauCeti
+end Function

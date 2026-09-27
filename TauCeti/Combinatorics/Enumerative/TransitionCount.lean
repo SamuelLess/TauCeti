@@ -36,7 +36,7 @@ transition counts of a path are the sufficient statistic: see
 
 ## Main definitions
 
-* `TauCeti.occCount`: the number of positions of a word carrying a given letter.
+* `Function.occCount`: the number of positions of a word carrying a given letter.
 * `TauCeti.transitionCount`: the number of positions of a word at which a given ordered pair of
   letters occurs consecutively.
 
@@ -68,6 +68,8 @@ public section
 noncomputable section
 
 open Finset
+
+open Function (occCount occCount_def occCount_eq_card_filter sum_occCount_eq_card)
 
 namespace TauCeti
 

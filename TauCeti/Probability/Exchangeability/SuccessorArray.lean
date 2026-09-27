@@ -60,6 +60,8 @@ open MeasureTheory
 
 open TauCeti.MeasureTheory
 
+open Function (occCount occCount_def occCount_eq_card_filter sum_occCount_eq_card)
+
 namespace TauCeti
 
 namespace Probability

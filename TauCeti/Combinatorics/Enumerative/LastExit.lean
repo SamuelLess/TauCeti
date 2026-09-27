@@ -59,6 +59,8 @@ public section
 
 noncomputable section
 
+open Function (occCount occCount_def occCount_eq_card_filter sum_occCount_eq_card)
+
 namespace TauCeti
 
 variable {α : Type*}

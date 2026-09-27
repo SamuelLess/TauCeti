@@ -9,7 +9,9 @@ public import Mathlib.FieldTheory.IsRealClosed.Basic
 public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.FieldTheory.PrimitiveElement
-import TauCeti.Algebra.Polynomial.QuadraticDiscriminant
+import Mathlib.Algebra.QuadraticAlgebra.Discriminant
+import Mathlib.Algebra.QuadraticAlgebra.IsQuadraticExtension
+import Mathlib.Algebra.Field.Equiv
 import Mathlib.FieldTheory.Minpoly.Finite
 
 /-! # Finite extensions of an abstract real closed field -/
@@ -40,20 +42,11 @@ variable {K L : Type*} [Field K] [NeZero (2 : K)]
 theorem finrank_ne_two_of_isSquare [Field L] [Algebra K L]
     [FiniteDimensional K L] (hsq : ∀ x : K, IsSquare x) : finrank K L ≠ 2 := by
   intro htwo
-  have hsurj : Function.Surjective (Algebra.linearMap K L) := by
-    intro x
-    apply minpoly.natDegree_eq_one_iff.mp
-    have hpos := minpoly.natDegree_pos (IsIntegral.of_finite K x)
-    have hle := (minpoly.natDegree_le x).trans_eq htwo
-    by_contra hne
-    have hdeg : (minpoly K x).natDegree = 2 := by omega
-    obtain ⟨a, ha⟩ := exists_root_of_isSquare_discrim hdeg (hsq _)
-    have hone : (minpoly K x).natDegree = 1 := natDegree_eq_of_degree_eq_some
-      (degree_eq_one_of_irreducible_of_root (minpoly.irreducible (IsIntegral.of_finite K x)) ha)
-    omega
-  have := LinearMap.finrank_le_finrank_of_surjective hsurj
-  simp only [htwo, finrank_self] at this
-  omega
+  have : Algebra.IsQuadraticExtension K L := ⟨htwo⟩
+  obtain ⟨a, b, ⟨e⟩⟩ :=
+    Algebra.IsQuadraticExtension.exists_algEquiv_quadraticAlgebra (R := K) (A := L)
+  exact QuadraticAlgebra.not_isField_of_isSquare_discr (hsq _)
+    (e.symm.toRingEquiv.toMulEquiv.isField (Field.toIsField L))
 
 end Quadratic
 

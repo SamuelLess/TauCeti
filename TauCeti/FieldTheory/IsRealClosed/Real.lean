@@ -8,18 +8,20 @@ module
 public import Mathlib.Analysis.Polynomial.Order
 public import Mathlib.Analysis.Real.Sqrt
 public import Mathlib.FieldTheory.IsRealClosed.Basic
-public import Mathlib.Tactic.Linarith
-public import Mathlib.Tactic.NormNum
 
-/-! # The real numbers form a real closed field -/
+/-! # The real numbers form a real closed field
+
+Square roots and the polynomial sign-at-infinity consequences of real intermediate value
+supply the two axioms, independently of abstract real-closed-field polynomial order theory.
+-/
 
 public section
 
-/-- A concrete model of the abstract axioms, using only Mathlib's real-analysis APIs. -/
-instance : IsRealClosed ℝ := by
+/-- The real numbers form a real closed field. -/
+instance Real.instIsRealClosed : IsRealClosed ℝ := by
   apply IsRealClosed.of_linearOrderedField
   · intro x hx
-    exact ⟨Real.sqrt x, by simpa only [pow_two] using (Real.sq_sqrt hx).symm⟩
+    exact Real.isSquare_iff.mpr hx
   · intro p hp
     by_contra h
     have hleft : ∀ y, p.IsRoot y → y < 0 := fun y hy => (h ⟨y, hy⟩).elim

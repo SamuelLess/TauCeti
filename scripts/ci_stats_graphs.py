@@ -100,15 +100,16 @@ def load_jobs(db: sqlite3.Connection, since: float, until: float) -> list[dict]:
         counts[(workflow, day)] = (total, fetched or 0)
 
     out = []
-    for name, created, started, completed, kind, trigger, workflow in db.execute("""
-            SELECT j.name, j.created_at, j.started_at, j.completed_at, j.runner_kind, r.trigger, r.workflow
+    for name, created, started, completed, kind, trigger, workflow, run_created in db.execute("""
+            SELECT j.name, j.created_at, j.started_at, j.completed_at, j.runner_kind, r.trigger, r.workflow,
+                   r.created_at
             FROM jobs j JOIN runs r USING (repo, run_id)
             WHERE j.created_at BETWEEN ? AND ? AND j.runner_kind IN ('github', 'namespace')
               AND (j.completed_at IS NULL OR j.completed_at >= ?)""", (lo, hi, iso(since))):
         if not created:
             continue
         key, wait_series = classify(name, kind, trigger)
-        total, fetched = counts.get((workflow, created[:13]), (1, 1))
+        total, fetched = counts.get((workflow, run_created[:13]), (1, 1))
         out.append({
             "key": key, "kind": kind, "wait_series": wait_series,
             "weight": total / fetched if fetched else 1.0,
@@ -360,6 +361,8 @@ def main(argv=None):
     # empty bin would mean "not collected yet", and would draw as an idle fleet.
     now = dt.datetime.now(UTC).timestamp()
     covered = [ts(c) for (c,) in db.execute("SELECT complete_to FROM coverage")]
+    if not covered and not args.until:
+        sys.exit("the CI database records no coverage; not drawing charts that could not say where it ends")
     watermark = min(covered) if covered else now
     until = ts(args.until) if args.until else min(now, watermark)
     if not args.until and now - until > MAX_STALENESS:

@@ -19,7 +19,8 @@ covering the range is weighted by its occurrence count.
 ## Main results
 
 * `Function.occCount_pos`: for a finite fiber, the count is positive exactly when it is nonempty.
-* `Function.occCount_of_injective`: an injective function has count one on its range and zero outside.
+* `Function.occCount_of_injective`: an injective function has count one on its range
+  and zero outside.
 * `Function.occCount_le_of_comp`, `Function.occCount_lt_of_comp`: comparison along embeddings.
 * `Function.sum_occCount_nsmul`: regroup a sum by counting the occurrences of each value.
 * `Function.sum_occCount_eq_card`: the total occurrence count is the cardinality of the index type.

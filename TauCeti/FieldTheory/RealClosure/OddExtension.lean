@@ -58,12 +58,11 @@ variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
 /-- A negative weighted-square certificate in an odd-degree adjunction descends
  to an irreducible odd-degree adjunction of smaller degree. -/
-private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
+private theorem extensionCone.exists_lt (p : K[X])
     (hodd : Odd p.natDegree) (hneg : -1 ∈ extensionCone (algebraMap K (AdjoinRoot p))) :
     ∃ r : K[X], Irreducible r ∧ Odd r.natDegree ∧ r.natDegree < p.natDegree ∧
       -1 ∈ extensionCone (algebraMap K (AdjoinRoot r)) := by
-  have : Fact (Irreducible p) := ⟨hp⟩
-  obtain ⟨s, hs, hsdeg, hseval⟩ := extensionCone.exists_aeval_root_eq p hp.natDegree_pos hneg
+  obtain ⟨s, hs, hsdeg, hseval⟩ := extensionCone.exists_aeval_root_eq p hodd.pos hneg
   let w := (1 : K[X]) + s
   have hw : w ∈ extensionCone (C : K →+* K[X]) := add_mem (one_mem _) hs
   have hw0 : w ≠ 0 := by
@@ -81,7 +80,7 @@ private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
   obtain ⟨q, hq⟩ := hpw
   have hq0 : q ≠ 0 := by intro hz; apply hw0; simp [hq, hz]
   have hdegrees : w.natDegree = p.natDegree + q.natDegree := by
-    rw [hq, natDegree_mul hp.ne_zero hq0]
+    rw [hq, natDegree_mul (ne_zero_of_natDegree_gt hodd.pos) hq0]
   have hqdeg : q.natDegree < p.natDegree := by omega
   have hqodd : Odd q.natDegree := by
     have heven := (extensionCone.even_natDegree hw)
@@ -102,15 +101,15 @@ private theorem extensionCone.exists_lt (p : K[X]) (hp : Irreducible p)
   exact ⟨r, hr, hrodd, hrdeg, hsr ▸ extensionCone.aeval_mem hs (AdjoinRoot.root r)⟩
 
 /-- The cone of weighted squares stays proper after adjoining a root of an
-irreducible polynomial of odd degree. -/
-theorem extensionCone.neg_one_notMem_adjoinRoot (p : K[X]) (hp : Irreducible p)
+polynomial of odd degree. -/
+theorem extensionCone.neg_one_notMem_adjoinRoot (p : K[X])
     (hodd : Odd p.natDegree) :
     -1 ∉ extensionCone (algebraMap K (AdjoinRoot p)) := by
   induction hn : p.natDegree using Nat.strong_induction_on generalizing p with
   | h n ih =>
     intro hneg
-    obtain ⟨r, hr, hrodd, hrdeg, hrneg⟩ := extensionCone.exists_lt p hp hodd hneg
-    exact ih r.natDegree (hrdeg.trans_le hn.le) r hr hrodd rfl hrneg
+    obtain ⟨r, _, hrodd, hrdeg, hrneg⟩ := extensionCone.exists_lt p hodd hneg
+    exact ih r.natDegree (hrdeg.trans_le hn.le) r hrodd rfl hrneg
 
 /-- An odd-degree simple field extension admits an order preserving the
 given order of the base field. -/
@@ -118,6 +117,6 @@ theorem _root_.AdjoinRoot.exists_linearOrder (p : K[X]) [hp : Fact (Irreducible 
     (hodd : Odd p.natDegree) :
     ∃ o : LinearOrder (AdjoinRoot p), letI := o
       IsStrictOrderedRing (AdjoinRoot p) ∧ StrictMono (algebraMap K (AdjoinRoot p)) :=
-  extensionCone.exists_linearOrder _ (extensionCone.neg_one_notMem_adjoinRoot p hp.out hodd)
+  extensionCone.exists_linearOrder _ (extensionCone.neg_one_notMem_adjoinRoot p hodd)
 
 end TauCeti.RealClosure

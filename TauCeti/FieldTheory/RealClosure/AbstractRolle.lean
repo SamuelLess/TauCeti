@@ -6,13 +6,12 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.FieldTheory.RealClosure.IVT
-public import TauCeti.FieldTheory.RealClosure.Rolle
+public import TauCeti.Algebra.Polynomial.Rolle
 import TauCeti.Algebra.Polynomial.LinearFactor
 import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.Data.Finset.Max
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Positivity
 
 /-! # Polynomial Rolle over an abstract real closed field
 

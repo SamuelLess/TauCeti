@@ -6,14 +6,12 @@ Authors: Kim Morrison
 module
 
 public import Mathlib.Algebra.Polynomial.Derivative
-import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.LinearCombination
-import Mathlib.Tactic.Ring
 
 /-! # Polynomial Rolle and mean value
 
 The algebraic implication from polynomial Rolle to polynomial mean value works
-over any ordered field. `AbstractRolle.lean` derives the premise from
+over any ordered field. `TauCeti.FieldTheory.RealClosure.AbstractRolle` derives the premise from
 `IsRealClosed`; the `IsRealClosed ℝ` instance specializes this to the real numbers.
 -/
 
@@ -21,7 +19,7 @@ public section
 
 open Polynomial Set
 
-namespace TauCeti.RealClosure
+namespace Polynomial
 
 /-- Polynomial Rolle, stated without topology or completeness hypotheses. -/
 def Rolle (R : Type*) [Field R] [LinearOrder R] : Prop :=
@@ -94,4 +92,4 @@ theorem Rolle.strictAnti (h : Rolle R) (p : R[X]) {a b : R}
   have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
   exact sub_neg.mp (he.symm ▸ mul_neg_of_neg_of_pos hdc (sub_pos.mpr huv))
 
-end TauCeti.RealClosure
+end Polynomial

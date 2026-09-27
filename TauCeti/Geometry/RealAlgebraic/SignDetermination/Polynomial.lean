@@ -40,7 +40,8 @@ variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 noncomputable def signEval {K : Type*} [MulZeroOneClass K] [HasDistribNeg K] (x : R) : R[X] →*₀ K :=
   SignType.castHom.comp (signHom.comp (Polynomial.evalRingHom x).toMonoidWithZeroHom)
 
-@[simp] theorem signEval_apply {K : Type*} [MulZeroOneClass K] [HasDistribNeg K]
+@[simp, grind =]
+theorem signEval_apply {K : Type*} [MulZeroOneClass K] [HasDistribNeg K]
     (x : R) (p : R[X]) :
     signEval x p = (sign (p.eval x) : K) := (rfl)
 
@@ -56,13 +57,16 @@ theorem signSum_eq_sum (Z : Finset R) (p : R[X]) :
     signSum Z p = ∑ x ∈ Z, (sign (p.eval x) : ℤ) := by
   rw [signSum_eq_sum_subtype, Finset.sum_coe_sort Z (fun x : R => (sign (p.eval x) : ℤ))]
 
-@[simp] theorem signSum_empty (p : R[X]) : signSum ∅ p = 0 := by
+@[simp, grind =]
+theorem signSum_empty (p : R[X]) : signSum ∅ p = 0 := by
   simp [signSum_eq_sum]
 
-@[simp] theorem signSum_zero (Z : Finset R) : signSum Z 0 = 0 := by
+@[simp, grind =]
+theorem signSum_zero (Z : Finset R) : signSum Z 0 = 0 := by
   simp [signSum_eq_sum]
 
-@[simp] theorem signSum_one (Z : Finset R) : signSum Z 1 = Z.card := by
+@[simp, grind =]
+theorem signSum_one (Z : Finset R) : signSum Z 1 = Z.card := by
   simp [signSum_eq_sum]
 
 /-- A finite sign sum is the number of positive evaluations minus the number of negative ones. -/
@@ -104,7 +108,8 @@ theorem signCount_eq_card_filter {J : Type*} [Fintype J]
     (fun x : R => if ∀ j, sign ((Q j).eval x) = σ j then (1 : ℕ) else 0)
 
 omit [IsStrictOrderedRing R] in
-@[simp] theorem signCount_empty {J : Type*} [Fintype J]
+@[simp, grind =]
+theorem signCount_empty {J : Type*} [Fintype J]
     (Q : J → R[X]) (σ : J → SignType) : signCount ∅ Q σ = 0 := by
   simp [signCount_eq_card_filter]
 
@@ -118,7 +123,8 @@ theorem sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
 
 omit [IsStrictOrderedRing R] in
 /-- A positive sign count is equivalent to realization at a point of the finite set. -/
-@[simp] theorem signCount_pos {J : Type*} [Fintype J]
+@[simp, grind =]
+theorem signCount_pos {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     0 < signCount Z Q σ ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
   classical

@@ -25,7 +25,8 @@ def fiberCount (obs : X → S) (σ : S) : ℕ :=
   (Finset.univ.filter (fun x => obs x = σ)).card
 
 /-- Positive multiplicity means the value occurs. -/
-@[simp] theorem fiberCount_pos (obs : X → S) (σ : S) : 0 < fiberCount obs σ ↔ ∃ x, obs x = σ := by
+@[simp, grind =]
+theorem fiberCount_pos (obs : X → S) (σ : S) : 0 < fiberCount obs σ ↔ ∃ x, obs x = σ := by
   simp [fiberCount, Finset.card_pos, Finset.nonempty_iff_ne_empty]
 
 /-- An injective observation map gives multiplicity one precisely on its range. -/

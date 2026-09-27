@@ -42,13 +42,16 @@ theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
       (p.roots.toFinset.filter (fun x => q.eval x < 0)).card := by
   rw [tarskiQuery_eq_signSum, signSum_eq_card_sub_card]
 
-@[simp] theorem tarskiQuery_zero_left (q : R[X]) : tarskiQuery 0 q = 0 := by
+@[simp, grind =]
+theorem tarskiQuery_zero_left (q : R[X]) : tarskiQuery 0 q = 0 := by
   simp [tarskiQuery_eq_signSum]
 
-@[simp] theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
+@[simp, grind =]
+theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
   simp [tarskiQuery_eq_signSum]
 
-@[simp] theorem tarskiQuery_one (p : R[X]) :
+@[simp, grind =]
+theorem tarskiQuery_one (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
 

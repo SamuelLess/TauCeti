@@ -78,13 +78,16 @@ def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
   | .neg => if e = 1 then -1/2 else if e = 2 then 1/2 else 0
   | .pos => if e = 1 then 1/2 else if e = 2 then 1/2 else 0
 
-@[simp] theorem inverseCoeff_zero (e : Fin 3) :
+@[simp, grind =]
+theorem inverseCoeff_zero (e : Fin 3) :
     inverseCoeff 0 e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
 
-@[simp] theorem inverseCoeff_neg_one (e : Fin 3) :
+@[simp, grind =]
+theorem inverseCoeff_neg_one (e : Fin 3) :
     inverseCoeff (-1) e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
-@[simp] theorem inverseCoeff_one (e : Fin 3) :
+@[simp, grind =]
+theorem inverseCoeff_one (e : Fin 3) :
     inverseCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
 /-- The one-coordinate moment matrix has an explicit rational left inverse. -/
@@ -104,16 +107,19 @@ def fullInverse : Matrix (J → SignType) (J → Fin 3) ℚ :=
   Matrix.of fun σ e => ∏ j, inverseCoeff (σ j) (e j)
 
 omit [DecidableEq J] in
-@[simp] theorem fullMatrix_apply (e : J → Fin 3) (σ : J → SignType) :
+@[simp, grind =]
+theorem fullMatrix_apply (e : J → Fin 3) (σ : J → SignType) :
     fullMatrix J e σ = ∏ j, (σ j : ℚ) ^ (e j).val := (rfl)
 
 omit [DecidableEq J] in
-@[simp] theorem fullInverse_apply (σ : J → SignType) (e : J → Fin 3) :
+@[simp, grind =]
+theorem fullInverse_apply (σ : J → SignType) (e : J → Fin 3) :
     fullInverse J σ e = ∏ j, inverseCoeff (σ j) (e j) := (rfl)
 
 /-- The tensor inverse works for every finite number of sign queries,
 including zero. This is the uniqueness fact a full-table solver needs. -/
-@[simp] theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
+@[simp, grind =]
+theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
   classical
   ext σ τ
   rw [Matrix.mul_apply, Matrix.one_apply]
@@ -129,7 +135,8 @@ including zero. This is the uniqueness fact a full-table solver needs. -/
     exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
 
 /-- Equal finite dimensions turn the explicit left inverse into a right inverse. -/
-@[simp] theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
+@[simp, grind =]
+theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
   classical
   apply (Matrix.mul_eq_one_comm_of_card_eq (J → SignType) (J → Fin 3) ℚ
     (A := fullInverse J) (B := fullMatrix J) ?_).mp

@@ -5,7 +5,7 @@ Authors: Kim Morrison
 -/
 module
 
-public import TauCeti.FieldTheory.RealClosure.Ordering
+public import TauCeti.Algebra.Order.Ring.Ordering.Extension
 public import Mathlib.Algebra.Order.Field.Basic
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 
@@ -97,7 +97,7 @@ theorem exists_order_extension (f : K →+* L) (h : -1 ∉ extensionCone f) :
         rintro x ⟨y, rfl⟩
         exact square_mem_extensionCone f y
       neg_one_notMem' := h }
-  obtain ⟨o, ho, hP⟩ := Preordering.exists_linearOrder P
+  obtain ⟨o, ho, hP⟩ := RingPreordering.exists_linearOrder P
   let := o
   have := ho
   refine ⟨o, ho, ?_⟩

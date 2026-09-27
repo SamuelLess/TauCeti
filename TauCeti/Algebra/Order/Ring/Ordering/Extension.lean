@@ -20,11 +20,9 @@ extension of an already ordered field.
 
 @[expose] public section
 
-namespace RealClosure
-
 variable {K : Type*} [Field K]
 
-namespace Preordering
+namespace RingPreordering
 
 /-- Adjoin an element whose negative is absent from a field preordering. -/
 def adjoin (P : RingPreordering K) (a : K) (ha : -a ∉ P) : RingPreordering K :=
@@ -114,7 +112,7 @@ instance (P : RingPreordering K) [P.IsOrdering] : HasMemOrNegMem (cone P) where
   classical
   exact .mkOfAddGroupCone (cone P)
 
-theorem ordered (P : RingPreordering K) [P.IsOrdering] :
+theorem isStrictOrderedRing (P : RingPreordering K) [P.IsOrdering] :
     letI := order P
     IsStrictOrderedRing K := by
   let := order P
@@ -133,7 +131,7 @@ theorem exists_linearOrder (P : RingPreordering K) :
       IsStrictOrderedRing K ∧ ∀ x ∈ P, 0 ≤ x := by
   obtain ⟨Q, hPQ, hQ⟩ := exists_ordering P
   let := hQ
-  exact ⟨order Q, ordered Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
+  exact ⟨order Q, isStrictOrderedRing Q, fun x hx => (nonneg_iff Q x).mpr (hPQ hx)⟩
 
 /-- The sums of squares form a proper preordering in a formally real field. -/
 def sumsOfSquares [IsSemireal K] : RingPreordering K where
@@ -141,13 +139,11 @@ def sumsOfSquares [IsSemireal K] : RingPreordering K where
   mem_of_isSquare' hx := by simpa using hx.isSumSq
   neg_one_notMem' := by simpa using IsSemireal.not_isSumSq_neg_one K
 
-end Preordering
+end RingPreordering
 
 /-- A formally real field admits a compatible linear order. -/
-theorem exists_order_of_semireal [IsSemireal K] :
+theorem IsSemireal.exists_linearOrder [IsSemireal K] :
     ∃ o : LinearOrder K, letI := o
       IsStrictOrderedRing K := by
-  obtain ⟨o, ho, _⟩ := Preordering.exists_linearOrder (Preordering.sumsOfSquares (K := K))
+  obtain ⟨o, ho, _⟩ := RingPreordering.exists_linearOrder (RingPreordering.sumsOfSquares (K := K))
   exact ⟨o, ho⟩
-
-end RealClosure

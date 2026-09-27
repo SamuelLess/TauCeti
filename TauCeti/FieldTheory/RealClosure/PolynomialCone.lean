@@ -77,10 +77,11 @@ theorem polynomialCone_map {L : Type*} [CommRing L] [Algebra K L]
 
 /-- A weighted-square certificate in a simple algebraic extension lifts to a
 polynomial weighted-square certificate of degree less than twice the defining degree. -/
-theorem lift_polynomialCone (p : K[X]) (hp : p ≠ 0) [Fact (Irreducible p)]
+theorem lift_polynomialCone (p : K[X]) [Fact (Irreducible p)]
     {x : AdjoinRoot p} (hx : x ∈ extensionCone (algebraMap K (AdjoinRoot p))) :
     ∃ q : K[X], q ∈ extensionCone (C : K →+* K[X]) ∧
       q.natDegree < 2 * p.natDegree ∧ aeval (AdjoinRoot.root p) q = x := by
+  have hp : p ≠ 0 := (Fact.out (p := Irreducible p)).ne_zero
   have hdeg : 0 < p.natDegree := (Fact.out (p := Irreducible p)).natDegree_pos
   induction hx using AddSubmonoid.closure_induction with
   | mem x hx =>

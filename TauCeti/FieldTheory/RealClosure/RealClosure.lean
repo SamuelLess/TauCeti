@@ -19,6 +19,8 @@ extension steps preserve the prescribed base order.
 
 public section
 
+universe u
+
 namespace RealClosure
 
 open Polynomial

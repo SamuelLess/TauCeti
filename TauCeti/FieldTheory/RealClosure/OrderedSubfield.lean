@@ -5,7 +5,7 @@ Authors: Kim Morrison
 -/
 module
 
-public import TauCeti.FieldTheory.RealClosure.Ordering
+public import TauCeti.Algebra.Order.Ring.Ordering.Extension
 public import Mathlib.FieldTheory.IntermediateField.Basic
 public import Mathlib.Algebra.Order.Field.Basic
 
@@ -24,9 +24,11 @@ variable (K L : Type*) [Field K] [LinearOrder K] [IsStrictOrderedRing K]
 
 /-- An ordered intermediate field whose order extends that of the base. -/
 @[ext] structure OrderedSubfield where
+  /-- The underlying intermediate field. -/
   field : IntermediateField K L
+  /-- The nonnegative elements, represented in the ambient field. -/
   nonneg : Subsemiring L
-  nonneg_le : ∀ x ∈ nonneg, x ∈ field
+  nonneg_subset : ∀ x ∈ nonneg, x ∈ field
   total : ∀ x ∈ field, x ∈ nonneg ∨ -x ∈ nonneg
   neg_one : -1 ∉ nonneg
   base_nonneg : ∀ x : K, 0 ≤ x → algebraMap K L x ∈ nonneg
@@ -62,15 +64,15 @@ instance (P : OrderedSubfield K L) : (preordering P).IsOrdering where
 
 /-- The induced linear order on the intermediate field. -/
 @[instance_reducible] noncomputable def order (P : OrderedSubfield K L) :
-    LinearOrder P.field := Preordering.order P.preordering
+    LinearOrder P.field := RingPreordering.order P.preordering
 
 omit [IsStrictOrderedRing K] in
 theorem ordered (P : OrderedSubfield K L) : letI := P.order
-    IsStrictOrderedRing P.field := Preordering.ordered P.preordering
+    IsStrictOrderedRing P.field := RingPreordering.isStrictOrderedRing P.preordering
 
 omit [IsStrictOrderedRing K] in
 theorem nonneg_iff (P : OrderedSubfield K L) (x : P.field) : letI := P.order
-    0 ≤ x ↔ x.val ∈ P.nonneg := Preordering.nonneg_iff P.preordering x
+    0 ≤ x ↔ x.val ∈ P.nonneg := RingPreordering.nonneg_iff P.preordering x
 
 theorem base_strictMono (P : OrderedSubfield K L) : letI := P.order
     StrictMono (algebraMap K P.field) := by
@@ -88,7 +90,7 @@ def image {E : Type*} [Field E] [LinearOrder E] [IsStrictOrderedRing E] [Algebra
     (hf : StrictMono (algebraMap K E)) (f : E →ₐ[K] L) : OrderedSubfield K L where
   field := f.fieldRange
   nonneg := (Subsemiring.nonneg E).map f.toRingHom
-  nonneg_le := by
+  nonneg_subset := by
     rintro x ⟨y, _, rfl⟩
     exact ⟨y, rfl⟩
   total := by
@@ -143,7 +145,7 @@ def chainUnion (c : Set (OrderedSubfield K L)) (hc : IsChain (· ≤ ·) c)
         rcases hc.total hP hQ with h | h
         · exact ⟨Q, hQ, mul_mem (h.2 hx) hy⟩
         · exact ⟨P, hP, mul_mem hx (h.2 hy)⟩ }
-  nonneg_le := by rintro x ⟨P, hP, hx⟩; exact ⟨P, hP, P.nonneg_le x hx⟩
+  nonneg_subset := by rintro x ⟨P, hP, hx⟩; exact ⟨P, hP, P.nonneg_subset x hx⟩
   total := by
     rintro x ⟨P, hP, hx⟩
     exact (P.total x hx).imp (fun h => ⟨P, hP, h⟩) (fun h => ⟨P, hP, h⟩)
@@ -183,7 +185,7 @@ theorem exists_image (P : OrderedSubfield K L) {E : Type*}
   · intro x hx
     exact ⟨algebraMap P.field E ⟨x, hx⟩, f.commutes ⟨x, hx⟩⟩
   · intro x hx
-    let y : P.field := ⟨x, P.nonneg_le x hx⟩
+    let y : P.field := ⟨x, P.nonneg_subset x hx⟩
     have hy : 0 ≤ y := (P.nonneg_iff y).mpr hx
     exact ⟨algebraMap P.field E y, by simpa using hf.monotone hy, f.commutes y⟩
 

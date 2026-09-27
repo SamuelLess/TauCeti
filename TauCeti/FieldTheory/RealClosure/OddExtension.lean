@@ -50,7 +50,7 @@ theorem odd_cone_proper (p : K[X]) (hp : Irreducible p) (hodd : Odd p.natDegree)
   | h n ih =>
     have : Fact (Irreducible p) := ⟨hp⟩
     intro hneg
-    obtain ⟨s, hs, hsdeg, hseval⟩ := lift_polynomialCone p hp.ne_zero hneg
+    obtain ⟨s, hs, hsdeg, hseval⟩ := lift_polynomialCone p hneg
     let w := (1 : K[X]) + s
     have hw : w ∈ extensionCone (C : K →+* K[X]) := add_mem (one_mem _) hs
     have hw0 : w ≠ 0 := by

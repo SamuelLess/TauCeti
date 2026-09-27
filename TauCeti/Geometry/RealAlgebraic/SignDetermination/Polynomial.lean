@@ -51,6 +51,21 @@ noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, signEval
 theorem signSum_eq_sum (Z : Finset R) (p : R[X]) :
     signSum Z p = ∑ x : Z, (sign (p.eval x.val) : ℤ) := (rfl)
 
+/-- A finite sign sum is the number of positive evaluations minus the number of negative ones. -/
+theorem signSum_eq_card_sub_card (Z : Finset R) (p : R[X]) :
+    signSum Z p = ((Z.filter (fun x => 0 < p.eval x)).card : ℤ) -
+      (Z.filter (fun x => p.eval x < 0)).card := by
+  classical
+  rw [signSum_eq_sum, Finset.sum_coe_sort Z (fun x : R => (sign (p.eval x) : ℤ))]
+  simp only [Finset.card_filter, Nat.cast_sum, Nat.cast_ite, Nat.cast_one, Nat.cast_zero,
+    ← Finset.sum_sub_distrib]
+  apply Finset.sum_congr rfl
+  intro x _
+  by_cases hpos : 0 < p.eval x
+  · have hneg : ¬ p.eval x < 0 := not_lt_of_ge hpos.le
+    simp [hpos, hneg]
+  · by_cases hneg : p.eval x < 0 <;> simp [sign_apply, hpos, hneg]
+
 omit [IsStrictOrderedRing R] in
 /-- The number of points realizing a specified polynomial sign condition. -/
 noncomputable def signCount {J : Type*} [Fintype J]
@@ -63,12 +78,17 @@ theorem signCount_eq_fiberCount {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     signCount Z Q σ = fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
 
-/-- Polynomial product sign sums are the moments of the observed sign words. -/
-theorem signSum.prod_pow_eq_sum {J : Type*} [Fintype J]
-    (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
-    signSum Z (∏ j, Q j ^ e j) =
-      ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) ^ e j := by
-  simp only [signSum, map_prod, map_pow, signEval_apply]
+omit [IsStrictOrderedRing R] in
+/-- A positive sign count is equivalent to realization at a point of the finite set. -/
+@[simp] theorem signCount_pos {J : Type*} [Fintype J]
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
+    0 < signCount Z Q σ ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
+  simp only [signCount_eq_fiberCount, fiberCount_pos, funext_iff, Subtype.exists, exists_prop]
+
+/-- The sign sum of a product is the sum of the products of its pointwise signs. -/
+theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
+    signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
+  simp only [signSum, map_prod, signEval_apply]
 
 /-- The polynomial moment identity on any complete restricted column set and
 any selected exponent rows. Exponents need not be bounded by two. -/
@@ -81,7 +101,7 @@ theorem mulVec_signCount {J C I : Type*} [Fintype J]
         (fun c => (signCount Z Q (columns c) : ℤ)) =
       fun i => signSum Z (∏ j, Q j ^ rows i j) := by
   classical
-  simp_rw [signSum.prod_pow_eq_sum]
+  simp_rw [signSum_prod, eval_pow, sign_pow, SignType.coe_pow]
   simpa only [signCount_eq_fiberCount] using
     mulVec_fiberCount _ columns hinj cover (fun i σ => ∏ j, (σ j : ℤ) ^ rows i j)
 
@@ -90,7 +110,7 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
-  simp_rw [signSum.prod_pow_eq_sum]
+  simp_rw [signSum_prod, eval_pow, sign_pow, SignType.coe_pow]
   simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow,
     signCount_eq_fiberCount, SignType.intCast_cast] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
@@ -101,7 +121,7 @@ theorem signSum_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
     signSum Z (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
   classical
-  rw [signSum.prod_pow_eq_sum]
+  simp only [signSum_prod, eval_pow, sign_pow, SignType.coe_pow]
   simpa only [id_eq, signCount_eq_fiberCount] using
     (sum_mul_fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) id
       Function.injective_id (fun x => ⟨_, rfl⟩)
@@ -113,6 +133,6 @@ theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
     0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
       ∃ x : Z, ∀ j, sign ((Q j).eval x.val) = σ j := by
   rw [fullInverse_mulVec_signSum]
-  simp only [Nat.cast_pos, signCount_eq_fiberCount, fiberCount_pos, funext_iff]
+  simp only [Nat.cast_pos, signCount_pos, Subtype.exists, exists_prop]
 
 end TauCeti.SignDetermination

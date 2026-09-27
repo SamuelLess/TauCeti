@@ -31,6 +31,15 @@ noncomputable def tarskiQuery (p q : R[X]) : ℤ := signSum p.roots.toFinset q
 theorem tarskiQuery_eq_signSum (p q : R[X]) :
     tarskiQuery p q = signSum p.roots.toFinset q := (rfl)
 
+/-- The Tarski query is the positive root count minus the negative root count. -/
+theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
+    tarskiQuery p q = ((p.roots.toFinset.filter (fun x => 0 < q.eval x)).card : ℤ) -
+      (p.roots.toFinset.filter (fun x => q.eval x < 0)).card := by
+  rw [tarskiQuery_eq_signSum, signSum_eq_card_sub_card]
+
+@[simp] theorem tarskiQuery_zero_left (q : R[X]) : tarskiQuery 0 q = 0 := by
+  simp [tarskiQuery_eq_signSum, signSum_eq_sum]
+
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
 theorem tarskiQuery_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
     (p : R[X]) (Q : J → R[X]) (e : J → ℕ) :
@@ -52,7 +61,6 @@ theorem signCount_roots_pos {J : Type*} [Fintype J]
     0 < signCount p.roots.toFinset Q σ ↔
       ∃ x : R, p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j := by
   classical
-  simp only [signCount_eq_fiberCount, fiberCount_pos, funext_iff, Subtype.exists,
-    Multiset.mem_toFinset, mem_roots hp, IsRoot.def, exists_prop]
+  simp only [signCount_pos, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
 
 end TauCeti.SignDetermination

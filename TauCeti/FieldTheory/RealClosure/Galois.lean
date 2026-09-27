@@ -9,7 +9,15 @@ public import TauCeti.FieldTheory.RealClosure.FiniteExtension
 public import Mathlib.FieldTheory.Galois.Basic
 public import Mathlib.GroupTheory.Nilpotent
 
-/-! # The Galois-theoretic reduction for real closed fields -/
+/-! # The Galois-theoretic reduction for real closed fields
+
+## References
+
+The Sylow 2-subgroup and index-two subgroup steps of the Artin–Schreier argument; see
+Salma Kuhlmann,
+[Real Algebraic Geometry, Lecture 5](https://www.math.uni-konstanz.de/algebra/WS0910/Notes05.pdf),
+Theorem 2.2.
+-/
 
 public section
 

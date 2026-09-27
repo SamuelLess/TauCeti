@@ -14,7 +14,15 @@ import Mathlib.Algebra.QuadraticAlgebra.IsQuadraticExtension
 import Mathlib.Algebra.Field.Equiv
 import Mathlib.FieldTheory.Minpoly.Finite
 
-/-! # Finite extensions of an abstract real closed field -/
+/-! # Finite extensions of an abstract real closed field
+
+## References
+
+The odd-degree and quadratic-extension steps of the Artin–Schreier argument; see
+Salma Kuhlmann,
+[Real Algebraic Geometry, Lecture 5](https://www.math.uni-konstanz.de/algebra/WS0910/Notes05.pdf),
+Theorem 2.2.
+-/
 
 public section
 

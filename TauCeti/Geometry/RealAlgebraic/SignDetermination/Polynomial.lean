@@ -10,36 +10,47 @@ public import Mathlib.Algebra.Polynomial.Roots
 
 /-! # Sign determination from polynomial sign sums
 
-This file concerns mathematical finite sums over any ordered field.
-Taking the finite set to be the distinct roots of a nonzero polynomial gives
-the sign-determination moment identity. No real-closed-field hypothesis is
-needed for this finite algebraic identity.
+`signCount` counts points realizing a sign condition, and `signSum` is the
+integer sum of signs on a specified finite set. `signSum_prod_pow` expresses
+the sign sum of a product as a moment of these counts. `recover_signs` inverts
+the full moment system over the rationals.
+
+These statements hold over any ordered field. For root sign determination,
+take the finite set to be the distinct roots of a nonzero polynomial, possibly
+restricted to an interval. The zero polynomial must be handled separately:
+its zero set is not represented by its empty `Polynomial.roots` multiset.
 -/
 
 public section
 
 open Polynomial SignType
-open scoped BigOperators Matrix
+open scoped Matrix
 
-namespace SignDetermination
+namespace TauCeti.SignDetermination
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
-/-- Polynomial evaluation followed by sign and the rational sign-code cast. -/
-@[expose] noncomputable def signEval (x : R) : R[X] →*₀ ℚ :=
+/-- Polynomial evaluation followed by sign and a sign-code cast. -/
+@[expose] noncomputable def signEval {K : Type*} [Ring K] (x : R) : R[X] →*₀ K :=
   SignType.castHom.comp (signHom.comp (Polynomial.evalRingHom x).toMonoidWithZeroHom)
 
-@[simp] theorem signEval_apply (x : R) (p : R[X]) :
-    signEval x p = (sign (p.eval x) : ℚ) := rfl
+@[simp] theorem signEval_apply {K : Type*} [Ring K] (x : R) (p : R[X]) :
+    signEval x p = (sign (p.eval x) : K) := rfl
 
-/-- The mathematical sum of signs at a specified finite set of points. -/
-noncomputable def signSum (Z : Finset R) (p : R[X]) : ℚ := ∑ x : Z, signEval x.val p
+/-- The integer sum of signs at a specified finite set of points. -/
+noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, signEval x.val p
+
+/-- The number of points realizing a specified polynomial sign condition. -/
+noncomputable def signCount {J : Type*} [Fintype J]
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) : ℕ := by
+  classical
+  exact count (fun x : Z => fun j => sign ((Q j).eval x.val)) σ
 
 /-- Polynomial product sign sums are the moments of the observed sign words. -/
 theorem signSum_product {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
     signSum Z (∏ j, Q j ^ e j) =
-      ∑ x : Z, ∏ j, ((sign ((Q j).eval x.val) : SignType) : ℚ) ^ e j := by
+      ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) ^ e j := by
   simp only [signSum, map_prod, map_pow, signEval_apply]
 
 /-- The polynomial moment identity on any complete restricted column set and
@@ -49,65 +60,37 @@ theorem restricted_moments {J C I : Type*} [Fintype J]
     (columns : C → (J → SignType)) (rows : I → J → ℕ)
     (hinj : Function.Injective columns)
     (cover : ∀ x : Z, ∃ c, columns c = fun j => sign ((Q j).eval x.val)) :
-    (Matrix.of fun i c => ∏ j, (columns c j : ℚ) ^ rows i j) *ᵥ
-        (fun c => count (fun x : Z => fun j => sign ((Q j).eval x.val)) (columns c)) =
+    (Matrix.of fun i c => ∏ j, (columns c j : ℤ) ^ rows i j) *ᵥ
+        (fun c => (signCount Z Q (columns c) : ℤ)) =
       fun i => signSum Z (∏ j, Q j ^ rows i j) := by
   classical
   simp_rw [signSum_product]
-  exact count_moments _ columns hinj cover (fun i σ => ∏ j, (σ j : ℚ) ^ rows i j)
+  exact count_moments _ columns hinj cover (fun i σ => ∏ j, (σ j : ℤ) ^ rows i j)
 
-/-- All ternary moments determine the exact multiplicity of every sign pattern.
-Taking `Z` to be the distinct roots in an interval gives the abstract BKR
-sign-determination identity, without any root-separation hypothesis. -/
+/-- All ternary moments determine the exact multiplicity of every sign pattern. -/
 theorem recover_signs {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
-    fullInverse J *ᵥ (fun e => signSum Z (∏ j, Q j ^ (e j).val)) =
-      fun σ => count (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := by
+    fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
+      fun σ => (signCount Z Q σ : ℚ) := by
   simp_rw [signSum_product]
-  exact full_recovery J _
+  simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow, signCount, SignType.intCast_cast] using
+    full_recovery J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
-/-- The integer BKR moment identity on the distinct roots of a polynomial.
-For nonzero `p` these are precisely its zeros. As a finite-list identity it also
-holds for `p = 0`, whose `roots` multiset is empty. -/
-theorem sign_matrix (p : R[X]) {J : Type*} [Fintype J] [DecidableEq J]
-    (Q : J → R[X]) (e : J → ℕ) :
-    (∑ x ∈ p.roots.toFinset, (sign ((∏ j, Q j ^ e j).eval x) : ℤ)) =
-      ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) *
-        ((p.roots.toFinset.filter fun x => ∀ j, sign ((Q j).eval x) = σ j).card : ℤ) := by
+/-- The integer BKR moment identity on a finite set of sample points. -/
+theorem signSum_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
+    (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
+    signSum Z (∏ j, Q j ^ e j) =
+      ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
   classical
-  let Z := p.roots.toFinset
-  let obs (x : Z) (j : J) := sign ((Q j).eval x.val)
-  have h := congrFun (count_moments_int obs id Function.injective_id
-    (fun x => ⟨obs x, rfl⟩) (fun (_ : Unit) σ => ∏ j, (σ j : ℤ) ^ e j)) ()
-  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq] at h
-  have counts (σ : J → SignType) :
-      (Finset.univ.filter fun x : Z => obs x = σ).card =
-        (Z.filter fun x => ∀ j, sign ((Q j).eval x) = σ j).card := by
-    simp only [obs, funext_iff]
-    apply Finset.card_bij (fun x _ => x.val)
-    · intro x hx
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hx ⊢
-      exact ⟨x.property, hx⟩
-    · intro x _ y _ hxy
-      exact Subtype.ext hxy
-    · intro x hx
-      exact ⟨⟨x, (Finset.mem_filter.mp hx).1⟩,
-        by simpa using (Finset.mem_filter.mp hx).2, rfl⟩
-  simp_rw [counts] at h
-  rw [h]
-  rw [Finset.sum_subtype Z (fun _ => Iff.rfl)]
-  apply Finset.sum_congr rfl
-  intro x _
-  change (SignType.castHom.comp (signHom.comp (Polynomial.evalRingHom x.val).toMonoidWithZeroHom)
-    (∏ j, Q j ^ e j) : ℤ) = _
-  simp [map_prod, map_pow, obs]
+  exact (congrFun (restricted_moments Z Q id (fun (_ : Unit) => e)
+    Function.injective_id (fun x => ⟨_, rfl⟩)) ()).symm
 
-/-- The recovered sign pattern occurs at exactly as many points as its count. -/
+/-- The recovered sign pattern is positive exactly when it is realized. -/
 theorem recovered_pos {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    0 < (fullInverse J *ᵥ (fun e => signSum Z (∏ j, Q j ^ (e j).val))) σ ↔
+    0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
       ∃ x : Z, ∀ j, sign ((Q j).eval x.val) = σ j := by
-  rw [recover_signs, count_pos]
-  simp only [funext_iff]
+  rw [recover_signs]
+  simp only [Nat.cast_pos, signCount, count_pos, funext_iff]
 
-end SignDetermination
+end TauCeti.SignDetermination

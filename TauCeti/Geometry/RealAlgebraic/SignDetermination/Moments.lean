@@ -10,51 +10,51 @@ public import Mathlib.LinearAlgebra.Matrix.SemiringInverse
 public import Mathlib.Algebra.BigOperators.Ring.Finset
 public import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Basic.Sign.Basic
-public import Mathlib.Tactic.FinCases
 public import Mathlib.Tactic.NormNum
 
 /-! # Finite sign determination
 
 Counts refer to an actual finite family of observations, independently of a
-proposed solution of a moment system. A reduced system determines those counts
-only when its candidate columns cover every observation.
+proposed solution of a moment system. `solve_counts` recovers multiplicities on
+candidate columns only when they cover every observation. `full_recovery` gives
+an explicit inverse for all ternary sign conditions.
+
+Here `X` indexes observations, `S` is the space of sign conditions, `C` indexes
+candidate columns, and `I` indexes moment rows.
 -/
 
 public section
 
-open scoped BigOperators Matrix
+open scoped Matrix
 
-namespace SignDetermination
+namespace TauCeti.SignDetermination
 
 variable {X S C I : Type*} [Fintype X] [Fintype C] [Fintype I]
     [DecidableEq S] [DecidableEq C]
 
 /-- Multiplicity of a proposed sign condition in a finite observation family. -/
-def count (obs : X → S) (σ : S) : ℚ :=
-  ((Finset.univ.filter (fun x => obs x = σ)).card : ℚ)
+def count (obs : X → S) (σ : S) : ℕ :=
+  (Finset.univ.filter (fun x => obs x = σ)).card
 
 /-- The multiplicity counts observations, not distinct sign patterns. -/
 theorem count_eq_sum (obs : X → S) (σ : S) :
-    count obs σ = ∑ x, if obs x = σ then (1 : ℚ) else 0 := by
+    count obs σ = ∑ x, if obs x = σ then (1 : ℕ) else 0 := by
   simp [count, Finset.sum_boole]
 
 /-- Positive multiplicity means the condition is actually realized. -/
 theorem count_pos (obs : X → S) (σ : S) : 0 < count obs σ ↔ ∃ x, obs x = σ := by
   simp [count, Finset.card_pos, Finset.nonempty_iff_ne_empty]
 
-/-- Every actual count is a nonnegative integer. -/
-theorem count_integral (obs : X → S) (σ : S) : ∃ n : ℕ, count obs σ = n :=
-  ⟨_, rfl⟩
-
 omit [Fintype I] [DecidableEq C] in
 /-- Complete candidate columns satisfy the moment equations. -/
-theorem count_moments (obs : X → S) (columns : C → S)
+theorem count_moments {K : Type*} [CommSemiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
-    (weight : I → S → ℚ) :
-    (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => count obs (columns c)) =
+    (weight : I → S → K) :
+    (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => (count obs (columns c) : K)) =
       fun i => ∑ x, weight i (obs x) := by
   funext i
-  simp only [Matrix.mulVec, dotProduct, count_eq_sum, Finset.mul_sum]
+  simp only [Matrix.mulVec, dotProduct, count_eq_sum, Nat.cast_sum, Nat.cast_ite,
+    Nat.cast_one, Nat.cast_zero, Finset.mul_sum]
   rw [Finset.sum_comm]
   apply Finset.sum_congr rfl
   intro x _
@@ -68,21 +68,6 @@ theorem count_moments (obs : X → S) (columns : C → S)
     simp [hne]
   · simp
 
-omit [Fintype I] [DecidableEq C] in
-/-- The same moment identity over integers, before any inverse introduces
-rational coefficients. -/
-theorem count_moments_int (obs : X → S) (columns : C → S)
-    (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
-    (weight : I → S → ℤ) :
-    (Matrix.of fun i c => weight i (columns c)) *ᵥ
-        (fun c => ((Finset.univ.filter (fun x => obs x = columns c)).card : ℤ)) =
-      fun i => ∑ x, weight i (obs x) := by
-  funext i
-  have hi := congrFun (count_moments obs columns hinj cover
-    (fun i σ => (weight i σ : ℚ))) i
-  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply, count] at hi ⊢
-  exact_mod_cast hi
-
 /-- An independently checked left inverse gives uniqueness on the candidate
 columns. Coverage is an essential separate premise, not a consequence of this
 matrix identity. -/
@@ -92,7 +77,7 @@ theorem solve_counts (obs : X → S) (columns : C → S)
     (hA : (A * (Matrix.of fun i c => weight i (columns c)) : Matrix C C ℚ) = 1) (proposed : C → ℚ)
     (hsolve : (Matrix.of fun i c => weight i (columns c)) *ᵥ proposed =
       fun i => ∑ x, weight i (obs x)) :
-    proposed = fun c => count obs (columns c) := by
+    proposed = fun c => (count obs (columns c) : ℚ) := by
   have hm := count_moments obs columns hinj cover weight
   have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
   simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
@@ -108,19 +93,7 @@ theorem support_exact (obs : X → S) (columns : C → S)
     0 < proposed c ↔ ∃ x, obs x = columns c := by
   classical
   rw [solve_counts obs columns hinj cover weight A hA proposed hsolve]
-  exact count_pos obs (columns c)
-
-omit [Fintype X] in
-/-- Complete child supports cover every parent observation in their Cartesian
-product. This implication precedes the parent's reduced solve. -/
-theorem product_covers {L R A B : Type*} (left : X → L) (right : X → R)
-    (lc : A → L) (rc : B → R)
-    (hl : ∀ x, ∃ a, lc a = left x) (hr : ∀ x, ∃ b, rc b = right x) :
-    ∀ x, ∃ ab : A × B, (lc ab.1, rc ab.2) = (left x, right x) := by
-  intro x
-  obtain ⟨a, ha⟩ := hl x
-  obtain ⟨b, hb⟩ := hr x
-  exact ⟨(a, b), by simp [ha, hb]⟩
+  simpa only [Nat.cast_pos] using count_pos obs (columns c)
 
 /-- An injective observation map gives multiplicity one precisely on its range. -/
 theorem count_of_injective (obs : X → S) (hinj : Function.Injective obs) (σ : S) :
@@ -133,12 +106,12 @@ theorem count_of_injective (obs : X → S) (hinj : Function.Injective obs) (σ :
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
       exact ⟨fun hy => hinj (hy.trans hx.symm), fun hy => hy ▸ hx⟩
     have hex : ∃ y, obs y = σ := ⟨x, hx⟩
-    simp only [count, hf, Finset.card_singleton, Nat.cast_one, ite_eq_left hex]
+    simp only [count, hf, Finset.card_singleton, ite_eq_left hex]
   · have hf : Finset.univ.filter (fun y => obs y = σ) = ∅ := by
       ext y
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.notMem_empty, iff_false]
       exact fun hy => h ⟨y, hy⟩
-    simp only [count, hf, Finset.card_empty, Nat.cast_zero, ite_eq_right h]
+    simp only [count, hf, Finset.card_empty, ite_eq_right h]
 
 /-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/
 def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
@@ -177,10 +150,7 @@ theorem full_left_inverse : fullInverse J * fullMatrix J = 1 := by
   by_cases heq : σ = τ
   · subst τ
     simp
-  · obtain ⟨j, hj⟩ : ∃ j, σ j ≠ τ j := by
-      by_contra hn
-      push Not at hn
-      exact heq (funext hn)
+  · obtain ⟨j, hj⟩ := Function.ne_iff.mp heq
     rw [ite_eq_right heq]
     exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
 
@@ -197,10 +167,10 @@ theorem full_right_inverse : fullMatrix J * fullInverse J = 1 := by
 /-- Explicit inversion of all ternary moments recovers each actual sign count. -/
 theorem full_recovery (obs : X → (J → SignType)) :
     fullInverse J *ᵥ (fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val) =
-      fun σ => count obs σ := by
+      fun σ => (count obs σ : ℚ) := by
   have hm := count_moments obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
     (fun (e : J → Fin 3) σ => ∏ j, (σ j : ℚ) ^ (e j).val)
-  change fullMatrix J *ᵥ (fun σ => count obs σ) = _ at hm
+  change fullMatrix J *ᵥ (fun σ => (count obs σ : ℚ)) = _ at hm
   rw [← hm, Matrix.mulVec_mulVec, full_left_inverse, Matrix.one_mulVec]
 
-end SignDetermination
+end TauCeti.SignDetermination

@@ -19,6 +19,8 @@ observed range can be weighted by their multiplicities instead of summing over e
 
 public section
 
+open Finset
+
 namespace Function
 
 variable {X S : Type*}
@@ -34,6 +36,34 @@ theorem occCount_def (obs : X → S) (σ : S) :
 theorem occCount_eq_card_filter [Fintype X] [DecidableEq S] (obs : X → S) (σ : S) :
     occCount obs σ = (Finset.univ.filter (fun x => obs x = σ)).card := by
   rw [occCount_def, Nat.card_eq_fintype_card, Fintype.card_subtype]
+
+/-- The occurrence count as a sum of indicators over the positions. -/
+theorem occCount_eq_sum [Fintype X] [DecidableEq S] (w : X → S) (a : S) :
+    occCount w a = ∑ i : X, if w i = a then 1 else 0 := by
+  rw [occCount_eq_card_filter, card_filter]
+
+/-- Multiplicity grows along an embedding preserving the observed values. -/
+theorem occCount_le_of_comp {Y : Type*} {u : X → S} {v : Y → S}
+    (e : X ↪ Y) (he : ∀ i, v (e i) = u i) (a : S) [Finite {y // v y = a}] :
+    occCount u a ≤ occCount v a := by
+  let f : {x // u x = a} ↪ {y // v y = a} :=
+    e.subtypeMap (fun {x} hx => (he x).trans hx)
+  exact Nat.card_le_card_of_injective f f.injective
+
+/-- An embedding that misses an occurrence gives strictly smaller multiplicity. -/
+theorem occCount_lt_of_comp {Y : Type*} {u : X → S} {v : Y → S} {a : S}
+    [Finite {y // v y = a}] {j : Y} (e : X ↪ Y) (he : ∀ i, v (e i) = u i)
+    (hj : v j = a) (hmiss : ∀ i, e i ≠ j) : occCount u a < occCount v a := by
+  let f : {x // u x = a} ↪ {y // v y = a} :=
+    e.subtypeMap (fun {x} hx => (he x).trans hx)
+  have : Finite {x // u x = a} := Finite.of_injective f f.injective
+  let _ := Fintype.ofFinite {x // u x = a}
+  let _ := Fintype.ofFinite {y // v y = a}
+  rw [occCount_def, occCount_def, Nat.card_eq_fintype_card, Nat.card_eq_fintype_card]
+  apply Fintype.card_lt_of_injective_not_surjective f f.injective
+  intro hsurj
+  obtain ⟨x, hx⟩ := hsurj ⟨j, hj⟩
+  exact hmiss x (congrArg Subtype.val hx)
 
 /-- Positive multiplicity means the value occurs. -/
 @[simp, grind =]
@@ -54,27 +84,22 @@ theorem occCount_of_injective (obs : X → S) (hinj : Function.Injective obs) (�
   · have he := Set.preimage_singleton_eq_empty.mpr h
     simpa [Set.preimage, Set.coe_ofPred] using congrArg (fun s : Set X => Nat.card s) he
 
-/-- The multiplicity-weighted sum over a complete injective set of candidate values equals the sum
-over the original family. -/
-theorem sum_occCount_nsmul [Fintype X] {C K : Type*} [Fintype C] [AddCommMonoid K]
-    (obs : X → S) (columns : C → S) (hinj : Function.Injective columns)
-    (cover : ∀ x, ∃ c, columns c = obs x) (weight : S → K) :
-    ∑ c, occCount obs (columns c) • weight (columns c) =
-      ∑ x, weight (obs x) := by
+/-- Multiplicity-weighted sums over a finite set containing the observed range equal sums over
+all indices. -/
+theorem sum_occCount_nsmul [Fintype X] {K : Type*} [AddCommMonoid K]
+    (obs : X → S) {T : Finset S} (hT : ∀ x, obs x ∈ T) (weight : S → K) :
+    ∑ σ ∈ T, occCount obs σ • weight σ = ∑ x, weight (obs x) := by
   classical
-  have h := Finset.sum_fiberwise_of_maps_to' (s := Finset.univ)
-    (t := Finset.univ.image columns) (g := obs) (fun x _ => by
-      obtain ⟨c, hc⟩ := cover x
-      exact Finset.mem_image.mpr ⟨c, Finset.mem_univ _, hc⟩) weight
-  rw [Finset.sum_image hinj.injOn] at h
-  simpa only [Finset.sum_const, occCount_eq_card_filter] using h
+  simpa only [Finset.sum_const, occCount_eq_card_filter] using
+    Finset.sum_fiberwise_of_maps_to' (s := Finset.univ) (t := T) (g := obs)
+      (fun x _ => hT x) weight
 
 /-- Occurrence counts over a finite candidate set containing the observed range sum to the size of
 the original family. -/
-theorem sum_occCount_eq_card [Fintype X] (obs : X → S) {T : Finset S}
-    (hT : ∀ x, obs x ∈ T) : ∑ σ ∈ T, occCount obs σ = Fintype.card X := by
+theorem sum_occCount_eq_card [Finite X] (obs : X → S) {T : Finset S}
+    (hT : ∀ x, obs x ∈ T) : ∑ σ ∈ T, occCount obs σ = Nat.card X := by
   classical
-  simpa only [occCount_eq_card_filter, hT, Finset.filter_true, Finset.card_univ] using
-    Finset.sum_card_fiberwise_eq_card_filter Finset.univ T obs
+  let _ := Fintype.ofFinite X
+  simpa [Nat.card_eq_fintype_card] using sum_occCount_nsmul obs hT (fun _ => (1 : ℕ))
 
 end Function

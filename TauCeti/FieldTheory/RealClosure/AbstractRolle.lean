@@ -36,10 +36,14 @@ open Polynomial Set
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
 
 /-- Rolle between consecutive distinct roots, allowing arbitrary endpoint multiplicities. -/
-theorem rolle_consecutive (p : R[X]) (hp : p ≠ 0) {a b : R} (hab : a < b)
+theorem rolle_consecutive (p : R[X]) {a b : R} (hab : a < b)
     (ha : p.eval a = 0) (hb : p.eval b = 0)
     (hroot : ∀ x ∈ Ioo a b, p.eval x ≠ 0) :
     ∃ c ∈ Ioo a b, p.derivative.eval c = 0 := by
+  have hp : p ≠ 0 := by
+    intro h
+    obtain ⟨c, hc⟩ := exists_between hab
+    exact hroot c hc (by simp [h])
   obtain ⟨m, q, hpq, hqa⟩ := IsRoot.exists_pow_mul ha hp
   have hq0 : q ≠ 0 := by intro h; exact hqa (by simp [h])
   have hqb : q.eval b = 0 := by
@@ -100,7 +104,7 @@ theorem rolle_roots (p : R[X]) {a b : R} (hab : a < b)
     intro x hx hz
     have hmem : x ∈ p.roots.toFinset := by simpa [mem_roots hp] using hz
     exact hx.2.not_ge (hnext x hmem hx.1)
-  obtain ⟨c, hc, hd⟩ := rolle_consecutive p hp hab' ha hb' hroot
+  obtain ⟨c, hc, hd⟩ := rolle_consecutive p hab' ha hb' hroot
   exact ⟨c, ⟨hc.1, hc.2.trans_le hb'b⟩, hd⟩
 
 /-- Polynomial Rolle follows from the abstract real-closed-field axioms. -/
@@ -110,5 +114,30 @@ theorem rolle_realClosed : Rolle R := by
   obtain ⟨c, hc, hd⟩ := rolle_roots (p - C (p.eval a)) hab
     (by simp) (by simp [heq])
   exact ⟨c, hc, by simpa using hd⟩
+
+/-- Polynomial mean value over an ordered real closed field. -/
+theorem _root_.Polynomial.mean_value (p : R[X]) {a b : R} (hab : a < b) :
+    ∃ c ∈ Ioo a b, p.eval b - p.eval a = p.derivative.eval c * (b - a) :=
+  rolle_realClosed.mean_value p hab
+
+/-- A nonnegative formal derivative makes polynomial evaluation monotone on an interval. -/
+theorem _root_.Polynomial.monotoneOn_of_derivative_nonneg (p : R[X]) {a b : R}
+    (hd : ∀ x ∈ Ioo a b, 0 ≤ p.derivative.eval x) : MonotoneOn p.eval (Icc a b) :=
+  rolle_realClosed.monotone p hd
+
+/-- A nonpositive formal derivative makes polynomial evaluation antitone on an interval. -/
+theorem _root_.Polynomial.antitoneOn_of_derivative_nonpos (p : R[X]) {a b : R}
+    (hd : ∀ x ∈ Ioo a b, p.derivative.eval x ≤ 0) : AntitoneOn p.eval (Icc a b) :=
+  rolle_realClosed.antitone p hd
+
+/-- A positive formal derivative makes polynomial evaluation strictly monotone on an interval. -/
+theorem _root_.Polynomial.strictMonoOn_of_derivative_pos (p : R[X]) {a b : R}
+    (hd : ∀ x ∈ Ioo a b, 0 < p.derivative.eval x) : StrictMonoOn p.eval (Icc a b) :=
+  rolle_realClosed.strictMono p hd
+
+/-- A negative formal derivative makes polynomial evaluation strictly antitone on an interval. -/
+theorem _root_.Polynomial.strictAntiOn_of_derivative_neg (p : R[X]) {a b : R}
+    (hd : ∀ x ∈ Ioo a b, p.derivative.eval x < 0) : StrictAntiOn p.eval (Icc a b) :=
+  rolle_realClosed.strictAnti p hd
 
 end TauCeti.RealClosure

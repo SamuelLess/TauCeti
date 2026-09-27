@@ -8,6 +8,7 @@ module
 public import Mathlib.FieldTheory.IsRealClosed.Basic
 public import Mathlib.Algebra.QuadraticAlgebra.Basic
 public import Mathlib.Algebra.Order.Field.Basic
+import TauCeti.Algebra.Order.Ring.Ordering.Semireal
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.FieldSimp
@@ -28,7 +29,7 @@ public section
 
 namespace TauCeti.RealClosure
 
-scoped instance {R : Type*} [Field R] [IsSemireal R] : Fact (¬ IsSquare (-1 : R)) :=
+scoped instance {R : Type*} [Ring R] [IsSemireal R] : Fact (¬ IsSquare (-1 : R)) :=
   ⟨fun h => IsSemireal.not_isSumSq_neg_one R h.isSumSq⟩
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
@@ -38,7 +39,7 @@ theorem exists_nonneg_sq {a : R} (ha : 0 ≤ a) : ∃ r : R, 0 ≤ r ∧ r ^ 2 =
   exact ⟨|r|, abs_nonneg r, by simpa using hr.symm⟩
 
 /-- Every element of `R[i]` is a square when `R` is real closed. -/
-theorem complex_isSquare (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
+private theorem complex_isSquare_aux (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
   by_cases him : z.im = 0
   · rcases IsRealClosed.isSquare_or_isSquare_neg z.re with ⟨r, hr⟩ | ⟨r, hr⟩
     · refine ⟨⟨r, 0⟩, ?_⟩
@@ -65,5 +66,13 @@ theorem complex_isSquare (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
     · simp only [QuadraticAlgebra.im_mul]
       field_simp
       ring
+
+omit [LinearOrder R] [IsStrictOrderedRing R] in
+/-- Every element of `R[i]` is a square when `R` is real closed, without choosing an order. -/
+theorem complex_isSquare (z : QuadraticAlgebra R (-1) 0) : IsSquare z := by
+  obtain ⟨o, ho⟩ := IsSemireal.exists_linearOrder (K := R)
+  let := o
+  have := ho
+  exact complex_isSquare_aux z
 
 end TauCeti.RealClosure

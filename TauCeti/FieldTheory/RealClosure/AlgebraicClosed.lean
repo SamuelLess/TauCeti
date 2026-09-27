@@ -65,10 +65,7 @@ theorem SquareClosed.isAlgClosed (hsq : ∀ x : C, IsSquare x) : IsAlgClosed C :
     (by rw [Polynomial.degree_eq_natDegree hp.ne_zero, hdeg]; rfl)
 
 /-- The complexification `R[i]` of a real closed field is algebraically closed. -/
-theorem complex_isAlgClosed : IsAlgClosed (QuadraticAlgebra R (-1) 0) := by
-  obtain ⟨o, ho⟩ := IsSemireal.exists_linearOrder (K := R)
-  let := o
-  have := ho
-  exact SquareClosed.isAlgClosed (R := R) complex_isSquare
+theorem complex_isAlgClosed : IsAlgClosed (QuadraticAlgebra R (-1) 0) :=
+  SquareClosed.isAlgClosed (R := R) complex_isSquare
 
 end TauCeti.RealClosure

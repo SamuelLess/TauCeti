@@ -25,6 +25,13 @@ its zero set is not represented by its empty `Polynomial.roots` multiset.
 M. Ben-Or, D. Kozen, and J. Reif,
 [The complexity of elementary algebra and geometry](https://doi.org/10.1016/0022-0000(86)90029-2),
 Journal of Computer and System Sciences 32 (1986), 251–264, for BKR sign determination.
+
+For finite sign sums and the full ternary moment construction, see
+S. Basu, R. Pollack, M.-F. Roy,
+[*Algorithms in Real Algebraic Geometry*, 2nd ed.](https://doi.org/10.1007/3-540-33099-2),
+Chapter 10. A formal precedent is C. Cohen, A. Mahboubi,
+[Formal proofs in real algebraic geometry: from ordered fields to quantifier elimination]
+(https://doi.org/10.2168/LMCS-8(1:2)2012), LMCS 8(1), 2012.
 -/
 
 public section
@@ -86,30 +93,31 @@ theorem signSum_eq_card_sub_card (Z : Finset R) (p : R[X]) :
 
 omit [IsStrictOrderedRing R] in
 /-- The number of points realizing a specified polynomial sign condition. -/
-noncomputable def signCount {J : Type*} [Fintype J]
+noncomputable def signCount {J : Type*}
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) : ℕ :=
-  fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ
+  occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ
 
 omit [IsStrictOrderedRing R] in
 /-- Polynomial sign counts are multiplicities in the finite family of pointwise signs. -/
-theorem signCount_eq_fiberCount {J : Type*} [Fintype J]
+theorem signCount_eq_occCount {J : Type*}
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    signCount Z Q σ = fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
+    signCount Z Q σ = occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
 
 omit [IsStrictOrderedRing R] in
+open scoped Classical in
 /-- Sign counts are cardinalities of the realizing subset of the original finite set. -/
-theorem signCount_eq_card_filter {J : Type*} [Fintype J]
+theorem signCount_eq_card_filter {J : Type*}
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     signCount Z Q σ = (Z.filter fun x => ∀ j, sign ((Q j).eval x) = σ j).card := by
   classical
-  simp only [signCount_eq_fiberCount, fiberCount_eq_card_filter, Finset.card_filter,
+  simp only [signCount_eq_occCount, occCount_eq_card_filter, Finset.card_filter,
     funext_iff]
   exact Finset.sum_coe_sort Z
     (fun x : R => if ∀ j, sign ((Q j).eval x) = σ j then (1 : ℕ) else 0)
 
 omit [IsStrictOrderedRing R] in
 @[simp, grind =]
-theorem signCount_empty {J : Type*} [Fintype J]
+theorem signCount_empty {J : Type*}
     (Q : J → R[X]) (σ : J → SignType) : signCount ∅ Q σ = 0 := by
   simp [signCount_eq_card_filter]
 
@@ -118,13 +126,13 @@ omit [IsStrictOrderedRing R] in
 theorem sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) : ∑ σ, signCount Z Q σ = Z.card := by
   classical
-  simpa only [signCount_eq_fiberCount, Fintype.card_coe] using
-    sum_fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val))
+  simpa only [signCount_eq_occCount, Fintype.card_coe] using
+    sum_occCount (fun x : Z => fun j => sign ((Q j).eval x.val))
 
 omit [IsStrictOrderedRing R] in
 /-- A positive sign count is equivalent to realization at a point of the finite set. -/
 @[simp, grind =]
-theorem signCount_pos {J : Type*} [Fintype J]
+theorem signCount_pos {J : Type*}
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     0 < signCount Z Q σ ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
   classical
@@ -155,8 +163,8 @@ theorem mulVec_signCount {K : Type*} [CommRing K] {J C I : Type*} [Fintype J]
   classical
   simp_rw [signSum_prod_pow]
   simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow, SignType.intCast_cast,
-    signCount_eq_fiberCount] using
-    mulVec_fiberCount _ columns hinj (fun x : Z => cover x.val x.property)
+    signCount_eq_occCount] using
+    mulVec_occCount _ columns hinj (fun x : Z => cover x.val x.property)
       (fun i σ => ∏ j, (σ j : K) ^ rows i j)
 
 /-- A left inverse recovers polynomial sign counts on complete candidate columns.
@@ -172,13 +180,16 @@ theorem eq_signCount {K : Type*} [CommRing K] {J C I : Type*}
     (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) :
     proposed = fun c => (signCount Z Q (columns c) : K) := by
-  have hm := mulVec_signCount (K := K) Z Q columns rows hinj cover
-  have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
-  simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
+  simpa only [signCount_eq_occCount] using
+    eq_occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) columns hinj
+      (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j) A hA proposed
+      (hsolve.trans (funext fun i => by
+        simp only [signSum_prod_pow, Int.cast_sum, Int.cast_prod, Int.cast_pow,
+          SignType.intCast_cast]))
 
 /-- Positive entries of a solved, complete polynomial moment system are exactly
 its realizable candidate sign conditions. -/
-theorem solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
+theorem signCount_solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
     [IsOrderedRing K] [Nontrivial K] {J C I : Type*}
     [Fintype J] [Fintype C] [DecidableEq C] [Fintype I]
     (Z : Finset R) (Q : J → R[X]) (columns : C → (J → SignType)) (rows : I → J → ℕ)
@@ -190,8 +201,12 @@ theorem solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
     (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) (c : C) :
     0 < proposed c ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = columns c j := by
-  rw [eq_signCount Z Q columns rows hinj cover A hA proposed hsolve]
-  simp only [Nat.cast_pos, signCount_pos]
+  simpa only [Subtype.exists, exists_prop, funext_iff] using
+    solution_pos_iff (fun x : Z => fun j => sign ((Q j).eval x.val)) columns hinj
+      (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j) A hA proposed
+      (hsolve.trans (funext fun i => by
+        simp only [signSum_prod_pow, Int.cast_sum, Int.cast_prod, Int.cast_pow,
+          SignType.intCast_cast])) c
 
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
 theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
@@ -200,7 +215,7 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
       fun σ => (signCount Z Q σ : ℚ) := by
   simp_rw [signSum_prod_pow]
   simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow,
-    signCount_eq_fiberCount, SignType.intCast_cast] using
+    signCount_eq_occCount, SignType.intCast_cast] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
 /-- The integer BKR moment identity on a finite set of sample points. -/
@@ -210,8 +225,8 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
   classical
   simp only [signSum_prod_pow]
-  simpa only [id_eq, signCount_eq_fiberCount] using
-    (sum_mul_fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) id
+  simpa only [id_eq, signCount_eq_occCount] using
+    (sum_mul_occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) id
       Function.injective_id (fun x => ⟨_, rfl⟩)
       (fun σ => ∏ j, (σ j : ℤ) ^ e j)).symm
 

@@ -15,12 +15,21 @@ public import Mathlib.Tactic.NormNum
 /-! # Finite sign determination
 
 Counts refer to an actual finite family of observations, independently of a
-proposed solution of a moment system. `eq_fiberCount` recovers multiplicities on
+proposed solution of a moment system. `eq_occCount` recovers multiplicities on
 candidate columns only when they cover every observation. `fullInverse_mulVec` gives
 an explicit inverse for all ternary sign conditions.
 
 Here `X` indexes observations, `S` is the space of sign conditions, `C` indexes
 candidate columns, and `I` indexes moment rows.
+
+## References
+
+For the full ternary moment matrix and finite sign determination, see
+S. Basu, R. Pollack, M.-F. Roy,
+[*Algorithms in Real Algebraic Geometry*, 2nd ed.](https://doi.org/10.1007/3-540-33099-2),
+Chapter 10, and C. Cohen, A. Mahboubi,
+[Formal proofs in real algebraic geometry: from ordered fields to quantifier elimination]
+(https://doi.org/10.2168/LMCS-8(1:2)2012), LMCS 8(1), 2012.
 -/
 
 public section
@@ -30,36 +39,36 @@ open scoped Matrix
 namespace TauCeti.SignDetermination
 
 variable {X S C I : Type*} [Fintype X] [Fintype C] [Fintype I]
-    [DecidableEq S] [DecidableEq C]
+    [DecidableEq C]
 
 omit [Fintype I] [DecidableEq C] in
 /-- Complete candidate columns satisfy the moment equations. -/
-theorem mulVec_fiberCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
+theorem mulVec_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) :
-    (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => (fiberCount obs (columns c) : K)) =
+    (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => (occCount obs (columns c) : K)) =
       fun i => ∑ x, weight i (obs x) := by
   funext i
   simp only [Matrix.mulVec, dotProduct, Matrix.of_apply]
-  exact sum_mul_fiberCount obs columns hinj cover (weight i)
+  exact sum_mul_occCount obs columns hinj cover (weight i)
 
 /-- An independently checked left inverse gives uniqueness on the candidate
 columns. Coverage is an essential separate premise, not a consequence of this
 matrix identity. -/
-theorem eq_fiberCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
+theorem eq_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)
     (hA : (A * (Matrix.of fun i c => weight i (columns c)) : Matrix C C K) = 1) (proposed : C → K)
     (hsolve : (Matrix.of fun i c => weight i (columns c)) *ᵥ proposed =
       fun i => ∑ x, weight i (obs x)) :
-    proposed = fun c => (fiberCount obs (columns c) : K) := by
-  have hm := mulVec_fiberCount obs columns hinj cover weight
+    proposed = fun c => (occCount obs (columns c) : K) := by
+  have hm := mulVec_occCount obs columns hinj cover weight
   have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
   simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
 
-omit [DecidableEq S] in
-/-- Zero pruning keeps exactly the realizable candidate conditions. -/
-theorem pos_iff_exists {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing K] [Nontrivial K]
+/-- With a left inverse and complete columns, a solved entry is positive exactly
+when its candidate condition occurs among the observations. -/
+theorem solution_pos_iff {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing K] [Nontrivial K]
     (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)
@@ -68,8 +77,8 @@ theorem pos_iff_exists {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing 
       fun i => ∑ x, weight i (obs x)) (c : C) :
     0 < proposed c ↔ ∃ x, obs x = columns c := by
   classical
-  rw [eq_fiberCount obs columns hinj cover weight A hA proposed hsolve]
-  simpa only [Nat.cast_pos] using fiberCount_pos obs (columns c)
+  rw [eq_occCount obs columns hinj cover weight A hA proposed hsolve]
+  simpa only [Nat.cast_pos] using occCount_pos obs (columns c)
 
 /-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/
 def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
@@ -134,7 +143,7 @@ theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
     rw [ite_eq_right heq]
     exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
 
-/-- Equal finite dimensions turn the explicit left inverse into a right inverse. -/
+/-- The tensor inverse is also a right inverse of the full ternary moment matrix. -/
 @[simp, grind =]
 theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
   classical
@@ -146,18 +155,18 @@ theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
   rw [hs]
 
 /-- The full sign matrix maps the actual multiplicities to the sign moments. -/
-theorem fullMatrix_mulVec_fiberCount (obs : X → (J → SignType)) :
-    fullMatrix J *ᵥ (fun σ => (fiberCount obs σ : ℚ)) =
+theorem fullMatrix_mulVec_occCount (obs : X → (J → SignType)) :
+    fullMatrix J *ᵥ (fun σ => (occCount obs σ : ℚ)) =
       fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val := by
   simpa only [fullMatrix, id_eq] using
-    mulVec_fiberCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
+    mulVec_occCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
       (fun (e : J → Fin 3) σ => ∏ j, (σ j : ℚ) ^ (e j).val)
 
 /-- Explicit inversion of all ternary moments recovers each actual sign count. -/
 theorem fullInverse_mulVec (obs : X → (J → SignType)) :
     fullInverse J *ᵥ (fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val) =
-      fun σ => (fiberCount obs σ : ℚ) := by
-  rw [← fullMatrix_mulVec_fiberCount, Matrix.mulVec_mulVec,
+      fun σ => (occCount obs σ : ℚ) := by
+  rw [← fullMatrix_mulVec_occCount, Matrix.mulVec_mulVec,
     fullInverse_mul_fullMatrix, Matrix.one_mulVec]
 
 end TauCeti.SignDetermination

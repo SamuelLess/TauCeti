@@ -56,7 +56,7 @@ theorem tarskiQuery_one (p : R[X]) :
   simp [tarskiQuery_eq_signSum]
 
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
-theorem tarskiQuery_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
+theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     (p : R[X]) (Q : J → R[X]) (e : J → ℕ) :
     tarskiQuery p (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) *
@@ -71,7 +71,7 @@ theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]
   simp only [tarskiQuery_eq_signSum, fullInverse_mulVec_signSum]
 
 /-- A positive count at the roots of a nonzero polynomial is an actual realizable condition. -/
-theorem signCount_roots_pos {J : Type*} [Fintype J]
+theorem signCount_roots_pos {J : Type*}
     {p : R[X]} (hp : p ≠ 0) (Q : J → R[X]) (σ : J → SignType) :
     0 < signCount p.roots.toFinset Q σ ↔
       ∃ x : R, p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j := by

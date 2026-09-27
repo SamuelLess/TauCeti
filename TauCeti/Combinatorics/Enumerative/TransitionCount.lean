@@ -5,6 +5,7 @@ Authors: The Tau Ceti contributors
 -/
 module
 
+public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Data.Fintype.EquivFin
 public import Mathlib.Data.List.GetD
@@ -73,19 +74,10 @@ namespace TauCeti
 
 variable {α : Type*}
 
-/-- The number of positions of the word `w` carrying the letter `a`. -/
-def occCount {N : ℕ} (w : Fin N → α) (a : α) : ℕ :=
-  Nat.card {i : Fin N // w i = a}
-
 /-- The number of positions `i` of the word `w` at which the letter `a` is immediately followed by
 the letter `b`. -/
 def transitionCount {n : ℕ} (w : Fin (n + 1) → α) (a b : α) : ℕ :=
   Nat.card {i : Fin n // w i.castSucc = a ∧ w i.succ = b}
-
-/-- The occurrence count as the cardinality of a `Finset` of positions. -/
-theorem occCount_eq_card_filter [DecidableEq α] {N : ℕ} (w : Fin N → α) (a : α) :
-    occCount w a = #{i : Fin N | w i = a} := by
-  rw [occCount, Nat.card_eq_fintype_card, Fintype.card_subtype]
 
 /-- The transition count as the cardinality of a `Finset` of positions. -/
 theorem transitionCount_eq_card_filter [DecidableEq α] {n : ℕ} (w : Fin (n + 1) → α) (a b : α) :
@@ -238,15 +230,6 @@ theorem prod_consecutivePairs_getD {M : Type*} [CommMonoid M] (p : α → α →
       prod_consecutivePairs_getD p d t.length (y :: t) rfl]
     simp
 
-/-- **The occurrence counts of a word sum to its length.** The index set `S` only has to contain
-the letters the word uses. -/
-theorem sum_occCount_eq_card {N : ℕ} (w : Fin N → α) {S : Finset α} (hS : ∀ i, w i ∈ S) :
-    ∑ a ∈ S, occCount w a = N := by
-  classical
-  have h := card_eq_sum_card_fiberwise (s := (univ : Finset (Fin N))) (f := w) (t := S)
-    fun i _ => hS i
-  simpa only [card_univ, Fintype.card_fin, occCount_eq_card_filter] using h.symm
-
 /-- Summing the transitions out of `a` counts the positions carrying `a` other than the last one.
 The index set `S` only has to contain the successors of transitions in `w`. -/
 theorem sum_transitionCount_right {n : ℕ} (w : Fin (n + 1) → α) {S : Finset α}
@@ -313,7 +296,7 @@ theorem exists_perm_comp_of_occCount_eq {N : ℕ} {u v : Fin N → α}
   refine ⟨Equiv.ofFiberEquiv (f := u) (g := v) fun c =>
     Fintype.equivOfCardEq (by
       rw [← Nat.card_eq_fintype_card, ← Nat.card_eq_fintype_card]
-      exact h c), ?_⟩
+      exact (occCount_def u c).symm.trans ((h c).trans (occCount_def v c))), ?_⟩
   funext i
   exact Equiv.ofFiberEquiv_map _ i
 

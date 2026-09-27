@@ -386,10 +386,11 @@ private theorem exists_maximal_visitCount_lt (π : α → Equiv.Perm ℕ) (x : �
       rw [← reindexStepEmbedding_source π x m t hused hmaps j]
       exact hxS _
     have hsumy : ∑ a ∈ S, visitCount (pathOfReindexedSuccessors π x) a t = t := by
-      simpa only [visitCount_def] using
+      simpa only [visitCount_def, Fintype.card_fin] using
         sum_occCount_eq_card (fun j : Fin t => pathOfReindexedSuccessors π x j.val) hyS
     have hsumx : ∑ a ∈ S, visitCount x a m = m := by
-      simpa only [visitCount_def] using sum_occCount_eq_card (fun j : Fin m => x j.val) hxS
+      simpa only [visitCount_def, Fintype.card_fin] using
+        sum_occCount_eq_card (fun j : Fin m => x j.val) hxS
     have hsumEq : ∑ a ∈ S, visitCount (pathOfReindexedSuccessors π x) a t =
         ∑ a ∈ S, visitCount x a m := Finset.sum_congr rfl hall
     omega

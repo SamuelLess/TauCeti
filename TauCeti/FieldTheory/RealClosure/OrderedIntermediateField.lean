@@ -123,16 +123,10 @@ instance : Nonempty (OrderedIntermediateField K L) := ⟨base⟩
 private def chainUnion (c : Set (OrderedIntermediateField K L)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : OrderedIntermediateField K L := by
   have := hne.to_subtype
-  have hf : Directed (· ≤ ·) (fun P : c => P.val.toIntermediateField) := by
-    intro P Q
-    rcases hc.total P.property Q.property with h | h
-    · exact ⟨Q, h.1, le_rfl⟩
-    · exact ⟨P, le_rfl, h.1⟩
-  have hn : Directed (· ≤ ·) (fun P : c => P.val.nonneg) := by
-    intro P Q
-    rcases hc.total P.property Q.property with h | h
-    · exact ⟨Q, h.2, le_rfl⟩
-    · exact ⟨P, le_rfl, h.2⟩
+  have hf : Directed (· ≤ ·) (fun P : c => P.val.toIntermediateField) :=
+    hc.directed.mono_comp _ (fun _ _ h => h.1)
+  have hn : Directed (· ≤ ·) (fun P : c => P.val.nonneg) :=
+    hc.directed.mono_comp _ (fun _ _ h => h.2)
   exact
     { toIntermediateField :=
         (⨆ P : c, P.val.toIntermediateField).copy {x | ∃ P ∈ c, x ∈ P.toIntermediateField} (by

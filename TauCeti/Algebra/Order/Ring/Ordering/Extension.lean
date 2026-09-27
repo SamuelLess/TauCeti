@@ -82,11 +82,8 @@ theorem adjoin_le {P Q : RingPreordering K} {a : K} {ha : -a ∉ P}
 private def chainUnion (c : Set (RingPreordering K)) (hc : IsChain (· ≤ ·) c)
     (hne : c.Nonempty) : RingPreordering K := by
   have := hne.to_subtype
-  have hd : Directed (· ≤ ·) (fun P : c => P.val.toSubsemiring) := by
-    intro P Q
-    rcases hc.total P.property Q.property with h | h
-    · exact ⟨Q, h, le_rfl⟩
-    · exact ⟨P, le_rfl, h⟩
+  have hd : Directed (· ≤ ·) (fun P : c => P.val.toSubsemiring) :=
+    hc.directed.mono_comp _ RingPreordering.toSubsemiring_mono
   exact
     { (⨆ P : c, P.val.toSubsemiring).copy {x | ∃ P ∈ c, x ∈ P} (by
         rw [Subsemiring.coe_iSup_of_directed hd]

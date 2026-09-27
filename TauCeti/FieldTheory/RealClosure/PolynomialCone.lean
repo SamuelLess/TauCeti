@@ -14,7 +14,7 @@ public import Mathlib.RingTheory.AdjoinRoot
 The leading terms of sums of nonnegatively weighted squares cannot cancel.
 This is the degree argument needed for odd-degree order extension.
 `extensionCone.exists_aeval_root_eq` lifts cone certificates in `AdjoinRoot p`
-to polynomial certificates of bounded degree; `extensionCone.aeval_mem`
+to polynomial certificates of bounded degree; `extensionCone.map_mem`
 specializes polynomial certificates into any algebra over the base field.
 -/
 
@@ -75,19 +75,6 @@ theorem extensionCone.eval_nonneg {p : K[X]} (hp : p ∈ extensionCone (C : K �
     (x : K) : 0 ≤ p.eval x :=
   extensionCone.map_nonneg C (evalRingHom x).toAddMonoidHom
     (fun a ha q => by simpa using mul_nonneg ha (sq_nonneg (q.eval x))) hp
-
-/-- Evaluating weighted polynomial squares gives weighted squares in any
-extension ring. -/
-theorem extensionCone.aeval_mem {L : Type*} [CommRing L] [Algebra K L]
-    {p : K[X]} (hp : p ∈ extensionCone (C : K →+* K[X])) (x : L) :
-    aeval x p ∈ extensionCone (algebraMap K L) := by
-  induction hp using extensionCone.induction _ with
-  | mem p hp =>
-    obtain ⟨a, ha, q, rfl⟩ := (mem_weightedSquares _).mp hp
-    exact extensionCone.weightedSquares_subset _
-      ((mem_weightedSquares _).mpr ⟨a, ha, aeval x q, by simp⟩)
-  | zero => simpa only [map_zero] using (extensionCone (algebraMap K L)).zero_mem
-  | add p q _ _ hp hq => simpa only [map_add] using add_mem hp hq
 
 /-- A weighted-square certificate in a simple algebraic extension lifts to a
 polynomial weighted-square certificate of degree less than twice the defining degree. -/

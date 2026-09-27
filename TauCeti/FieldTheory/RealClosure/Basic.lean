@@ -89,7 +89,7 @@ theorem _root_.IsMax.exists_isRoot_of_odd_natDegree
     rw [aeval_algHom_apply, hpval, map_zero]
   apply (algebraMap P.toIntermediateField L).injective
   rw [map_zero, ← aeval_algebraMap_apply_eq_algebraMap_eval]
-  exact hpL
+  simpa only [IntermediateField.algebraMap_apply] using hpL
 
 /-- A maximal ordered intermediate field of an algebraically closed field is real closed. -/
 theorem _root_.IsMax.isRealClosed {P : OrderedIntermediateField K L} (hP : IsMax P) :

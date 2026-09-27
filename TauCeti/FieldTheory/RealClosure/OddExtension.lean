@@ -6,7 +6,7 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.FieldTheory.RealClosure.PolynomialCone
-public import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
+public import TauCeti.Algebra.Polynomial.OddDegreeFactor
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.FieldTheory.PrimitiveElement
 
@@ -29,29 +29,6 @@ The odd-degree descent is the classical Artin–Schreier argument; see Salma Kuh
 
 public section
 
-namespace Polynomial
-
-variable {K : Type*} [CommSemiring K] [NoZeroDivisors K] [WfDvdMonoid K]
-
-/-- An odd-degree polynomial has an odd-degree irreducible factor. -/
-theorem exists_irreducible_factor_of_odd_natDegree (p : K[X]) (hp : Odd p.natDegree) :
-    ∃ q : K[X], Irreducible q ∧ Odd q.natDegree ∧ q ∣ p := by
-  revert hp
-  induction p using WfDvdMonoid.induction_on_irreducible with
-  | zero => simp
-  | unit p hp => simp [natDegree_eq_zero_of_isUnit hp]
-  | mul p q hp hq ih =>
-    intro hodd
-    by_cases hoddq : Odd q.natDegree
-    · exact ⟨q, hq, hoddq, dvd_mul_right q p⟩
-    have hoddp : Odd p.natDegree := by
-      rw [natDegree_mul hq.ne_zero hp, Nat.odd_iff] at hodd
-      rw [Nat.odd_iff] at hoddq ⊢
-      omega
-    obtain ⟨r, hr, hrodd, hrp⟩ := ih hoddp
-    exact ⟨r, hr, hrodd, hrp.trans (dvd_mul_left p q)⟩
-
-end Polynomial
 
 namespace TauCeti.RealClosure
 
@@ -101,7 +78,7 @@ private theorem extensionCone.exists_lt (p : K[X])
     have hsum : 1 + aeval (AdjoinRoot.root r) s = 0 := by
       simpa only [w, map_add, map_one] using hwr
     exact eq_neg_of_add_eq_zero_right hsum
-  exact ⟨r, hr, hrodd, hrdeg, hsr ▸ extensionCone.aeval_mem hs (AdjoinRoot.root r)⟩
+  exact ⟨r, hr, hrodd, hrdeg, hsr ▸ extensionCone.map_mem (aeval (AdjoinRoot.root r)) hs⟩
 
 /-- The cone of weighted squares stays proper after adjoining a root of a
 polynomial of odd degree. -/

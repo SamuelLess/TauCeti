@@ -8,7 +8,6 @@ module
 public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Data.Matrix.Mul
 public import Mathlib.LinearAlgebra.Matrix.SemiringInverse
-public import Mathlib.Algebra.BigOperators.Ring.Finset
 public import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Basic.Sign.Basic
 public import Mathlib.Tactic.NormNum
@@ -16,7 +15,7 @@ public import Mathlib.Tactic.NormNum
 /-! # Finite sign determination
 
 Counts refer to an actual finite family of observations, independently of a
-proposed solution of a moment system. `eq_count` recovers multiplicities on
+proposed solution of a moment system. `eq_fiberCount` recovers multiplicities on
 candidate columns only when they cover every observation. `fullInverse_mulVec` gives
 an explicit inverse for all ternary sign conditions.
 
@@ -35,32 +34,19 @@ variable {X S C I : Type*} [Fintype X] [Fintype C] [Fintype I]
 
 omit [Fintype I] [DecidableEq C] in
 /-- Complete candidate columns satisfy the moment equations. -/
-theorem mulVec_fiberCount {K : Type*} [CommSemiring K] (obs : X → S) (columns : C → S)
+theorem mulVec_fiberCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) :
     (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => (fiberCount obs (columns c) : K)) =
       fun i => ∑ x, weight i (obs x) := by
   funext i
-  simp only [Matrix.mulVec, dotProduct, fiberCount_eq_card_filter, Finset.card_filter,
-    Nat.cast_sum, Nat.cast_ite,
-    Nat.cast_one, Nat.cast_zero, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  apply Finset.sum_congr rfl
-  intro x _
-  obtain ⟨c, hc⟩ := cover x
-  rw [Finset.sum_eq_single c]
-  · simp [hc]
-  · intro d _ hdc
-    have hne : obs x ≠ columns d := by
-      intro he
-      exact hdc (hinj (he.symm.trans hc.symm))
-    simp [hne]
-  · simp
+  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply]
+  exact sum_mul_fiberCount obs columns hinj cover (weight i)
 
 /-- An independently checked left inverse gives uniqueness on the candidate
 columns. Coverage is an essential separate premise, not a consequence of this
 matrix identity. -/
-theorem eq_count {K : Type*} [CommSemiring K] (obs : X → S) (columns : C → S)
+theorem eq_fiberCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)
     (hA : (A * (Matrix.of fun i c => weight i (columns c)) : Matrix C C K) = 1) (proposed : C → K)
@@ -73,7 +59,7 @@ theorem eq_count {K : Type*} [CommSemiring K] (obs : X → S) (columns : C → S
 
 omit [DecidableEq S] in
 /-- Zero pruning keeps exactly the realizable candidate conditions. -/
-theorem pos_iff_exists {K : Type*} [CommSemiring K] [LinearOrder K] [IsStrictOrderedRing K]
+theorem pos_iff_exists {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing K] [Nontrivial K]
     (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)
@@ -82,7 +68,7 @@ theorem pos_iff_exists {K : Type*} [CommSemiring K] [LinearOrder K] [IsStrictOrd
       fun i => ∑ x, weight i (obs x)) (c : C) :
     0 < proposed c ↔ ∃ x, obs x = columns c := by
   classical
-  rw [eq_count obs columns hinj cover weight A hA proposed hsolve]
+  rw [eq_fiberCount obs columns hinj cover weight A hA proposed hsolve]
   simpa only [Nat.cast_pos] using fiberCount_pos obs (columns c)
 
 /-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/

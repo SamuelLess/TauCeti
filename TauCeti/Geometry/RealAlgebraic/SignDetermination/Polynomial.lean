@@ -12,7 +12,7 @@ public import Mathlib.Algebra.Polynomial.Eval.Defs
 
 `signCount` counts points realizing a sign condition, and `signSum` is the
 integer sum of signs on a specified finite set. `signSum_prod_pow` expresses
-the sign sum of a product as a moment of these counts. `fullInverse_signSum` inverts
+the sign sum of a product as a moment of these counts. `fullInverse_mulVec_signSum` inverts
 the full moment system over the rationals.
 
 These statements hold over any linearly ordered commutative ring. For root sign determination,
@@ -59,12 +59,12 @@ noncomputable def signCount {J : Type*} [Fintype J]
 
 omit [IsStrictOrderedRing R] in
 /-- Polynomial sign counts are multiplicities in the finite family of pointwise signs. -/
-@[simp] theorem signCount_eq_fiberCount {J : Type*} [Fintype J]
+theorem signCount_eq_fiberCount {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     signCount Z Q σ = fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
 
 /-- Polynomial product sign sums are the moments of the observed sign words. -/
-theorem signSum_prod_eval {J : Type*} [Fintype J]
+theorem signSum.prod_pow_eq_sum {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
     signSum Z (∏ j, Q j ^ e j) =
       ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) ^ e j := by
@@ -81,16 +81,16 @@ theorem mulVec_signCount {J C I : Type*} [Fintype J]
         (fun c => (signCount Z Q (columns c) : ℤ)) =
       fun i => signSum Z (∏ j, Q j ^ rows i j) := by
   classical
-  simp_rw [signSum_prod_eval]
+  simp_rw [signSum.prod_pow_eq_sum]
   simpa only [signCount_eq_fiberCount] using
     mulVec_fiberCount _ columns hinj cover (fun i σ => ∏ j, (σ j : ℤ) ^ rows i j)
 
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
-theorem fullInverse_signSum {J : Type*} [Fintype J] [DecidableEq J]
+theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
-  simp_rw [signSum_prod_eval]
+  simp_rw [signSum.prod_pow_eq_sum]
   simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow,
     signCount_eq_fiberCount, SignType.intCast_cast] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
@@ -101,16 +101,18 @@ theorem signSum_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
     signSum Z (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
   classical
-  have h := congrFun (mulVec_signCount Z Q id (fun (_ : Unit) => e)
-    Function.injective_id (fun x => ⟨_, rfl⟩)) ()
-  simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq] using h.symm
+  rw [signSum.prod_pow_eq_sum]
+  simpa only [id_eq, signCount_eq_fiberCount] using
+    (sum_mul_fiberCount (fun x : Z => fun j => sign ((Q j).eval x.val)) id
+      Function.injective_id (fun x => ⟨_, rfl⟩)
+      (fun σ => ∏ j, (σ j : ℤ) ^ e j)).symm
 
 /-- The recovered sign pattern is positive exactly when it is realized. -/
-theorem fullInverse_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
+theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
       ∃ x : Z, ∀ j, sign ((Q j).eval x.val) = σ j := by
-  rw [fullInverse_signSum]
+  rw [fullInverse_mulVec_signSum]
   simp only [Nat.cast_pos, signCount_eq_fiberCount, fiberCount_pos, funext_iff]
 
 end TauCeti.SignDetermination

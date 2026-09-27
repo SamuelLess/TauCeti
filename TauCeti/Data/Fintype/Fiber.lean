@@ -6,6 +6,8 @@ Authors: Kim Morrison
 module
 
 public import Mathlib.Data.Fintype.Card
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 
 /-! # Multiplicities in a finite family
 
@@ -30,22 +32,38 @@ theorem fiberCount_pos (obs : X → S) (σ : S) : 0 < fiberCount obs σ ↔ ∃ 
 theorem fiberCount_of_injective (obs : X → S) (hinj : Function.Injective obs) (σ : S) :
     fiberCount obs σ = if ∃ x, obs x = σ then 1 else 0 := by
   classical
-  by_cases h : ∃ x, obs x = σ
-  · obtain ⟨x, hx⟩ := h
-    have hf : Finset.univ.filter (fun y => obs y = σ) = {x} := by
-      ext y
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
-      exact ⟨fun hy => hinj (hy.trans hx.symm), fun hy => hy ▸ hx⟩
-    have hex : ∃ y, obs y = σ := ⟨x, hx⟩
-    simp only [fiberCount, hf, Finset.card_singleton, ite_eq_left hex]
-  · have hf : Finset.univ.filter (fun y => obs y = σ) = ∅ := by
-      ext y
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.notMem_empty, iff_false]
-      exact fun hy => h ⟨y, hy⟩
-    simp only [fiberCount, hf, Finset.card_empty, ite_eq_right h]
+  split_ifs with h
+  · obtain ⟨x, rfl⟩ := h
+    simp only [fiberCount, hinj.eq_iff]
+    exact Finset.card_eq_one.mpr ⟨x, by ext y; simp⟩
+  · simpa [fiberCount, Finset.card_eq_zero, Finset.filter_eq_empty_iff, not_exists] using h
 
 /-- Multiplicity is the cardinality of the corresponding fiber. -/
 theorem fiberCount_eq_card_filter (obs : X → S) (σ : S) :
     fiberCount obs σ = (Finset.univ.filter (fun x => obs x = σ)).card := (rfl)
+
+/-- Summing weights over a complete, injective list of candidate values equals summing
+those weights over the original family with their multiplicities. -/
+theorem sum_mul_fiberCount {C K : Type*} [Fintype C] [Semiring K]
+    (obs : X → S) (columns : C → S) (hinj : Function.Injective columns)
+    (cover : ∀ x, ∃ c, columns c = obs x) (weight : S → K) :
+    ∑ c, weight (columns c) * (fiberCount obs (columns c) : K) =
+      ∑ x, weight (obs x) := by
+  classical
+  simp only [fiberCount_eq_card_filter, Finset.card_filter,
+    Nat.cast_sum, Nat.cast_ite,
+    Nat.cast_one, Nat.cast_zero, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro x _
+  obtain ⟨c, hc⟩ := cover x
+  rw [Finset.sum_eq_single c]
+  · simp [hc]
+  · intro d _ hdc
+    have hne : obs x ≠ columns d := by
+      intro he
+      exact hdc (hinj (he.symm.trans hc.symm))
+    simp [hne]
+  · simp
 
 end TauCeti

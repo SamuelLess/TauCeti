@@ -25,6 +25,7 @@ covering the range is weighted by its occurrence count.
 * `Function.occCount_le_of_comp`, `Function.occCount_lt_of_comp`: comparison along embeddings.
 * `Function.sum_occCount_nsmul`: regroup a sum by counting the occurrences of each value.
 * `Function.sum_occCount_eq_card`: the total occurrence count is the cardinality of the index type.
+* `Function.exists_perm_of_occCount_eq`: equal counts on finite families give a permutation.
 
 -/
 
@@ -140,5 +141,18 @@ theorem occCount_succ [DecidableEq S] {n : ℕ} (w : Fin (n + 1) → S) (a : S) 
     occCount (w ∘ Fin.succ) a + (if w 0 = a then 1 else 0) = occCount w a := by
   rw [occCount_eq_sum, occCount_eq_sum, Fin.sum_univ_succ, Nat.add_comm]
   rfl
+
+/-- Two families on a finite index type with equal occurrence counts differ by a permutation. -/
+theorem exists_perm_of_occCount_eq [Finite X] {u v : X → S}
+    (h : ∀ a, occCount u a = occCount v a) :
+    ∃ σ : Equiv.Perm X, v ∘ σ = u := by
+  classical
+  let _ := Fintype.ofFinite X
+  refine ⟨Equiv.ofFiberEquiv (f := u) (g := v) fun c =>
+    Fintype.equivOfCardEq (by
+      rw [← Nat.card_eq_fintype_card, ← Nat.card_eq_fintype_card]
+      exact (occCount_def u c).symm.trans ((h c).trans (occCount_def v c))), ?_⟩
+  funext i
+  exact Equiv.ofFiberEquiv_map _ i
 
 end Function

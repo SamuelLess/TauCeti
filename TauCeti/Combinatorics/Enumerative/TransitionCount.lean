@@ -68,7 +68,7 @@ noncomputable section
 
 open Finset
 
-open Function (occCount occCount_def occCount_eq_card_filter occCount_castSucc occCount_succ)
+open Function (occCount occCount_eq_card_filter occCount_castSucc occCount_succ)
 
 namespace TauCeti
 
@@ -236,18 +236,6 @@ theorem occCount_eq_of_transitionCount_eq {n : ℕ} {u v : Fin (n + 1) → α} (
   rw [h0] at hu_zero
   omega
 
-/-- Two words with the same occurrence counts are rearrangements of each other. -/
-theorem exists_perm_comp_of_occCount_eq {N : ℕ} {u v : Fin N → α}
-    (h : ∀ a, occCount u a = occCount v a) :
-    ∃ σ : Equiv.Perm (Fin N), v ∘ σ = u := by
-  classical
-  refine ⟨Equiv.ofFiberEquiv (f := u) (g := v) fun c =>
-    Fintype.equivOfCardEq (by
-      rw [← Nat.card_eq_fintype_card, ← Nat.card_eq_fintype_card]
-      exact (occCount_def u c).symm.trans ((h c).trans (occCount_def v c))), ?_⟩
-  funext i
-  exact Equiv.ofFiberEquiv_map _ i
-
 /-- **Words with the same first letter and the same transition counts are rearrangements of each
 other.** This is the elementary fact underlying Markov exchangeability: the transition counts of a
 path, together with its starting point, are a sufficient statistic finer than the occurrence
@@ -255,7 +243,7 @@ counts, so any symmetry expressed through them is implied by exchangeability. -/
 theorem exists_perm_comp_of_transitionCount_eq {n : ℕ} {u v : Fin (n + 1) → α} (h0 : u 0 = v 0)
     (h : ∀ a b, transitionCount u a b = transitionCount v a b) :
     ∃ σ : Equiv.Perm (Fin (n + 1)), v ∘ σ = u :=
-  exists_perm_comp_of_occCount_eq (occCount_eq_of_transitionCount_eq h0 h)
+  Function.exists_perm_of_occCount_eq (occCount_eq_of_transitionCount_eq h0 h)
 
 /-- **A product of transition weights along a word is a function of its transition counts.** The
 index set `S` only has to contain both endpoints of every transition in `w`. -/

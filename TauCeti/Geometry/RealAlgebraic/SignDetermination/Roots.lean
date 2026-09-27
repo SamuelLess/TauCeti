@@ -40,13 +40,20 @@ theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
 @[simp] theorem tarskiQuery_zero_left (q : R[X]) : tarskiQuery 0 q = 0 := by
   simp [tarskiQuery_eq_signSum, signSum_eq_sum]
 
+@[simp] theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
+  simp [tarskiQuery_eq_signSum]
+
+@[simp] theorem tarskiQuery_one (p : R[X]) :
+    tarskiQuery p 1 = p.roots.toFinset.card := by
+  simp [tarskiQuery_eq_signSum]
+
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
 theorem tarskiQuery_prod_pow {J : Type*} [Fintype J] [DecidableEq J]
     (p : R[X]) (Q : J → R[X]) (e : J → ℕ) :
     tarskiQuery p (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) *
         (signCount p.roots.toFinset Q σ : ℤ) := by
-  rw [tarskiQuery_eq_signSum, signSum_prod_pow]
+  rw [tarskiQuery_eq_signSum, signSum_eq_sum_signCount]
 
 /-- Inverting the full matrix of Tarski queries recovers the root sign multiplicities. -/
 theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]

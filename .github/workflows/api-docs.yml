@@ -16,7 +16,7 @@ name: API docs
 # database plus one Lake marker per module), and that tree is cached between runs, so a run
 # re-analyzes only the modules whose oleans changed since the last one. The cache is keyed on the
 # pins, so a toolchain or Mathlib bump, which changes every olean anyway, starts from an empty
-# database; that is also what keeps modules deleted from TauCeti from lingering in it for long.
+# database. Modules deleted from TauCeti are removed from the database by doc-gen4 itself.
 
 on:
   push:
@@ -32,7 +32,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: api-docs
+  # Per ref: a dispatch on another branch works on that branch's caches and must not hold up main's.
+  group: api-docs-${{ github.ref }}
   # A run in progress holds the build cache it restored; let it save before the next one restores.
   cancel-in-progress: false
 
@@ -206,9 +207,33 @@ jobs:
           fi
           printf '%s\n' "$SHA" > "$marker"
 
+      # pages.yml publishes the most recently SAVED tree, which is not necessarily the newest one:
+      # re-running an old run of this workflow would save its older tree last, and the next Pages
+      # run would publish it. So a run saves nothing once a later run has succeeded. Its build state
+      # is older too, so that is skipped as well. If the question cannot be answered, save: that
+      # is what every run did before this check existed.
+      - name: Check that no later run has already succeeded
+        id: superseded
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_NUMBER: ${{ github.run_number }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          newest=$(gh run list -R "$REPO" --workflow api-docs.yml --branch "$REF_NAME" --status success \
+            --limit 1 --json number --jq '.[0].number // 0' || echo 0)
+          if [ "${newest:-0}" -gt "$RUN_NUMBER" ]; then
+            echo "::warning title=Superseded::run #${newest} has already succeeded; not saving this older run's docs"
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # What pages.yml restores (newest first, by prefix). The key shape is unchanged from when
       # pages.yml built the docs itself, so the entries it saved remain usable.
       - name: Save the generated API docs
+        if: steps.superseded.outputs.superseded != 'true'
         uses: actions/cache/save@v4
         with:
           path: docbuild/.lake/build/doc
@@ -217,6 +242,7 @@ jobs:
       # Saved only after a successful build: a failed build may have left the database half
       # updated, and the next run is better off restoring the last good state.
       - name: Save the doc-gen4 build state
+        if: steps.superseded.outputs.superseded != 'true'
         uses: actions/cache/save@v4
         with:
           path: docbuild/.lake/build
@@ -225,7 +251,8 @@ jobs:
       # Every run saves new entries, and the repository's cache is shared with the Mathlib olean
       # caches that pr-build.yml depends on, so left alone these would push those out under the
       # size limit. Only the newest few are ever restored; delete the rest. Best effort: a failure
-      # here costs cache space, not the docs.
+      # here costs cache space, not the docs. Caches belong to the ref that saved them, and main's
+      # are the ones Pages restores, so each ref prunes only its own.
       - name: Prune superseded cache entries
         continue-on-error: true
         env:
@@ -235,7 +262,7 @@ jobs:
           set -euo pipefail
           for prefix in docs-build-v1- docs-html-v2-; do
             # Newest first; keep three so a Pages run that restored one just now still finds it.
-            gh cache list -R "$REPO" --key "$prefix" --sort created_at --order desc --limit 100 --json id \
+            gh cache list -R "$REPO" --ref "$GITHUB_REF" --key "$prefix" --sort created_at --order desc --limit 100 --json id \
               --jq '.[3:][].id' |
               while read -r id; do
                 gh cache delete -R "$REPO" "$id" || true

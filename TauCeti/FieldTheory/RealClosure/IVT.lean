@@ -7,10 +7,8 @@ module
 
 public import TauCeti.FieldTheory.RealClosure.AlgebraicClosed
 import Mathlib.FieldTheory.Minpoly.Finite
-import Mathlib.Tactic.Linarith
 import TauCeti.Algebra.Polynomial.LinearFactor
 import TauCeti.Algebra.Polynomial.RealClosed.Quadratic
-import Mathlib.Tactic.Ring
 
 /-! # Polynomial intermediate values over an abstract real closed field
 
@@ -53,29 +51,6 @@ theorem _root_.Polynomial.natDegree_le_two_of_irreducible {p : R[X]} (hp : Irred
   rw [hdeg]
   exact (minpoly.natDegree_le z).trans_eq (QuadraticAlgebra.finrank_eq_two _ _)
 
-omit [IsRealClosed R] in
-/-- A linear polynomial has constant nonzero sign on an interval without a root. -/
-theorem _root_.Polynomial.linear_eval_mul_pos {p : R[X]} (hdeg : p.natDegree = 1) {a b : R}
-    (hab : a ≤ b) (hroot : ∀ x ∈ Set.Icc a b, p.eval x ≠ 0) :
-    0 < p.eval a * p.eval b := by
-  have hd : p.degree = 1 := (degree_eq_iff_natDegree_eq_of_pos (by decide)).mpr hdeg
-  obtain ⟨r, hr⟩ := exists_root_of_degree_eq_one hd
-  obtain ⟨c, hc⟩ := exists_eq_C_mul_X_sub_C_of_natDegree_le_one hdeg.le hr
-  have hcne : c ≠ 0 := by
-    intro hz
-    apply hroot a ⟨le_rfl, hab⟩
-    simp [hc, hz]
-  have hprod : 0 < (a - r) * (b - r) := by
-    rcases lt_or_ge r a with h | h
-    · exact mul_pos (sub_pos.mpr h) (sub_pos.mpr (h.trans_le hab))
-    · have hb : b < r := by
-        by_contra! hb
-        exact hroot r ⟨h, hb⟩ hr
-      exact mul_pos_of_neg_of_neg (sub_neg.mpr (hab.trans_lt hb)) (sub_neg.mpr hb)
-  simp only [hc, eval_mul, eval_C, eval_sub, eval_X]
-  convert mul_pos (mul_self_pos.mpr hcne) hprod using 1
-  ring
-
 /-- A polynomial has constant nonzero sign on any closed interval containing
 none of its roots. -/
 theorem _root_.Polynomial.eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a ≤ b)
@@ -106,7 +81,7 @@ theorem _root_.Polynomial.eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a
       have := hq.natDegree_pos
       omega
     have hqpos : 0 < q.eval a * q.eval b := hdeg.elim
-      (fun h => linear_eval_mul_pos h hab hq')
+      (fun h => linear_eval_mul_pos_of_no_roots h hab hq')
       (fun h => irreducible_quadratic_eval_mul_pos hq h a b)
     simpa only [eval_mul, mul_mul_mul_comm] using mul_pos hqpos (ih hp')
 

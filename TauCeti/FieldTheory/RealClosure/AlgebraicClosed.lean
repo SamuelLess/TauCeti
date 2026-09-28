@@ -7,12 +7,17 @@ module
 
 public import TauCeti.FieldTheory.RealClosure.Galois
 public import TauCeti.FieldTheory.RealClosure.Complexification
-public import TauCeti.Algebra.Order.Ring.Ordering.Semireal
 public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 
 /-! # Algebraic closedness of the complexification
 
-Finite extensions are put inside a finite normal closure. The 2-group argument
+`finrank_eq_one_of_forall_isSquare` proves that a finite extension of a finite
+square-closed extension of a real closed field is trivial. `isAlgClosed_of_forall_isSquare`
+then proves algebraic closedness of that square-closed field. In particular,
+`isAlgClosed_quadraticAlgebra` proves that `R[i] = QuadraticAlgebra R (-1) 0` is
+algebraically closed; the polynomial IVT development uses this to bound irreducible degrees.
+
+The proof puts finite extensions inside a finite normal closure. The 2-group argument
 then applies to the Galois group over a square-closed intermediate field.
 
 ## References
@@ -62,7 +67,7 @@ theorem isAlgClosed_of_forall_isSquare (hsq : ∀ x : C, IsSquare x) : IsAlgClos
   have hdeg : p.natDegree = 1 := by
     rwa [(AdjoinRoot.powerBasis hp.ne_zero).finrank] at hdim
   exact Polynomial.exists_root_of_degree_eq_one
-    (by rw [Polynomial.degree_eq_natDegree hp.ne_zero, hdeg]; rfl)
+    ((Polynomial.degree_eq_iff_natDegree_eq_of_pos one_pos).mpr hdeg)
 
 /-- The complexification `R[i]` of a real closed field is algebraically closed. -/
 theorem isAlgClosed_quadraticAlgebra : IsAlgClosed (QuadraticAlgebra R (-1) 0) :=

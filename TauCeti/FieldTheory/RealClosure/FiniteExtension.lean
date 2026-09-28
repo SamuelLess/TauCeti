@@ -12,7 +12,6 @@ import Mathlib.FieldTheory.PrimitiveElement
 import Mathlib.Algebra.QuadraticAlgebra.Discriminant
 import Mathlib.Algebra.QuadraticAlgebra.IsQuadraticExtension
 import Mathlib.Algebra.Field.Equiv
-import Mathlib.FieldTheory.Minpoly.Finite
 
 /-! # Finite extensions of an abstract real closed field
 

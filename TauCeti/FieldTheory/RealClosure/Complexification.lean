@@ -65,6 +65,8 @@ private theorem complex_isSquare_aux (z : QuadraticAlgebra R (-1) 0) : IsSquare 
     have ht : 2 * s * t = z.im := by
       dsimp only [t]
       field_simp
+    -- Multiplying by `(2 * s) ^ 2` clears the denominator of `t`; then `hm` and `hs2`
+    -- identify the real part of the square.
     have hprod : (2 * s) ^ 2 * (s ^ 2 - t ^ 2 - z.re) = 0 := by
       linear_combination (2 * s ^ 2 + m - z.re) * hs2 + hm - (2 * s * t + z.im) * ht
     have hre : s ^ 2 - t ^ 2 = z.re := sub_eq_zero.mp

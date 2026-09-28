@@ -37,11 +37,12 @@ test -x "${LINT_DRIVER_EXE:?the prebuilt environment-lint driver is required}"
 # CI telemetry: when each phase below starts, and the build's own per-module log, for the host's
 # telemetry step to summarise (pr-build.yml, scripts/ci_telemetry.py). Written under .lake because
 # that is the only place the sandbox can write, which also means candidate code could rewrite
-# them: they are statistics, never an input to any decision.
+# them: they are statistics, never an input to any decision. Every telemetry write is best-effort:
+# under `set -e` a failed write (a full disk, say) must not turn a passing build red.
 TELEMETRY="$PWD/.lake/telemetry"
-mkdir -p "$TELEMETRY"
-: > "$TELEMETRY/phases.tsv"
-phase() { printf '%s\t%s\n' "$1" "$(date +%s.%N)" >> "$TELEMETRY/phases.tsv"; }
+mkdir -p "$TELEMETRY" 2>/dev/null || true
+: > "$TELEMETRY/phases.tsv" 2>/dev/null || true
+phase() { printf '%s\t%s\n' "$1" "$(date +%s.%N)" >> "$TELEMETRY/phases.tsv" 2>/dev/null || true; }
 
 # Build the exact candidate against its attested Lake config. bwrap keeps this offline and
 # confines writes to the candidate's .lake directory.
@@ -51,7 +52,9 @@ phase() { printf '%s\t%s\n' "$1" "$(date +%s.%N)" >> "$TELEMETRY/phases.tsv"; }
 # #check/#eval, a `simp?`/`ring_nf?`-style "Try this: …" suggestion, a linter note. A clean elaboration
 # logs nothing above trace, so this is exit-code enforcement, not output scraping.
 phase build
-lake build --iofail 2>&1 | tee "$TELEMETRY/lake-build.log"
+# `--output-error=warn` keeps tee passing the build's output through even if writing the copy fails,
+# and `|| true` drops tee's own status, so `pipefail` reports exactly Lake's.
+lake build --iofail 2>&1 | { tee --output-error=warn "$TELEMETRY/lake-build.log" 2>/dev/null || true; }
 
 # Reject duplicate declaration ownership before merging imported environments can hide it.
 # This also checks orphan modules and runs on the exact merge-group candidate before landing.

@@ -1215,6 +1215,7 @@ jobs:
       - name: Summarise CI telemetry (statistics only)
         if: always()
         continue-on-error: true
+        timeout-minutes: 2
         env:
           PICKED: ${{ needs.pick-runner.outputs.github == 'true' && 'github' || 'namespace' }}
           PICKER_BUSY: ${{ needs.pick-runner.outputs.busy }}
@@ -1228,6 +1229,7 @@ jobs:
       - name: Upload CI telemetry
         if: always()
         continue-on-error: true
+        timeout-minutes: 3
         uses: actions/upload-artifact@v4
         with:
           name: ci-telemetry

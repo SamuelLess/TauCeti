@@ -13,28 +13,18 @@ import TauCeti.RingTheory.MvPolynomial.Finrank
 /-!
 # The trace reduction to the ambient space of binary forms
 
-Let `K` be a field, `w` an even natural number and `ξ ∈ K[ℳₙ]` an element satisfying Popa and
-Zagier's exchange relations (B). On the space `V_w` of binary forms of degree `w`, the action of
-`ξ` maps each of the subspaces `A = ker (1 + S)` and `B = ker (1 + U + U²)`, with `U = T S`, into
-the other. It therefore preserves both the period-polynomial space `W_w = A ∩ B` and `A + B`, and
-its traces on the two agree. When `A + B = V_w`, this is Popa and Zagier's reduction
-`tr(ξ | W_w) = tr(ξ | V_w)` of the trace on period polynomials to the trace on all binary forms.
+Let `K` be a field of characteristic zero, `w` a positive even natural number and
+`ξ ∈ K[ℳₙ]` an element satisfying Popa and Zagier's exchange relations (B). On the space `V_w`
+of binary forms of degree `w`, the action of `ξ` maps each of the subspaces `A = ker (1 + S)` and
+`B = ker (1 + U + U²)`, with `U = T S`, into the other, and `A + B = V_w`. Its trace on the
+period-polynomial space `W_w = A ∩ B` is therefore its trace on `V_w`. This is Popa and Zagier's
+reduction `tr(ξ | W_w) = tr(ξ | V_w)` of the trace on period polynomials to the trace on all
+binary forms.
 
 ## Main results
 
-* `TraceFormulaMatrixModule.ExchangeRelations.trace_periodActionRestrict_eq_trace_restrict_sup`:
-  the trace of `ξ` on `W_w = A ∩ B` is its trace on `A + B`.
-* `TraceFormulaMatrixModule.ExchangeRelations.trace_periodActionRestrict_eq_trace`: if
-  `A + B = V_w`, then the trace of `ξ` on `W_w` is its trace on `V_w`.
-
-## Implementation notes
-
-Popa and Zagier prove `A + B = V_w` for `w > 0` from a nondegenerate `Γ`-invariant inner product
-on `V_w`: the orthogonal complement of `A + B` is the space of `Γ`-invariants, which is zero for
-`w > 0`. That input is not proved here: it enters
-`TauCeti.TraceFormulaMatrixModule.ExchangeRelations.trace_periodActionRestrict_eq_trace` as the
-hypothesis `Codisjoint A B`. For `w = 0` it fails when `2` and `3` are invertible, since then
-`A = B = 0`.
+* `TauCeti.TraceFormulaMatrixModule.ExchangeRelations.trace_periodActionRestrict_eq_trace`: the
+  trace of `ξ` on `W_w` is its trace on `V_w`.
 
 ## References
 
@@ -77,41 +67,16 @@ private theorem ExchangeRelations.trace_periodActionRestrict_eq_trace_restrict_i
   rw [h]
   exact trace_restrict_congr periodPolynomials_def _ _ _
 
-/-- **Trace reduction to `A + B`** (Popa–Zagier, Proposition 3, proof): for even `w`, the action of
-an element `ξ` satisfying the exchange relations has the same trace on the period polynomials
-`W_w = ker (1 + S) ∩ ker (1 + U + U²)` as on `ker (1 + S) + ker (1 + U + U²)`, where `U = T S`. -/
-theorem ExchangeRelations.trace_periodActionRestrict_eq_trace_restrict_sup (hw : Even w)
-    {ξ : K[TraceFormulaMatrixModule n]} (hξ : ExchangeRelations K n ξ) :
-    LinearMap.trace K (periodPolynomials K w) (hξ.periodActionRestrict hw) =
-      LinearMap.trace K
-        ↥(LinearMap.ker (1 + binaryFormRep K w (op (S : Matrix (Fin 2) (Fin 2) ℤ))) ⊔
-          LinearMap.ker
-            (1 + binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) +
-              binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) ^ 2))
-        ((periodAction (R := K) hw ξ).restrict fun _ hP ↦
-          (sup_le (fun _ hP ↦ Submodule.mem_sup_right
-              (hξ.periodAction_mem_ker_one_add_U_add_U_sq hw hP))
-            (fun _ hP ↦ Submodule.mem_sup_left (hξ.periodAction_mem_ker_one_add_S hw hP)) :
-            _ ≤ Submodule.comap (periodAction (R := K) hw ξ) _) hP) := by
-  rw [hξ.trace_periodActionRestrict_eq_trace_restrict_inf hw]
-  exact LinearMap.trace_restrict_inf_eq_trace_restrict_sup
-    (fun _ ↦ hξ.periodAction_mem_ker_one_add_U_add_U_sq hw)
-    (fun _ ↦ hξ.periodAction_mem_ker_one_add_S hw)
-
-/-- **The trace reduction** (Popa–Zagier, Proposition 3): for even `w`, if
-`ker (1 + S) + ker (1 + U + U²)` is all of `V_w`, where `U = T S`, then the action of an element `ξ`
-satisfying the exchange relations has the same trace on the period polynomials `W_w` as on the
-binary forms `V_w`. -/
-theorem ExchangeRelations.trace_periodActionRestrict_eq_trace (hw : Even w)
-    {ξ : K[TraceFormulaMatrixModule n]} (hξ : ExchangeRelations K n ξ)
-    (hAB : Codisjoint (LinearMap.ker (1 + binaryFormRep K w (op (S : Matrix (Fin 2) (Fin 2) ℤ))))
-      (LinearMap.ker
-        (1 + binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) +
-          binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) ^ 2))) :
+/-- **The trace reduction** (Popa–Zagier, §2, Proposition 3): over a field of characteristic zero
+and for positive even `w`, the action of an element `ξ` satisfying the exchange relations has the
+same trace on the period polynomials `W_w` as on the binary forms `V_w`. -/
+theorem ExchangeRelations.trace_periodActionRestrict_eq_trace [CharZero K] (hw : Even w)
+    (hw₀ : w ≠ 0) {ξ : K[TraceFormulaMatrixModule n]} (hξ : ExchangeRelations K n ξ) :
     LinearMap.trace K (periodPolynomials K w) (hξ.periodActionRestrict hw) =
       LinearMap.trace K (homogeneousSubmodule (Fin 2) K w) (periodAction (R := K) hw ξ) := by
   rw [hξ.trace_periodActionRestrict_eq_trace_restrict_inf hw]
-  exact LinearMap.trace_restrict_inf_eq_trace hAB
+  exact LinearMap.trace_restrict_inf_eq_trace
+    (codisjoint_ker_one_add_S_ker_one_add_U_add_U_sq hw hw₀)
     (fun _ ↦ hξ.periodAction_mem_ker_one_add_U_add_U_sq hw)
     (fun _ ↦ hξ.periodAction_mem_ker_one_add_S hw)
 

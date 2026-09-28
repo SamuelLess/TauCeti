@@ -28,7 +28,9 @@ open scoped Matrix
 
 namespace Polynomial
 
-variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
+section Basic
+
+variable {R : Type*} [CommRing R] [IsDomain R] [LinearOrder R]
 
 /-- Sum of the signs of `q` at the distinct roots of `p`, with value zero when `p = 0`. -/
 noncomputable def tarskiQuery (p q : R[X]) : ℤ := signSum p.roots.toFinset q
@@ -56,9 +58,23 @@ theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
   simp [tarskiQuery_eq_signSum]
 
 @[simp, grind =]
-theorem tarskiQuery_one (p : R[X]) :
+theorem tarskiQuery_one [ZeroLEOneClass R] (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
+
+/-- A positive count at the roots of a nonzero polynomial is an actual realizable condition. -/
+theorem signCount_roots_pos {J : Type*}
+    {p : R[X]} (hp : p ≠ 0) (Q : J → R[X]) (σ : J → SignType) :
+    0 < signCount p.roots.toFinset Q σ ↔
+      ∃ x : R, p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j := by
+  classical
+  simp only [signCount_pos, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
+
+end Basic
+
+section Moments
+
+variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
 theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
@@ -75,12 +91,7 @@ theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]
       fun σ => (signCount p.roots.toFinset Q σ : ℚ) := by
   simp only [tarskiQuery_eq_signSum, fullInverse_mulVec_signSum]
 
-/-- A positive count at the roots of a nonzero polynomial is an actual realizable condition. -/
-theorem signCount_roots_pos {J : Type*}
-    {p : R[X]} (hp : p ≠ 0) (Q : J → R[X]) (σ : J → SignType) :
-    0 < signCount p.roots.toFinset Q σ ↔
-      ∃ x : R, p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j := by
-  classical
-  simp only [signCount_pos, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
+
+end Moments
 
 end Polynomial

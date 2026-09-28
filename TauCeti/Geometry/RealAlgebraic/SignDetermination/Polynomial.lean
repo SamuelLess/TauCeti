@@ -16,7 +16,9 @@ integer sum of signs on a specified finite set. `signSum_eq_sum_signCount` expre
 the sign sum of a product as a moment of these counts. `fullInverse_mulVec_signSum` inverts
 the full moment system over the rationals.
 
-These statements hold over any linearly ordered commutative ring. For root sign determination,
+The basic counts and sign sums require only a semiring with a linear order.
+The multiplicative moment identities use a compatibly ordered commutative ring.
+For root sign determination,
 take the finite set to be the distinct roots of a nonzero polynomial, possibly
 restricted to an interval. The zero polynomial must be handled separately:
 its zero set is not represented by its empty `Polynomial.roots` multiset.
@@ -44,7 +46,7 @@ open Function (occCount occCount_eq_card_filter)
 
 namespace Finset
 
-section SignCount
+section Basic
 
 variable {R : Type*} [Semiring R] [LinearOrder R]
 
@@ -90,7 +92,46 @@ theorem signCount_pos {J : Type*}
   classical
   simp [signCount_eq_card_filter, Finset.card_pos, Finset.Nonempty]
 
-end SignCount
+/-- The integer sum of signs at a specified finite set of points. -/
+noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, (sign (p.eval x.val) : ℤ)
+
+/-- Sign sums are integer sums of pointwise polynomial signs. -/
+theorem signSum_eq_sum_subtype (Z : Finset R) (p : R[X]) :
+    signSum Z p = ∑ x : Z, (sign (p.eval x.val) : ℤ) := (rfl)
+
+/-- Sign sums expressed directly over the original finite set. -/
+theorem signSum_eq_sum (Z : Finset R) (p : R[X]) :
+    signSum Z p = ∑ x ∈ Z, (sign (p.eval x) : ℤ) := by
+  rw [signSum_eq_sum_subtype, Finset.sum_coe_sort Z (fun x : R => (sign (p.eval x) : ℤ))]
+
+@[simp, grind =]
+theorem signSum_empty (p : R[X]) : signSum ∅ p = 0 := by
+  simp [signSum_eq_sum]
+
+@[simp, grind =]
+theorem signSum_zero (Z : Finset R) : signSum Z 0 = 0 := by
+  simp [signSum_eq_sum]
+
+@[simp, grind =]
+theorem signSum_one [ZeroLEOneClass R] [NeZero (1 : R)] (Z : Finset R) : signSum Z 1 = Z.card := by
+  simp [signSum_eq_sum]
+
+/-- A finite sign sum is the number of positive evaluations minus the number of negative ones. -/
+theorem signSum_eq_card_sub_card (Z : Finset R) (p : R[X]) :
+    signSum Z p = ((Z.filter (fun x => 0 < p.eval x)).card : ℤ) -
+      (Z.filter (fun x => p.eval x < 0)).card := by
+  classical
+  rw [signSum_eq_sum]
+  simp only [Finset.card_filter, Nat.cast_sum, Nat.cast_ite, Nat.cast_one, Nat.cast_zero,
+    ← Finset.sum_sub_distrib]
+  apply Finset.sum_congr rfl
+  intro x _
+  by_cases hpos : 0 < p.eval x
+  · have hneg : ¬ p.eval x < 0 := not_lt_of_ge hpos.le
+    simp [hpos, hneg]
+  · by_cases hneg : p.eval x < 0 <;> simp [sign_apply, hpos, hneg]
+
+end Basic
 
 end Finset
 
@@ -115,49 +156,11 @@ open TauCeti.SignDetermination
 
 variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 
-/-- The integer sum of signs at a specified finite set of points. -/
-noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, signEval x.val p
-
-/-- Sign sums are integer sums of pointwise polynomial signs. -/
-theorem signSum_eq_sum_subtype (Z : Finset R) (p : R[X]) :
-    signSum Z p = ∑ x : Z, (sign (p.eval x.val) : ℤ) := (rfl)
-
-/-- Sign sums expressed directly over the original finite set. -/
-theorem signSum_eq_sum (Z : Finset R) (p : R[X]) :
-    signSum Z p = ∑ x ∈ Z, (sign (p.eval x) : ℤ) := by
-  rw [signSum_eq_sum_subtype, Finset.sum_coe_sort Z (fun x : R => (sign (p.eval x) : ℤ))]
-
-@[simp, grind =]
-theorem signSum_empty (p : R[X]) : signSum ∅ p = 0 := by
-  simp [signSum_eq_sum]
-
-@[simp, grind =]
-theorem signSum_zero (Z : Finset R) : signSum Z 0 = 0 := by
-  simp [signSum_eq_sum]
-
-@[simp, grind =]
-theorem signSum_one (Z : Finset R) : signSum Z 1 = Z.card := by
-  simp [signSum_eq_sum]
-
-/-- A finite sign sum is the number of positive evaluations minus the number of negative ones. -/
-theorem signSum_eq_card_sub_card (Z : Finset R) (p : R[X]) :
-    signSum Z p = ((Z.filter (fun x => 0 < p.eval x)).card : ℤ) -
-      (Z.filter (fun x => p.eval x < 0)).card := by
-  classical
-  rw [signSum_eq_sum]
-  simp only [Finset.card_filter, Nat.cast_sum, Nat.cast_ite, Nat.cast_one, Nat.cast_zero,
-    ← Finset.sum_sub_distrib]
-  apply Finset.sum_congr rfl
-  intro x _
-  by_cases hpos : 0 < p.eval x
-  · have hneg : ¬ p.eval x < 0 := not_lt_of_ge hpos.le
-    simp [hpos, hneg]
-  · by_cases hneg : p.eval x < 0 <;> simp [sign_apply, hpos, hneg]
-
 /-- The sign sum of a product is the sum of the products of its pointwise signs. -/
 private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
-  simp only [signSum, map_prod, signEval_apply]
+  change (∑ x : Z, signEval x.val (∏ j, Q j)) = _
+  simp only [map_prod, signEval_apply]
 
 /-- After casting to a commutative ring, a sign sum of powers is a sum of sign products. -/
 theorem signSum_prod_pow {K : Type*} [CommRing K] {J : Type*} [Fintype J]

@@ -19,6 +19,36 @@ def fleetGraphs : Html := {{
   </figure>
 }}
 
+/-- One daily chart, full width. -/
+def dailyChart (file alt caption : String) : Html := {{
+  <figure class="loc-figure loc-figure-wide">
+    <img class="loc-graph" src={{s!"static/{file}"}} alt={{alt}} loading="lazy"/>
+    <figcaption>{{caption}}</figcaption>
+  </figure>
+}}
+
+def durationGraph : Html := dailyChart "ci-build-duration.svg"
+  "Median and 90th-percentile build time per day, by where the build ran"
+  "Solid lines are medians, dashed lines 90th percentiles."
+def waitGraph : Html := dailyChart "ci-build-wait.svg"
+  "Median and 90th-percentile wait for a runner per day, by where the job ran"
+  "Solid lines are medians, dashed lines 90th percentiles."
+def phasesGraph : Html := dailyChart "ci-build-phases.svg"
+  "Mean minutes per successful PR build, stacked by phase"
+  "Mean minutes per successful PR build, by phase."
+def failuresGraph : Html := dailyChart "ci-failures.svg"
+  "Failed PR builds per day by cause, and the failure rate"
+  "Failed PR builds by cause; the dashed line is the share of PR builds that failed."
+def minutesGraph : Html := dailyChart "ci-runner-minutes.svg"
+  "Runner-minutes per day on Namespace and on GitHub-hosted runners"
+  "Runner-minutes per day."
+def queueGraph : Html := dailyChart "ci-merge-queue.svg"
+  "Merge-queue builds per day by outcome, and PRs landed"
+  "Merge-queue builds by outcome; the dashed line is PRs landed on main."
+def pickerGraph : Html := dailyChart "ci-picker.svg"
+  "Share of PR builds run on GitHub-hosted runners per day"
+  "Share of PR builds the runner picker sent to GitHub-hosted runners."
+
 #doc (Page) "CI" =>
 
 Where does Tau Ceti's continuous integration run, and how long does it wait? Every pull request
@@ -41,6 +71,55 @@ when bins are longer), for builds and for other jobs separately.
 
 :::blob fleetGraphs
 :::
+
+# Day by day
+
+The charts below give one point per complete UTC day, for up to the last ninety days.
+
+How long does a build take, and how long does it wait before starting? A pull-request build
+compiles only what the pull request changed, restoring everything else from the artifact cache, then
+runs the audits and lints over the whole library. Namespace machines have eight cores where
+GitHub-hosted runners have four, so the same build is faster there.
+
+:::blob durationGraph
+:::
+
+:::blob waitGraph
+:::
+
+Where does a build's time go? The build, the audits and the two lints run in one sandboxed step;
+since the build began recording its own phases, that step is split into them. Before then it
+appears as one block.
+
+:::blob phasesGraph
+:::
+
+Why do builds fail? Each failed pull-request build is classified by the step that failed and the
+error lines it printed: a Lean error, one of the lints, one of the audits, a policy check (scope,
+size, pins), or an infrastructure fault such as a cache download. Infrastructure faults are the
+ones a re-run fixes.
+
+:::blob failuresGraph
+:::
+
+What does it cost? Namespace bills every minute; GitHub-hosted minutes cost nothing for a public
+repository. A cancelled build is one a newer push to the same pull request replaced before it
+finished, so its minutes bought nothing.
+
+:::blob minutesGraph
+:::
+
+:::blob pickerGraph
+:::
+
+How is the merge queue doing? The queue builds each pull request together with those ahead of it,
+and lands them only if that combined build passes. A failed merge-queue build sends its pull request
+back, and the ones behind it are rebuilt.
+
+:::blob queueGraph
+:::
+
+# Where the data comes from
 
 The data comes from [TauCetiCI](https://github.com/TauCetiProject/TauCetiCI), which records
 every GitHub Actions run in the organisation: the commits each build tested, the runner, the

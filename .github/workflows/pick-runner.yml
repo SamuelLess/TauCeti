@@ -39,6 +39,12 @@ on:
       github:
         description: "`true` when the caller should run on a GitHub-hosted runner"
         value: ${{ jobs.pick.outputs.github }}
+      busy:
+        description: "GitHub-hosted jobs counted busy, when the count completed (for CI telemetry)"
+        value: ${{ jobs.pick.outputs.busy }}
+      budget:
+        description: "the HOSTED_RUNNER_BUDGET the decision used (for CI telemetry)"
+        value: ${{ jobs.pick.outputs.budget }}
 
 jobs:
   pick:
@@ -47,6 +53,8 @@ jobs:
     continue-on-error: true
     outputs:
       github: ${{ steps.pick.outputs.github }}
+      busy: ${{ steps.pick.outputs.busy }}
+      budget: ${{ steps.pick.outputs.budget }}
     steps:
       - name: Check for the App
         id: app
@@ -76,6 +84,8 @@ jobs:
           set -uo pipefail
           decide() {
             echo "github=$1" >> "$GITHUB_OUTPUT"
+            echo "budget=$BUDGET" >> "$GITHUB_OUTPUT"
+            echo "busy=${busy:-}" >> "$GITHUB_OUTPUT"
             echo "$2" | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           }

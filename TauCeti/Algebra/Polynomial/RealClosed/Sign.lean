@@ -41,7 +41,7 @@ theorem signs_at_nonroot (p : R[X]) {a r b : R} (har : a < r) (hrb : r < b)
   exact ⟨p.sign_eval_const har.le (fun x hx => hne x ⟨hx.1, hx.2.trans hrb.le⟩),
     (p.sign_eval_const hrb.le (fun x hx => hne x ⟨har.le.trans hx.1, hx.2⟩)).symm⟩
 
-/-- Near an isolated simple root, the head polynomial changes from the negative
+/-- Near an isolated simple root, a polynomial changes from the negative
 of its derivative's sign to its derivative's sign. -/
 theorem signs_at_root (p : R[X]) {a r b : R} (har : a < r) (hrb : r < b)
     (hr : p.eval r = 0) (hd : p.derivative.eval r ≠ 0)

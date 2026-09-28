@@ -44,8 +44,7 @@ theorem eq_right {cs : List (Polynomial R)} (h : Regular cs) {a c : R} (hac : a 
     (hz : ∀ x, a < x → x ≤ c → x ∉ rootsFinset cs) :
     signVariationsAt cs a = signVariationsAt cs c := by
   symm
-  refine signVariationsAt_eq cs c a ?_ ha (fun q hq => h.last q hq a)
-    (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 a) ?_
+  refine h.variations_eq c a ?_ ha ?_
   · intro q hq hqc
     exact hz c hac le_rfl ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqc⟩)
   · intro q hq hqa
@@ -61,8 +60,7 @@ theorem eq_left {cs : List (Polynomial R)} (h : Regular cs) {c b : R} (hcb : c <
     (hb : ∀ p, cs.head? = some p → p.eval b ≠ 0)
     (hz : ∀ x, c ≤ x → x < b → x ∉ rootsFinset cs) :
     signVariationsAt cs c = signVariationsAt cs b := by
-  refine signVariationsAt_eq cs c b ?_ hb (fun q hq => h.last q hq b)
-    (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 b) ?_
+  refine h.variations_eq c b ?_ hb ?_
   · intro q hq hqc
     exact hz c le_rfl hcb ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqc⟩)
   · intro q hq hqb
@@ -98,8 +96,8 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
         exact hxr (hn x ((mem_rootsFinset h.nonzero).mpr ⟨s, hs, hsx⟩) hx)
       by_cases hr : p.eval r = 0
       · simpa [w, hr] using h.root_jump har hrb hr
-          (hsimple r (haa.trans_lt har) (hrb.trans_le hbb) hr) (h.second_eval_ne_zero hr) hz
-      · have hsame := h.interior har hrb (fun s hs => by cases hs; exact hr) hz
+          (hsimple r (haa.trans_lt har) (hrb.trans_le hbb) hr) hz
+      · have hsame := h.eq_at_nonroot har hrb (fun s hs => by cases hs; exact hr) hz
         simp only [w, chain, ite_eq_right hr, hsame.1.trans hsame.2, sub_self]) hab ha hb
   rw [hsum]
   let A := p.roots.toFinset.filter (fun r => a < r ∧ r < b)

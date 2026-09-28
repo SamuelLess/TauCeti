@@ -7,16 +7,22 @@ module
 
 public import TauCeti.Algebra.Polynomial.Sturm.SignedRemainders
 public import TauCeti.Algebra.Polynomial.Sturm.Sum
-public import Mathlib.FieldTheory.Perfect
+public import TauCeti.Algebra.Polynomial.Squarefree
 
 /-! # Sturm–Tarski over an arbitrary real closed ordered field
+
+`IsTarskiSeed` relates the second chain entry to `f * p'` modulo `p`.
+`sum_sign` identifies the variation difference of a signed remainder chain
+with the sum of query signs at the roots in an open interval. Positive
+pseudo-remainder scalings and a nonconstant terminal common factor are allowed.
+The concrete `Polynomial.sturmSeq` specialization supplies sign sums and root
+counts, and is the finite-interval basis for the infinite-endpoint formulas.
+
 ## References
 
 For the classical sign-sum identity, see S. Basu, R. Pollack, and M.-F. Roy,
 [Algorithms in Real Algebraic Geometry](https://doi.org/10.1007/3-540-33099-2),
-second edition, §2.2.2, Theorem 2.61. Here positive pseudo-remainder scalings
-are allowed, and the proof sums local variation jumps after removing the
-common polynomial factor.
+second edition, §2.2.2, Theorem 2.61.
 -/
 
 public section
@@ -123,7 +129,7 @@ variable [IsRealClosed R]
 entry may be a nonconstant common factor. Roots at which the query vanishes
 contribute zero, and roots of interior entries at the endpoints are allowed.
 The head polynomial is required to have simple roots only inside the interval. -/
-theorem tarski {p f q : Polynomial R} {cs : List (Polynomial R)}
+theorem sum_sign {p f q : Polynomial R} {cs : List (Polynomial R)}
     (h : Signed (p :: q :: cs)) (hseed : IsTarskiSeed p f q)
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
@@ -190,16 +196,15 @@ theorem tarski {p f q : Polynomial R} {cs : List (Polynomial R)}
         _ = _ := hseed.sum_roots_mul hp hq (h.nonzero p (by simp)) hp0 hsimple
 
 /-- Squarefreeness supplies the simple-root hypothesis in Sturm–Tarski. -/
-theorem tarski_squarefree {p f q : Polynomial R} {cs : List (Polynomial R)}
+theorem sum_sign_squarefree {p f q : Polynomial R} {cs : List (Polynomial R)}
     (h : Signed (p :: q :: cs)) (hseed : IsTarskiSeed p f q) (hp : Squarefree p)
     {a b : R} (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (f.eval r) : ℤ) := by
-  apply tarski h hseed ?_ hab ha hb
+  apply sum_sign h hseed ?_ hab ha hb
   intro r _ _ hr
-  exact (PerfectField.separable_iff_squarefree.mpr hp).eval₂_derivative_ne_zero
-    (RingHom.id R) hr
+  exact hp.eval_derivative_ne_zero hr
 
 omit [IsRealClosed R] in
 /-- A zero query seed makes the query vanish at every simple root, so its
@@ -214,7 +219,7 @@ theorem IsTarskiSeed.sum_sign_eq_zero {p f : Polynomial R} (hseed : IsTarskiSeed
   rfl
 
 /-- Sturm–Tarski directly for Mathlib's concrete signed remainder sequence. -/
-theorem tarski_sturmSeq (p f : R[X]) (hp : p ≠ 0)
+theorem sum_sign_sturmSeq (p f : R[X])
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (sturmSeq p (f * p.derivative)) a : ℤ) -
@@ -222,6 +227,7 @@ theorem tarski_sturmSeq (p f : R[X]) (hp : p ≠ 0)
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (f.eval r) : ℤ) := by
   classical
+  have hp : p ≠ 0 := fun h => ha (by simp [h])
   have hseed := IsTarskiSeed.mul_derivative p f
   by_cases hq : f * p.derivative = 0
   · rw [hq] at hseed ⊢
@@ -233,15 +239,15 @@ theorem tarski_sturmSeq (p f : R[X]) (hp : p ≠ 0)
         (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))).symm
   · have hsigned := signed_sturmSeq p (f * p.derivative)
     rw [sturmSeq_cons hp, sturmSeq_cons hq] at hsigned ⊢
-    exact tarski hsigned hseed hsimple hab ha hb
+    exact sum_sign hsigned hseed hsimple hab ha hb
 
 /-- Classical Sturm root counting for a polynomial with simple roots. -/
-theorem sturm (p : R[X]) (hp : p ≠ 0)
+theorem count_roots (p : R[X])
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (sturmSeq p p.derivative) a : ℤ) -
         signVariationsAt (sturmSeq p p.derivative) b =
       (p.roots.toFinset.filter (fun r => a < r ∧ r < b)).card := by
-  simpa using tarski_sturmSeq p 1 hp hsimple hab ha hb
+  simpa using sum_sign_sturmSeq p 1 hsimple hab ha hb
 
 end TauCeti.Sturm

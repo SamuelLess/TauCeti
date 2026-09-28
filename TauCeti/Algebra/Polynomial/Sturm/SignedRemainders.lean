@@ -103,9 +103,10 @@ namespace Signed
 
 omit [IsStrictOrderedRing R] in
 /-- A two-entry chain terminates when its second polynomial divides its first. -/
-theorem pair {p q : Polynomial R} (hp : p ≠ 0) (hq : q ≠ 0) (hdvd : q ∣ p) :
+theorem pair {p q : Polynomial R} (hp : p ≠ 0) (hdvd : q ∣ p) :
     Signed [p, q] where
   nonzero s hs := by
+    have hq : q ≠ 0 := fun h => hp (zero_dvd_iff.mp (h ▸ hdvd))
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hs
     rcases hs with rfl | rfl
     · exact hp
@@ -240,7 +241,7 @@ theorem signed_sturmSeq (p q : R[X]) : Signed (sturmSeq p q) := by
     rw [sturmSeq_cons hp, sturmSeq_cons hq]
     by_cases hr : -p % q = 0
     · rw [hr, sturmSeq_zero_left]
-      exact Signed.pair hp hq (dvd_neg.mp (EuclideanDomain.mod_eq_zero.mp hr))
+      exact Signed.pair hp (dvd_neg.mp (EuclideanDomain.mod_eq_zero.mp hr))
     · rw [sturmSeq_cons hr]
       refine Signed.cons hp ?_ ?_
       · refine IsRemainder.of_identity 1 1 (p / q) zero_lt_one zero_lt_one ?_

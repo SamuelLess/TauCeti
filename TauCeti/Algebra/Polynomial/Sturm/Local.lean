@@ -50,73 +50,18 @@ theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : Regular (p :: cs
     h.alternate (i + 1) q0 q1 q2
       (by simpa using h0) (by simpa using h1) (by simpa using h2) r hz
 
-variable [IsRealClosed R]
-
-/-- Crossing isolated interior zeros does not change variations. -/
-theorem interior {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
-    (har : a < r) (hrb : r < b)
+/-- A regular chain has the same variations at two points if no entry vanishes
+at the first, the head does not vanish at the second, and all surviving signs agree. -/
+theorem variations_eq {cs : List (Polynomial R)} (h : Regular cs) (a r : R)
+    (hne : ∀ q ∈ cs, q.eval a ≠ 0)
     (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
-    (hz : ∀ q ∈ cs, ∀ x ∈ Set.Icc a b, x ≠ r → q.eval x ≠ 0) :
-    signVariationsAt cs a = signVariationsAt cs r ∧
-      signVariationsAt cs r = signVariationsAt cs b := by
-  have hab := (har.trans hrb).le
-  constructor
-  · refine signVariationsAt_eq cs a r
-      (fun q hq => hz q hq a ⟨le_rfl, hab⟩ har.ne) hfront
-      (fun q hq => h.last q hq r)
-      (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) ?_
-    intro q hq hqr
-    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).1
-  · symm
-    refine signVariationsAt_eq cs b r
-      (fun q hq => hz q hq b ⟨hab, le_rfl⟩ hrb.ne.symm) hfront
-      (fun q hq => h.last q hq r)
-      (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) ?_
-    intro q hq hqr
-    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).2
+    (hsame : ∀ q ∈ cs, q.eval r ≠ 0 →
+      SignType.sign (q.eval a) = SignType.sign (q.eval r)) :
+    signVariationsAt cs a = signVariationsAt cs r :=
+  signVariationsAt_eq_of_alternate cs a r hne hfront (fun q hq => h.last q hq r)
+    (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) hsame
 
-/-- At a simple root of the head, the variation jump is the sign of the
-product of the head derivative and the second entry. -/
-theorem root_jump {p q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Regular (p :: q :: cs)) {a r b : R} (har : a < r) (hrb : r < b)
-    (hr : p.eval r = 0) (hd : p.derivative.eval r ≠ 0) (hq : q.eval r ≠ 0)
-    (hz : ∀ s ∈ p :: q :: cs, ∀ x ∈ Set.Icc a b, x ≠ r → s.eval x ≠ 0) :
-    (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
-      (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) := by
-  have hab := (har.trans hrb).le
-  have ht := h.tail.interior har hrb
-    (fun s hs => by cases hs; simpa using hq)
-    (fun s hs => hz s (List.mem_cons_of_mem _ hs))
-  have hpz := hz p (by simp)
-  obtain ⟨hpa, hpb⟩ := Polynomial.signs_at_root p har hrb hr hd hpz
-  obtain ⟨hqa, hqb⟩ := q.signs_at_nonroot har hrb hq (hz q (by simp))
-  have ha0 := hpz a ⟨le_rfl, hab⟩ har.ne
-  have hb0 := hpz b ⟨hab, le_rfl⟩ hrb.ne.symm
-  have hqa0 := hz q (by simp) a ⟨le_rfl, hab⟩ har.ne
-  have hqb0 := hz q (by simp) b ⟨hab, le_rfl⟩ hrb.ne.symm
-  have ha : signVariationsAt (p :: q :: cs) a =
-      (if -SignType.sign (p.derivative.eval r * q.eval r) = -1 then 1 else 0) +
-      signVariationsAt (q :: cs) a := by
-    rw [signVariationsAt_def, List.map_cons]
-    rw [signVariations_cons_of_ne_zero _ ha0, List.map_cons, firstSign_cons_of_ne_zero _ hqa0,
-      hpa, hqa, neg_mul, ← sign_mul]
-    simp only [signVariationsAt_def, List.map_cons]
-  have hb : signVariationsAt (p :: q :: cs) b =
-      (if SignType.sign (p.derivative.eval r * q.eval r) = -1 then 1 else 0) +
-      signVariationsAt (q :: cs) b := by
-    rw [signVariationsAt_def, List.map_cons]
-    rw [signVariations_cons_of_ne_zero _ hb0, List.map_cons, firstSign_cons_of_ne_zero _ hqb0,
-      hpb, hqb, ← sign_mul]
-    simp only [signVariationsAt_def, List.map_cons]
-  rw [ha, hb, ht.1.trans ht.2, Nat.cast_add, Nat.cast_add]
-  have numeric (s : SignType) :
-      ((if -s = -1 then 1 else 0 : ℕ) : ℤ) -
-        ((if s = -1 then 1 else 0 : ℕ) : ℤ) = (s : ℤ) := by
-    cases s <;> decide
-  have := numeric (SignType.sign (p.derivative.eval r * q.eval r))
-  omega
-
-omit [IsStrictOrderedRing R] [IsRealClosed R] in
+omit [IsStrictOrderedRing R] in
 /-- Consecutive entries of a regular chain cannot both vanish. -/
 theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
     (h : Regular (p :: q :: cs)) {r : R} (hr : p.eval r = 0) : q.eval r ≠ 0 := by
@@ -125,6 +70,64 @@ theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
   | cons s cs =>
     intro hq
     exact (h.alternate 0 p q s rfl rfl rfl r hq).1 hr
+
+
+variable [IsRealClosed R]
+
+/-- Crossing isolated interior zeros does not change variations. -/
+theorem eq_at_nonroot {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
+    (har : a < r) (hrb : r < b)
+    (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
+    (hz : ∀ q ∈ cs, ∀ x ∈ Set.Icc a b, x ≠ r → q.eval x ≠ 0) :
+    signVariationsAt cs a = signVariationsAt cs r ∧
+      signVariationsAt cs r = signVariationsAt cs b := by
+  have hab := (har.trans hrb).le
+  constructor
+  · refine h.variations_eq a r
+      (fun q hq => hz q hq a ⟨le_rfl, hab⟩ har.ne) hfront ?_
+    intro q hq hqr
+    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).1
+  · symm
+    refine h.variations_eq b r
+      (fun q hq => hz q hq b ⟨hab, le_rfl⟩ hrb.ne.symm) hfront ?_
+    intro q hq hqr
+    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).2
+
+/-- At a simple root of the head, the variation jump is the sign of the
+product of the head derivative and the second entry. -/
+theorem root_jump {p q : Polynomial R} {cs : List (Polynomial R)}
+    (h : Regular (p :: q :: cs)) {a r b : R} (har : a < r) (hrb : r < b)
+    (hr : p.eval r = 0) (hd : p.derivative.eval r ≠ 0)
+    (hz : ∀ s ∈ p :: q :: cs, ∀ x ∈ Set.Icc a b, x ≠ r → s.eval x ≠ 0) :
+    (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
+      (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) := by
+  have hq := h.second_eval_ne_zero hr
+  have hab := (har.trans hrb).le
+  have ht := h.tail.eq_at_nonroot har hrb
+    (fun s hs => by cases hs; simpa using hq)
+    (fun s hs => hz s (List.mem_cons_of_mem _ hs))
+  have hpz := hz p (by simp)
+  obtain ⟨hpa, hpb⟩ := Polynomial.signs_at_root p har hrb hr hd hpz
+  obtain ⟨hqa, hqb⟩ := q.signs_at_nonroot har hrb hq (hz q (by simp))
+  have hqa0 := hz q (by simp) a ⟨le_rfl, hab⟩ har.ne
+  have hqb0 := hz q (by simp) b ⟨hab, le_rfl⟩ hrb.ne.symm
+  have ha : signVariationsAt (p :: q :: cs) a =
+      (if -SignType.sign (p.derivative.eval r * q.eval r) = -1 then 1 else 0) +
+      signVariationsAt (q :: cs) a := by
+    rw [signVariationsAt_cons, List.map_cons, firstSign_cons_of_ne_zero _ hqa0,
+      hpa, hqa, neg_mul, ← sign_mul]
+  have hb : signVariationsAt (p :: q :: cs) b =
+      (if SignType.sign (p.derivative.eval r * q.eval r) = -1 then 1 else 0) +
+      signVariationsAt (q :: cs) b := by
+    rw [signVariationsAt_cons, List.map_cons, firstSign_cons_of_ne_zero _ hqb0,
+      hpb, hqb, ← sign_mul]
+  rw [ha, hb, ht.1.trans ht.2, Nat.cast_add, Nat.cast_add]
+  have numeric (s : SignType) :
+      ((if -s = -1 then 1 else 0 : ℕ) : ℤ) -
+        ((if s = -1 then 1 else 0 : ℕ) : ℤ) = (s : ℤ) := by
+    cases s <;> decide
+  have := numeric (SignType.sign (p.derivative.eval r * q.eval r))
+  omega
 
 
 end Regular

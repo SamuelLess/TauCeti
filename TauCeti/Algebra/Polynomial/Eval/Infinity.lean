@@ -7,8 +7,8 @@ module
 
 public import Mathlib.Algebra.Polynomial.Eval.Degree
 public import Mathlib.Basic.Sign.Basic
+import Mathlib.Algebra.Order.Ring.Abs
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Order.Field.Power
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Tactic.Linarith
 

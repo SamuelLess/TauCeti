@@ -52,7 +52,7 @@ private theorem SignRelation.signVariations_eq {L M : List R} (h : SignRelation 
   | nil => exact ⟨rfl, rfl⟩
   | @same x y l m hx hy hs h ih =>
     refine ⟨?_, ?_⟩
-    · rw [signVariations_cons_of_ne_zero l hx, signVariations_cons_of_ne_zero m hy, ih.1, ih.2, hs]
+    · rw [signVariations_cons l, signVariations_cons m, ih.1, ih.2, hs]
     · rw [firstSign_cons_of_ne_zero l hx, firstSign_cons_of_ne_zero m hy, hs]
   | @collapse x X x' l m y y' hx hX hy' hsx hsy hopp h ih =>
     have hy : y ≠ 0 := by
@@ -60,10 +60,10 @@ private theorem SignRelation.signVariations_eq {L M : List R} (h : SignRelation 
     have hx' : x' ≠ 0 := by
       intro hx0; rw [hx0, sign_zero] at hsx; exact hx (sign_eq_zero_iff.mp hsx)
     refine ⟨?_, ?_⟩
-    · rw [signVariations_cons_of_ne_zero (X :: y :: l) hx,
-        firstSign_cons_of_ne_zero (y :: l) hX, signVariations_cons_of_ne_zero (y :: l) hX,
+    · rw [signVariations_cons (X :: y :: l),
+        firstSign_cons_of_ne_zero (y :: l) hX, signVariations_cons (y :: l),
         firstSign_cons_of_ne_zero l hy]
-      rw [signVariations_cons_of_ne_zero (0 :: y' :: m) hx',
+      rw [signVariations_cons (0 :: y' :: m),
         firstSign_zero_cons (y' :: m), firstSign_cons_of_ne_zero m hy',
         List.signVariations_zero_cons]
       rw [← add_assoc, ih.1]
@@ -89,13 +89,23 @@ theorem signVariationsAt_def (cs : List (Polynomial R)) (x : R) :
     signVariationsAt cs x = List.signVariations (cs.map (Polynomial.eval x)) := (rfl)
 
 omit [IsStrictOrderedRing R] in
-@[simp]
+@[simp, grind =]
 theorem signVariationsAt_nil (x : R) : signVariationsAt [] x = 0 := by simp [signVariationsAt_def]
 
 omit [IsStrictOrderedRing R] in
-@[simp]
+@[simp, grind =]
 theorem signVariationsAt_singleton (p : Polynomial R) (x : R) : signVariationsAt [p] x = 0 := by
   simp [signVariationsAt_def]
+
+omit [IsStrictOrderedRing R] in
+/-- Prepending an evaluation contributes one variation exactly when its
+sign is opposite to the first nonzero sign of the remaining evaluations. -/
+theorem signVariationsAt_cons (cs : List (Polynomial R)) {p : Polynomial R} {x : R}
+    : signVariationsAt (p :: cs) x =
+      (if SignType.sign (p.eval x) * List.firstSign (cs.map (Polynomial.eval x)) = -1
+        then 1 else 0) + signVariationsAt cs x := by
+  rw [signVariationsAt_def, List.map_cons, List.signVariations_cons,
+    signVariationsAt_def]
 
 /-- Multiplying every entry by a polynomial that does not vanish at the point
 preserves the sign variations at that point. -/
@@ -172,8 +182,10 @@ private theorem signRelation_eval (a r : R) :
         simp only [List.map_cons] at ih ⊢
         exact SignRelation.same ha0 hr0 (h.same q0 (by simp) hr0) ih
 
-/-- Interior zero entries may be erased without changing variations. -/
-theorem signVariationsAt_eq (cs : List (Polynomial R)) (a r : R)
+/-- Evaluations at `a` and `r` have the same variation count if no entry
+vanishes at `a`, the first and last entries do not vanish at `r`, zeros at `r`
+have nonvanishing opposite-sign neighbours, and the surviving signs agree. -/
+theorem signVariationsAt_eq_of_alternate (cs : List (Polynomial R)) (a r : R)
     (hne : ∀ q ∈ cs, q.eval a ≠ 0)
     (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
     (hlast : ∀ q, cs.getLast? = some q → q.eval r ≠ 0)

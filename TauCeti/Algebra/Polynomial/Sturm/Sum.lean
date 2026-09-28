@@ -82,7 +82,7 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) := by
   classical
-  let chain := p :: q :: cs
+  set chain := p :: q :: cs
   let w : R → ℤ := fun r => if p.eval r = 0 then
     (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) else 0
   have hsum := Finset.sum_jumps (a₀ := a) (b₀ := b)
@@ -107,9 +107,9 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
   have hAB : A ⊆ B := by
     intro r hr
     obtain ⟨hr, hi⟩ := Finset.mem_filter.mp hr
-    have hpr : p.eval r = 0 := (Polynomial.mem_roots (h.nonzero p (by simp))).mp
+    have hpr : p.eval r = 0 := (Polynomial.mem_roots (h.nonzero p (by simp [chain]))).mp
       (Multiset.mem_toFinset.mp hr)
-    exact Finset.mem_filter.mpr ⟨(mem_rootsFinset h.nonzero).mpr ⟨p, by simp, hpr⟩, hi⟩
+    exact Finset.mem_filter.mpr ⟨(mem_rootsFinset h.nonzero).mpr ⟨p, by simp [chain], hpr⟩, hi⟩
   have hrestrict : ∑ r ∈ A, w r = ∑ r ∈ B, w r := by
     apply Finset.sum_subset hAB
     intro r hr hn
@@ -117,13 +117,13 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
       intro hz
       apply hn
       exact Finset.mem_filter.mpr ⟨Multiset.mem_toFinset.mpr
-        ((Polynomial.mem_roots (h.nonzero p (by simp))).mpr hz),
+        ((Polynomial.mem_roots (h.nonzero p (by simp [chain]))).mpr hz),
         (Finset.mem_filter.mp hr).2⟩
     simp [w, hpr]
   rw [← hrestrict]
   apply Finset.sum_congr rfl
   intro r hr
-  have hpr : p.eval r = 0 := (Polynomial.mem_roots (h.nonzero p (by simp))).mp
+  have hpr : p.eval r = 0 := (Polynomial.mem_roots (h.nonzero p (by simp [chain]))).mp
     (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1)
   simp [w, hpr]
 
@@ -137,7 +137,7 @@ theorem sum {p q : Polynomial R} {cs : List (Polynomial R)}
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) := by
   classical
-  let chain := p :: q :: cs
+  set chain := p :: q :: cs
   obtain ⟨m, ham, hmb⟩ := exists_between hab
   obtain ⟨c, hac, hcm, hc⟩ := Finset.exists_right_gap (rootsFinset chain) ham
   obtain ⟨d, hmd, hdb, hd⟩ := Finset.exists_left_gap (rootsFinset chain) hmb
@@ -157,14 +157,12 @@ theorem sum {p q : Polynomial R} {cs : List (Polynomial R)}
     constructor
     · rintro ⟨hr, har, hrb⟩
       have hrZ : r ∈ rootsFinset chain := (mem_rootsFinset h.nonzero).mpr
-        ⟨p, by simp, (Polynomial.mem_roots (h.nonzero p (by simp))).mp
+        ⟨p, by simp [chain], (Polynomial.mem_roots (h.nonzero p (by simp [chain]))).mp
           (Multiset.mem_toFinset.mp hr)⟩
       exact ⟨hr, hc r hrZ har, hd r hrZ hrb⟩
     · rintro ⟨hr, hcr, hrd⟩
       exact ⟨hr, hac.trans hcr, hrd.trans hdb⟩
   rw [hfilters]
-  -- Fold the local chain abbreviation to match the endpoint comparison equalities.
-  change (signVariationsAt chain a : ℤ) - signVariationsAt chain b = _
   rw [haV, ← hbV]
   exact h.sum_of_regular_endpoints
     (fun r hcr hrd => hsimple r (hac.trans hcr) (hrd.trans hdb)) hcd hcZ hdZ

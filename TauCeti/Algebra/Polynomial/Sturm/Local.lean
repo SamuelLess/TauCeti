@@ -66,20 +66,14 @@ theorem interior {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
       (fun q hq => h.last q hq r)
       (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) ?_
     intro q hq hqr
-    exact Polynomial.sign_eval_const _ har.le (fun x hx => by
-      by_cases hxr : x = r
-      · simpa [hxr] using hqr
-      · exact hz q hq x ⟨hx.1, hx.2.trans hrb.le⟩ hxr)
+    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).1
   · symm
     refine signVariationsAt_eq cs b r
       (fun q hq => hz q hq b ⟨hab, le_rfl⟩ hrb.ne.symm) hfront
       (fun q hq => h.last q hq r)
       (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) ?_
     intro q hq hqr
-    exact (Polynomial.sign_eval_const _ hrb.le (fun x hx => by
-      by_cases hxr : x = r
-      · simpa [hxr] using hqr
-      · exact hz q hq x ⟨har.le.trans hx.1, hx.2⟩ hxr)).symm
+    exact (q.signs_at_nonroot har hrb hqr (hz q hq)).2
 
 /-- At a simple root of the head, the variation jump is the sign of the
 product of the head derivative and the second entry. -/
@@ -95,16 +89,7 @@ theorem root_jump {p q : Polynomial R} {cs : List (Polynomial R)}
     (fun s hs => hz s (List.mem_cons_of_mem _ hs))
   have hpz := hz p (by simp)
   obtain ⟨hpa, hpb⟩ := Polynomial.signs_at_root p har hrb hr hd hpz
-  have hqa : SignType.sign (q.eval a) = SignType.sign (q.eval r) :=
-    Polynomial.sign_eval_const _ har.le (fun x hx => by
-      by_cases hxr : x = r
-      · simpa [hxr] using hq
-      · exact hz q (by simp) x ⟨hx.1, hx.2.trans hrb.le⟩ hxr)
-  have hqb : SignType.sign (q.eval b) = SignType.sign (q.eval r) :=
-    (Polynomial.sign_eval_const _ hrb.le (fun x hx => by
-      by_cases hxr : x = r
-      · simpa [hxr] using hq
-      · exact hz q (by simp) x ⟨har.le.trans hx.1, hx.2⟩ hxr)).symm
+  obtain ⟨hqa, hqb⟩ := q.signs_at_nonroot har hrb hq (hz q (by simp))
   have ha0 := hpz a ⟨le_rfl, hab⟩ har.ne
   have hb0 := hpz b ⟨hab, le_rfl⟩ hrb.ne.symm
   have hqa0 := hz q (by simp) a ⟨le_rfl, hab⟩ har.ne

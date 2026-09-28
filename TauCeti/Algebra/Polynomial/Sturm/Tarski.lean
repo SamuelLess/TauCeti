@@ -58,8 +58,8 @@ theorem mul_derivative (p f : R[X]) : IsTarskiSeed p f (f * p.derivative) :=
 theorem mod (p f : R[X]) : IsTarskiSeed p f ((f * p.derivative) % p) := by
   classical
   refine of_identity 1 1 ((f * p.derivative) / p) zero_lt_one zero_lt_one ?_
-  simpa only [map_one, one_mul, mul_comm, add_comm] using
-    (EuclideanDomain.mod_add_div (f * p.derivative) p).symm
+  rw [map_one, one_mul, one_mul]
+  exact (EuclideanDomain.mod_add_div (f * p.derivative) p).symm.trans (by ring)
 
 /-- At a simple root of `p`, the signed-chain jump is the sign of the query. -/
 theorem sign_eq {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
@@ -74,9 +74,8 @@ theorem sign_eq {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
     simpa only [sign_mul, sign_pos ha, sign_pos hb, one_mul] using this
   rw [sign_mul, ← hs]
   have hd' : SignType.sign (p.derivative.eval r) ≠ 0 := by simpa using hd
-  generalize SignType.sign (p.derivative.eval r) = s at *
-  cases s <;> simp_all
-  simpa using congrArg Neg.neg hs.symm
+  have numeric : ∀ s t : SignType, s ≠ 0 → s * (t * s) = t := by decide
+  exact numeric _ _ hd'
 
 /-- Common roots of the head and second entry contribute zero to the query. -/
 theorem eval_eq_zero {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
@@ -87,6 +86,36 @@ theorem eval_eq_zero {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
   exact sign_eq_zero_iff.mp hs.symm
 
 end IsTarskiSeed
+
+/-- Removing a common factor preserves the query sum: its lost roots have zero query sign. -/
+private theorem IsTarskiSeed.sum_roots_mul {p f q d p0 q0 : R[X]}
+    (hseed : IsTarskiSeed p f q) (hp : p = d * p0) (hq : q = d * q0)
+    (hpne : p ≠ 0) (hp0 : p0 ≠ 0) {a b : R}
+    (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0) :
+    (∑ r ∈ p0.roots.toFinset.filter (fun r => a < r ∧ r < b),
+      (SignType.sign (f.eval r) : ℤ)) =
+      ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
+        (SignType.sign (f.eval r) : ℤ) := by
+  classical
+  apply Finset.sum_subset
+  · intro r hr
+    obtain ⟨hr, hi⟩ := Finset.mem_filter.mp hr
+    have hr0 : p0.eval r = 0 := (mem_roots hp0).mp (Multiset.mem_toFinset.mp hr)
+    exact Finset.mem_filter.mpr
+      ⟨Multiset.mem_toFinset.mpr ((mem_roots hpne).mpr (by simp [hp, hr0])), hi⟩
+  · intro r hr hn
+    obtain ⟨hr, hi⟩ := Finset.mem_filter.mp hr
+    have hpr : p.eval r = 0 := (mem_roots hpne).mp (Multiset.mem_toFinset.mp hr)
+    have hpr0 : p0.eval r ≠ 0 := by
+      intro hz
+      exact hn (Finset.mem_filter.mpr
+        ⟨Multiset.mem_toFinset.mpr ((mem_roots hp0).mpr hz), hi⟩)
+    have hdr : d.eval r = 0 := by
+      rw [hp, eval_mul] at hpr
+      exact (mul_eq_zero.mp hpr).resolve_right hpr0
+    have hqr : q.eval r = 0 := by simp [hq, hdr]
+    rw [hseed.eval_eq_zero hpr (hsimple r hi.1 hi.2 hpr) hqr, sign_zero]
+    rfl
 
 variable [IsRealClosed R]
 
@@ -102,20 +131,17 @@ theorem tarski {p f q : Polynomial R} {cs : List (Polynomial R)}
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (f.eval r) : ℤ) := by
   classical
-  let chain := p :: q :: cs
-  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_regular (List.getLast?_eq_some_getLast (by simp))
-  let d := chain.getLast (by simp [chain])
-  -- Fold the local chain and last-entry abbreviations; d names the common factor
-  -- throughout the reduced-chain argument.
-  change chain = ds.map (d * ·) at hmap
+  -- Remove the terminal common factor, apply the regular-chain formula,
+  -- then restore roots of the common factor, whose query contributions vanish.
+  obtain ⟨d, hd⟩ : ∃ d, (p :: q :: cs).getLast? = some d :=
+    ⟨_, List.getLast?_eq_some_getLast (by simp)⟩
+  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_regular hd
   cases ds with
-  | nil => simp [chain] at hmap
+  | nil => simp at hmap
   | cons p0 ds =>
     cases ds with
-    | nil => simp [chain] at hmap
+    | nil => simp at hmap
     | cons q0 ds =>
-      -- Unfold the local chain abbreviation after splitting the reduced list into two heads.
-      change p :: q :: cs = (p0 :: q0 :: ds).map (d * ·) at hmap
       have hp : p = d * p0 := by
         have := hmap
         simp only [List.map_cons, List.cons.injEq] at this
@@ -153,37 +179,15 @@ theorem tarski {p f q : Polynomial R} {cs : List (Polynomial R)}
         rw [hmap]
         exact signVariationsAt_map_mul _ hx
       rw [hV a ha0.1, hV b hb0.1, hreg.sum hsimple0 hab ha0.2 hb0.2]
-      let A := p0.roots.toFinset.filter (fun r => a < r ∧ r < b)
-      let B := p.roots.toFinset.filter (fun r => a < r ∧ r < b)
       have hp0 : p0 ≠ 0 := hreg.nonzero p0 (by simp)
-      have hpne : p ≠ 0 := h.nonzero p (by simp)
-      have hAB : A ⊆ B := by
-        intro r hr
-        obtain ⟨hr, hi⟩ := Finset.mem_filter.mp hr
-        have hr0 : p0.eval r = 0 := (mem_roots hp0).mp (Multiset.mem_toFinset.mp hr)
-        exact Finset.mem_filter.mpr ⟨Multiset.mem_toFinset.mpr ((mem_roots hpne).mpr
-          (hroot r hr0)), hi⟩
       calc
-        _ = ∑ r ∈ A, (SignType.sign (f.eval r) : ℤ) := by
+        _ = ∑ r ∈ p0.roots.toFinset.filter (fun r => a < r ∧ r < b),
+            (SignType.sign (f.eval r) : ℤ) := by
           apply Finset.sum_congr rfl
           intro r hr
           rw [hsign r (Finset.mem_filter.mp hr).2.1 (Finset.mem_filter.mp hr).2.2
             ((mem_roots hp0).mp (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))]
-        _ = ∑ r ∈ B, (SignType.sign (f.eval r) : ℤ) := by
-          apply Finset.sum_subset hAB
-          intro r hr hn
-          obtain ⟨hr, hi⟩ := Finset.mem_filter.mp hr
-          have hpr : p.eval r = 0 := (mem_roots hpne).mp (Multiset.mem_toFinset.mp hr)
-          have hpr0 : p0.eval r ≠ 0 := by
-            intro hz
-            exact hn (Finset.mem_filter.mpr
-              ⟨Multiset.mem_toFinset.mpr ((mem_roots hp0).mpr hz), hi⟩)
-          have hdr : d.eval r = 0 := by
-            rw [hp, eval_mul] at hpr
-            exact (mul_eq_zero.mp hpr).resolve_right hpr0
-          have hqr : q.eval r = 0 := by simp [hq, hdr]
-          rw [hseed.eval_eq_zero hpr (hsimple r hi.1 hi.2 hpr) hqr, sign_zero]
-          rfl
+        _ = _ := hseed.sum_roots_mul hp hq (h.nonzero p (by simp)) hp0 hsimple
 
 /-- Squarefreeness supplies the simple-root hypothesis in Sturm–Tarski. -/
 theorem tarski_squarefree {p f q : Polynomial R} {cs : List (Polynomial R)}

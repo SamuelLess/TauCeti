@@ -111,77 +111,66 @@ theorem signVariationsAt_map_mul (cs : List (Polynomial R)) {d : Polynomial R} {
   · exact List.signVariations_map
       (fun y => by rw [sign_mul, sign_pos hd, one_mul]) _
 
+/-- Evaluation hypotheses that persist when entries are removed from the front.
+Nonvanishing of the first entry at `r` is supplied separately to the induction. -/
+private structure EvalSigns (a r : R) (cs : List (Polynomial R)) : Prop where
+  nonzero : ∀ q ∈ cs, q.eval a ≠ 0
+  last : ∀ q, cs.getLast? = some q → q.eval r ≠ 0
+  alternate : ∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 →
+    cs[i + 1]? = some q1 → cs[i + 2]? = some q2 → q1.eval r = 0 →
+    q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0
+  same : ∀ q ∈ cs, q.eval r ≠ 0 → SignType.sign (q.eval a) = SignType.sign (q.eval r)
+
+omit [IsStrictOrderedRing R] in
+private theorem EvalSigns.tail {a r : R} {p : Polynomial R} {cs : List (Polynomial R)}
+    (h : EvalSigns a r (p :: cs)) : EvalSigns a r cs where
+  nonzero q hq := h.nonzero q (List.mem_cons_of_mem _ hq)
+  last q hq := by
+    cases cs with
+    | nil => simp at hq
+    | cons q0 rest => exact h.last q (by simpa using hq)
+  alternate i q0 q1 q2 h0 h1 h2 :=
+    h.alternate (i + 1) q0 q1 q2 (by simpa using h0) (by simpa using h1) (by simpa using h2)
+  same q hq := h.same q (List.mem_cons_of_mem _ hq)
+
+-- Induct along the list: a zero second entry collapses between opposite signs;
+-- otherwise the first entries match and the induction continues on the tail.
 private theorem signRelation_eval (a r : R) :
-    ∀ (cs : List (Polynomial R)),
-      (∀ q ∈ cs, q.eval a ≠ 0) →
+    ∀ (cs : List (Polynomial R)), EvalSigns a r cs →
       (∀ q, cs.head? = some q → q.eval r ≠ 0) →
-      (∀ q, cs.getLast? = some q → q.eval r ≠ 0) →
-      (∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 → cs[i + 1]? = some q1 →
-        cs[i + 2]? = some q2 → q1.eval r = 0 →
-        q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0) →
-      (∀ q ∈ cs, q.eval r ≠ 0 → SignType.sign (q.eval a) = SignType.sign (q.eval r)) →
       SignRelation (cs.map (Polynomial.eval a)) (cs.map (Polynomial.eval r))
-  | [], _, _, _, _, _ => SignRelation.nil
-  | [q0], hne0, hfront, _, _, hsame => by
+  | [], _, _ => SignRelation.nil
+  | [q0], h, hfront => by
       have hr : q0.eval r ≠ 0 := hfront q0 rfl
-      exact SignRelation.same (hne0 q0 (by simp)) hr (hsame q0 (by simp) hr) SignRelation.nil
-  | q0 :: q1 :: rest, hne0, hfront, hlast, halt, hsame => by
+      exact SignRelation.same (h.nonzero q0 (by simp)) hr (h.same q0 (by simp) hr) SignRelation.nil
+  | q0 :: q1 :: rest, h, hfront => by
       have hr0 : q0.eval r ≠ 0 := hfront q0 rfl
-      have ha0 : q0.eval a ≠ 0 := hne0 q0 (by simp)
+      have ha0 : q0.eval a ≠ 0 := h.nonzero q0 (by simp)
       by_cases hq1 : q1.eval r = 0
       · cases rest with
-        | nil => exact absurd hq1 (hlast q1 (by simp))
+        | nil => exact absurd hq1 (h.last q1 (by simp))
         | cons q2 rest' =>
-            obtain ⟨hn0, hn2, hoppR⟩ := halt 0 q0 q1 q2 rfl rfl rfl hq1
-            have hsx : SignType.sign (q0.eval a) = SignType.sign (q0.eval r) :=
-              hsame q0 (by simp) hn0
-            have hsy : SignType.sign (q2.eval a) = SignType.sign (q2.eval r) :=
-              hsame q2 (by simp) hn2
+            obtain ⟨hn0, hn2, hoppR⟩ := h.alternate 0 q0 q1 q2 rfl rfl rfl hq1
+            have hsx := h.same q0 (by simp) hn0
+            have hsy := h.same q2 (by simp) hn2
             have hoppA : SignType.sign (q0.eval a) * SignType.sign (q2.eval a) = -1 := by
-              rw [hsx, hsy, ← sign_mul, sign_eq_neg_one_iff]; exact hoppR
-            have hne0' : ∀ q ∈ q2 :: rest', q.eval a ≠ 0 := fun q hq =>
-              hne0 q (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ hq))
+              rw [hsx, hsy, ← sign_mul, sign_eq_neg_one_iff]
+              exact hoppR
             have hfront' : ∀ q, (q2 :: rest').head? = some q → q.eval r ≠ 0 := by
-              intro q hq; rw [List.head?_cons] at hq; cases hq; exact hn2
-            have hlast' : ∀ q, (q2 :: rest').getLast? = some q → q.eval r ≠ 0 := by
               intro q hq
-              exact hlast q (by rw [List.getLast?_cons_cons, List.getLast?_cons_cons]; exact hq)
-            have halt' : ∀ (i : ℕ) (p0 p1 p2 : Polynomial R), (q2 :: rest')[i]? = some p0 →
-                (q2 :: rest')[i + 1]? = some p1 → (q2 :: rest')[i + 2]? = some p2 →
-                p1.eval r = 0 → p0.eval r ≠ 0 ∧ p2.eval r ≠ 0 ∧ p0.eval r * p2.eval r < 0 := by
-              intro i p0 p1 p2 h0 h1 h2 hz
-              exact halt (i + 2) p0 p1 p2
-                (by rw [List.getElem?_cons_succ, List.getElem?_cons_succ]; exact h0)
-                (by rw [List.getElem?_cons_succ, List.getElem?_cons_succ]; exact h1)
-                (by rw [List.getElem?_cons_succ, List.getElem?_cons_succ]; exact h2) hz
-            have hsame' : ∀ q ∈ q2 :: rest', q.eval r ≠ 0 →
-                SignType.sign (q.eval a) = SignType.sign (q.eval r) := fun q hq =>
-              hsame q (List.mem_cons_of_mem _ (List.mem_cons_of_mem _ hq))
-            have IH := signRelation_eval a r (q2 :: rest') hne0' hfront' hlast' halt' hsame'
-            simp only [List.map_cons] at IH ⊢
+              cases hq
+              exact hn2
+            have ih := signRelation_eval a r (q2 :: rest') h.tail.tail hfront'
+            simp only [List.map_cons] at ih ⊢
             rw [hq1]
-            exact SignRelation.collapse ha0 (hne0 q1 (by simp)) hn2 hsx hsy hoppA IH
-      · have hne0' : ∀ q ∈ q1 :: rest, q.eval a ≠ 0 := fun q hq =>
-          hne0 q (List.mem_cons_of_mem _ hq)
-        have hfront' : ∀ q, (q1 :: rest).head? = some q → q.eval r ≠ 0 := by
-          intro q hq; rw [List.head?_cons] at hq; cases hq; exact hq1
-        have hlast' : ∀ q, (q1 :: rest).getLast? = some q → q.eval r ≠ 0 := by
+            exact SignRelation.collapse ha0 (h.nonzero q1 (by simp)) hn2 hsx hsy hoppA ih
+      · have hfront' : ∀ q, (q1 :: rest).head? = some q → q.eval r ≠ 0 := by
           intro q hq
-          exact hlast q (by rw [List.getLast?_cons_cons]; exact hq)
-        have halt' : ∀ (i : ℕ) (p0 p1 p2 : Polynomial R), (q1 :: rest)[i]? = some p0 →
-            (q1 :: rest)[i + 1]? = some p1 → (q1 :: rest)[i + 2]? = some p2 →
-            p1.eval r = 0 → p0.eval r ≠ 0 ∧ p2.eval r ≠ 0 ∧ p0.eval r * p2.eval r < 0 := by
-          intro i p0 p1 p2 h0 h1 h2 hz
-          exact halt (i + 1) p0 p1 p2
-            (by rw [List.getElem?_cons_succ]; exact h0)
-            (by rw [List.getElem?_cons_succ]; exact h1)
-            (by rw [List.getElem?_cons_succ]; exact h2) hz
-        have hsame' : ∀ q ∈ q1 :: rest, q.eval r ≠ 0 →
-            SignType.sign (q.eval a) = SignType.sign (q.eval r) := fun q hq =>
-          hsame q (List.mem_cons_of_mem _ hq)
-        have IH := signRelation_eval a r (q1 :: rest) hne0' hfront' hlast' halt' hsame'
-        simp only [List.map_cons] at IH ⊢
-        exact SignRelation.same ha0 hr0 (hsame q0 (by simp) hr0) IH
+          cases hq
+          exact hq1
+        have ih := signRelation_eval a r (q1 :: rest) h.tail hfront'
+        simp only [List.map_cons] at ih ⊢
+        exact SignRelation.same ha0 hr0 (h.same q0 (by simp) hr0) ih
 
 /-- Interior zero entries may be erased without changing variations. -/
 theorem signVariationsAt_eq (cs : List (Polynomial R)) (a r : R)
@@ -194,7 +183,7 @@ theorem signVariationsAt_eq (cs : List (Polynomial R)) (a r : R)
     (hsame : ∀ q ∈ cs, q.eval r ≠ 0 →
       SignType.sign (q.eval a) = SignType.sign (q.eval r)) :
     signVariationsAt cs a = signVariationsAt cs r :=
-  (signRelation_eval a r cs hne hfront hlast halt hsame).signVariations_eq.1
+  (signRelation_eval a r cs ⟨hne, hlast, halt, hsame⟩ hfront).signVariations_eq.1
 
 variable [IsRealClosed R]
 

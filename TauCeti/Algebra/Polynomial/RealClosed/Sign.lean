@@ -28,6 +28,19 @@ theorem sign_eval_const (p : R[X]) {a b : R} (hab : a ≤ b)
   · rw [sign_pos h.1, sign_pos h.2]
   · rw [sign_neg h.1, sign_neg h.2]
 
+/-- If a polynomial has no zeros except possibly at an interior point, and does
+not vanish there either, both endpoint signs agree with its sign at that point. -/
+theorem signs_at_nonroot (p : R[X]) {a r b : R} (har : a < r) (hrb : r < b)
+    (hr : p.eval r ≠ 0) (hz : ∀ x ∈ Set.Icc a b, x ≠ r → p.eval x ≠ 0) :
+    SignType.sign (p.eval a) = SignType.sign (p.eval r) ∧
+      SignType.sign (p.eval b) = SignType.sign (p.eval r) := by
+  have hne (x : R) (hx : x ∈ Set.Icc a b) : p.eval x ≠ 0 := by
+    rcases eq_or_ne x r with rfl | hxr
+    · exact hr
+    · exact hz x hx hxr
+  exact ⟨p.sign_eval_const har.le (fun x hx => hne x ⟨hx.1, hx.2.trans hrb.le⟩),
+    (p.sign_eval_const hrb.le (fun x hx => hne x ⟨har.le.trans hx.1, hx.2⟩)).symm⟩
+
 /-- Near an isolated simple root, the head polynomial changes from the negative
 of its derivative's sign to its derivative's sign. -/
 theorem signs_at_root (p : R[X]) {a r b : R} (har : a < r) (hrb : r < b)

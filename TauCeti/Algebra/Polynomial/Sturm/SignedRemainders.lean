@@ -244,8 +244,8 @@ theorem signed_sturmSeq (p q : R[X]) : Signed (sturmSeq p q) := by
     · rw [sturmSeq_cons hr]
       refine Signed.cons hp ?_ ?_
       · refine IsRemainder.of_identity 1 1 (p / q) zero_lt_one zero_lt_one ?_
-        simpa only [map_one, one_mul, mul_one, neg_mod, sub_neg_eq_add, mul_comm, add_comm] using
-          (EuclideanDomain.mod_add_div p q).symm
+        rw [map_one, one_mul, one_mul, neg_mod, sub_neg_eq_add]
+        exact (EuclideanDomain.mod_add_div p q).symm.trans (by ring)
       · rwa [sturmSeq_cons hq, sturmSeq_cons hr] at ih
 
 omit [IsStrictOrderedRing R] in

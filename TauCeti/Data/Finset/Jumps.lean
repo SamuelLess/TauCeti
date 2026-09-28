@@ -53,13 +53,15 @@ theorem sum_jumps {G : Type*} [AddCommGroup G] (S : Finset R) (V w : R → G)
     (hab : a₀ < b₀) (ha : a₀ ∉ S) (hb : b₀ ∉ S) :
     V a₀ - V b₀ = ∑ x ∈ S.filter (fun x => a₀ < x ∧ x < b₀), w x := by
   classical
+  -- Induct on the number of events inside the interval. Isolate the first event,
+  -- account for its jump, and apply the induction hypothesis to the remaining interval.
   have aux (a b : R) (haa : a₀ ≤ a) (hbb : b ≤ b₀)
       (hab : a < b) (ha : a ∉ S) (hb : b ∉ S) :
       V a - V b = ∑ x ∈ S.filter (fun x => a < x ∧ x < b), w x := by
     induction hn : (S.filter (fun x => a < x ∧ x < b)).card using Nat.strong_induction_on
         generalizing a b with
     | h n ih =>
-      let T := S.filter (fun x => a < x ∧ x < b)
+      set T := S.filter (fun x => a < x ∧ x < b)
       by_cases hT : T.Nonempty
       · let r := T.min' hT
         have hrT : r ∈ T := Finset.min'_mem T hT
@@ -98,16 +100,11 @@ theorem sum_jumps {G : Type*} [AddCommGroup G] (S : Finset R) (V w : R → G)
               exact Finset.mem_filter.mpr ⟨hxS, har.trans (hrc.trans hcx), hxb⟩
         have hcard : U.card < n := by
           have heq : T.card = U.card + 1 := by rw [hTU, Finset.card_insert_of_notMem hrU]
-          -- Fold the locally defined filtered set to compare its cardinality with U.
-          change T.card = n at hn
           omega
         have hlocal := hjump a r c haa (hcb.le.trans hbb) har hrc hrS hsingle
-        have hrest := ih U.card hcard c b (haa.trans (har.trans hrc).le) hbb hcb hcS hb rfl
-        -- Fold the local filter abbreviation so its partition or emptiness rewrites the sum.
-        change V a - V b = ∑ x ∈ T, w x
+        have hrest : V c - V b = ∑ x ∈ U, w x :=
+          ih U.card hcard c b (haa.trans (har.trans hrc).le) hbb hcb hcS hb rfl
         rw [hTU, Finset.sum_insert hrU]
-        -- The induction hypothesis uses the filter defining U; fold that abbreviation.
-        change V c - V b = ∑ x ∈ U, w x at hrest
         calc
           V a - V b = (V a - V c) + (V c - V b) := by abel
           _ = w r + ∑ x ∈ U, w x := by rw [hlocal, hrest]
@@ -118,8 +115,6 @@ theorem sum_jumps {G : Type*} [AddCommGroup G] (S : Finset R) (V w : R → G)
           have hxb : x < b := hxab.2.lt_of_ne (by rintro rfl; exact hb hx)
           have : x ∈ T := Finset.mem_filter.mpr ⟨hx, hax, hxb⟩
           simp [hT0] at this
-        -- Fold the local filter abbreviation so its partition or emptiness rewrites the sum.
-        change V a - V b = ∑ x ∈ T, w x
         simp [hT0, hconst a b haa hbb hab hno]
   exact aux a₀ b₀ le_rfl le_rfl hab ha hb
 

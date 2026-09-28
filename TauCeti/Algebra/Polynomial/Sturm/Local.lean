@@ -7,7 +7,7 @@ module
 
 public import TauCeti.Algebra.Polynomial.Sturm.Signs
 
-/-! # Local variation jumps for regular signed polynomial chains
+/-! # Local variation jumps for alternating polynomial chains
 
 `IsAlternating` records the sign conditions of a chain whose last entry has no roots.
 Interior zeros preserve sign variations. Crossing a simple root of the first
@@ -21,15 +21,17 @@ namespace TauCeti.Sturm
 
 open Polynomial List
 
-variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+section OrderedRing
 
-/-- A regular signed chain has opposite neighbors at every interior zero and
+variable {R : Type*} [Ring R] [LinearOrder R] [IsStrictOrderedRing R]
+
+/-- A alternating chain has opposite neighbors at every interior zero and
 no real zero in its last entry. These are the properties of a signed remainder
 chain after its common polynomial factor has been removed. -/
 structure IsAlternating (cs : List (Polynomial R)) : Prop where
   /-- Every entry is a nonzero polynomial. -/
   nonzero : ∀ q ∈ cs, q ≠ 0
-  /-- The terminal polynomial has no root in the ordered field. -/
+  /-- The terminal polynomial has no root in the coefficient ring. -/
   last : ∀ q, cs.getLast? = some q → ∀ r, q.eval r ≠ 0
   /-- At an interior zero the adjacent values are nonzero and have opposite signs. -/
   alternate : ∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 →
@@ -50,7 +52,7 @@ theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : IsAlternating (p
     h.alternate (i + 1) q0 q1 q2
       (by simpa using h0) (by simpa using h1) (by simpa using h2) r hz
 
-/-- A regular chain has the same variations at two points if no entry vanishes
+/-- A alternating chain has the same variations at two points if no entry vanishes
 at the first, the head does not vanish at the second, and all surviving signs agree. -/
 theorem signVariationsAt_eq {cs : List (Polynomial R)} (h : IsAlternating cs) (a r : R)
     (hne : ∀ q ∈ cs, q.eval a ≠ 0)
@@ -62,7 +64,7 @@ theorem signVariationsAt_eq {cs : List (Polynomial R)} (h : IsAlternating cs) (a
     (fun i q0 q1 q2 h0 h1 h2 => h.alternate i q0 q1 q2 h0 h1 h2 r) hsame
 
 omit [IsStrictOrderedRing R] in
-/-- Consecutive entries of a regular chain cannot both vanish. -/
+/-- Consecutive entries of a alternating chain cannot both vanish. -/
 theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
     (h : IsAlternating (p :: q :: cs)) {r : R} (hr : p.eval r = 0) : q.eval r ≠ 0 := by
   cases cs with
@@ -71,8 +73,13 @@ theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
     intro hq
     exact (h.alternate 0 p q s rfl rfl rfl r hq).1 hr
 
+end IsAlternating
 
-variable [IsRealClosed R]
+end OrderedRing
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
+
+namespace IsAlternating
 
 /-- Crossing isolated interior zeros does not change variations. -/
 theorem signVariationsAt_nonroot {cs : List (Polynomial R)} (h : IsAlternating cs) {a r b : R}

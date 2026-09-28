@@ -189,7 +189,7 @@ theorem last_dvd {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs) {d : P
       · exact hdp
       · exact ht s hs
 
-/-- A signed remainder chain with a root-free last entry is regular. -/
+/-- A signed remainder chain with a root-free last entry is alternating. -/
 theorem isAlternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
     (hlast : ∀ q, cs.getLast? = some q → ∀ x, q.eval x ≠ 0) : IsAlternating cs := by
   induction cs with
@@ -271,7 +271,7 @@ theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
     (h.terminal (pre.map (d * ·)) (d * p) (d * q) (by simp [heq]))
 
 /-- Divide every entry by the terminal common factor. The resulting chain is
-regular and ends at `1`, even when the original terminal factor is nonconstant. -/
+alternating and ends at `1`, even when the original terminal factor is nonconstant. -/
 theorem exists_isAlternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
     {d : Polynomial R}
     (hd : cs.getLast? = some d) :

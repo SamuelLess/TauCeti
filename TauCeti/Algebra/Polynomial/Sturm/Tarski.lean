@@ -160,7 +160,7 @@ private theorem sum_sign_cons {p f q : Polynomial R} {cs : List (Polynomial R)}
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (f.eval r) : ℤ) := by
   classical
-  -- Remove the terminal common factor, apply the regular-chain formula,
+  -- Remove the terminal common factor, apply the alternating-chain formula,
   -- then restore roots of the common factor, whose query contributions vanish.
   obtain ⟨d, hd⟩ : ∃ d, (p :: q :: cs).getLast? = some d :=
     ⟨_, List.getLast?_eq_some_getLast (by simp)⟩

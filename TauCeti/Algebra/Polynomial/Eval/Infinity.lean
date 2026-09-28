@@ -10,6 +10,8 @@ public import Mathlib.Basic.Sign.Defs
 import Mathlib.Algebra.Order.Ring.Abs
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Order.Filter.AtTopBot.Basic
+import Mathlib.Order.Filter.Finite
 import Mathlib.Tactic.Linarith
 
 /-! # Polynomial signs at infinity over an ordered field
@@ -91,35 +93,33 @@ end Polynomial
 
 namespace List
 
-open Polynomial
+open Polynomial Filter
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- A uniform right bound for the leading-coefficient signs of a polynomial list. -/
 theorem exists_signs_atTop (cs : List (Polynomial R)) : ∃ B : R,
     ∀ p ∈ cs, ∀ x, B < x → SignType.sign (p.eval x) = SignType.sign p.leadingCoeff := by
-  induction cs with
-  | nil => exact ⟨0, by simp⟩
-  | cons p cs ih =>
-    obtain ⟨B, hB⟩ := ih
-    obtain ⟨C, hC⟩ := exists_sign_atTop p
-    refine ⟨max B C, fun q hq x hx => ?_⟩
-    rcases List.mem_cons.mp hq with rfl | hq
-    · exact hC x ((le_max_right _ _).trans_lt hx)
-    · exact hB q hq x ((le_max_left _ _).trans_lt hx)
+  have he : ∀ᶠ x in atTop, ∀ p ∈ cs,
+      SignType.sign (p.eval x) = SignType.sign p.leadingCoeff := by
+    apply cs.finite_toSet.eventually_all.mpr
+    intro p _
+    obtain ⟨B, hB⟩ := exists_sign_atTop p
+    exact (eventually_gt_atTop B).mono fun x hx => hB x hx
+  obtain ⟨B, hB⟩ := eventually_atTop.mp he
+  exact ⟨B, fun p hp x hx => hB x hx.le p hp⟩
 
 /-- A uniform left bound for the degree-parity signs of a polynomial list. -/
 theorem exists_signs_atBot (cs : List (Polynomial R)) : ∃ B : R,
     ∀ p ∈ cs, ∀ x, x < B →
       SignType.sign (p.eval x) = SignType.sign (p.leadingCoeff * (-1) ^ p.natDegree) := by
-  induction cs with
-  | nil => exact ⟨0, by simp⟩
-  | cons p cs ih =>
-    obtain ⟨B, hB⟩ := ih
-    obtain ⟨C, hC⟩ := exists_sign_atBot p
-    refine ⟨min B C, fun q hq x hx => ?_⟩
-    rcases List.mem_cons.mp hq with rfl | hq
-    · exact hC x (hx.trans_le (min_le_right _ _))
-    · exact hB q hq x (hx.trans_le (min_le_left _ _))
+  have he : ∀ᶠ x in atBot, ∀ p ∈ cs,
+      SignType.sign (p.eval x) = SignType.sign (p.leadingCoeff * (-1) ^ p.natDegree) := by
+    apply cs.finite_toSet.eventually_all.mpr
+    intro p _
+    obtain ⟨B, hB⟩ := exists_sign_atBot p
+    exact (eventually_lt_atBot B).mono fun x hx => hB x hx
+  obtain ⟨B, hB⟩ := eventually_atBot.mp he
+  exact ⟨B, fun p hp x hx => hB x hx.le p hp⟩
 
 end List

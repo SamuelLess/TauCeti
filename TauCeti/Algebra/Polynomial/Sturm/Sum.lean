@@ -10,7 +10,7 @@ public import TauCeti.Data.Finset.Jumps
 
 /-! # Signed root sums for alternating Sturm chains
 
-The local jumps of a regular chain telescope to a signed sum over the roots
+The local jumps of a alternating chain telescope to a signed sum over the roots
 of its first polynomial in an open interval. Only those roots must be simple;
 the endpoints may be roots of interior entries, but not of the first entry.
 -/

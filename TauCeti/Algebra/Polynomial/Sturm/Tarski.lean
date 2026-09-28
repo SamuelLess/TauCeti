@@ -21,8 +21,8 @@ counts, and is the finite-interval basis for the infinite-endpoint formulas.
 ## References
 
 For the classical sign-sum identity, see S. Basu, R. Pollack, and M.-F. Roy,
-[Algorithms in Real Algebraic Geometry](https://doi.org/10.1007/3-540-33099-2),
-second edition, §2.2.2, Theorem 2.61.
+[Algorithms in Real Algebraic Geometry](https://mariefrancoiseroy.pages.math.cnrs.fr/bpr-ed2-posted3.pdf),
+revised second edition, §2.2.2, Theorem 2.73 (Tarski’s theorem).
 -/
 
 public section
@@ -98,10 +98,16 @@ theorem sturmSeq (p f : R[X]) :
   by_cases hp : p = 0
   · subst p
     simpa using mul_derivative (0 : R[X]) f
-  rw [sturmSeq_cons hp, List.tail_cons]
-  by_cases hq : f * p.derivative = 0
-  · simpa only [hq, sturmSeq_zero_left, List.head?_nil, Option.getD_none] using mul_derivative p f
-  · simpa only [head?_sturmSeq hq, Option.getD_some] using mul_derivative p f
+  simpa only [head?_tail_sturmSeq hp] using mul_derivative p f
+
+/-- Reducing the derivative query first still supplies the seed of its Sturm sequence. -/
+theorem sturmSeq_mod (p f : R[X]) :
+    IsTarskiSeed p f ((Polynomial.sturmSeq p ((f * p.derivative) % p)).tail.head?.getD 0) := by
+  classical
+  by_cases hp : p = 0
+  · subst p
+    simpa using mod (0 : R[X]) f
+  simpa only [head?_tail_sturmSeq hp] using mod p f
 
 end IsTarskiSeed
 

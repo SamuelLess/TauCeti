@@ -68,6 +68,26 @@ end Ring
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
+/-- The variation count stabilizes at positive infinity, even for lists containing zero. -/
+theorem exists_signVariationsAtTop (cs : List (Polynomial R)) :
+    ∃ B : R, ∀ x, B < x → signVariationsAt cs x = signVariationsAtTop cs := by
+  obtain ⟨B, hB⟩ := List.exists_signs_atTop cs
+  refine ⟨B, fun x hx => ?_⟩
+  rw [signVariationsAt_def, signVariationsAtTop_def]
+  apply List.signVariations_congr
+  simp only [List.map_map]
+  exact List.map_congr_left fun p hp => hB p hp x hx
+
+/-- The variation count stabilizes at negative infinity, even for lists containing zero. -/
+theorem exists_signVariationsAtBot (cs : List (Polynomial R)) :
+    ∃ B : R, ∀ x, x < B → signVariationsAt cs x = signVariationsAtBot cs := by
+  obtain ⟨B, hB⟩ := List.exists_signs_atBot cs
+  refine ⟨B, fun x hx => ?_⟩
+  rw [signVariationsAt_def, signVariationsAtBot_def]
+  apply List.signVariations_congr
+  simp only [List.map_map]
+  exact List.map_congr_left fun p hp => hB p hp x hx
+
 /-- Far enough to the right, finite evaluation realizes the infinity signs and
 lies beyond every chain root. The bound belongs to the ordered field itself. -/
 theorem exists_atTop (cs : List (Polynomial R)) (hne : ∀ p ∈ cs, p ≠ 0) :

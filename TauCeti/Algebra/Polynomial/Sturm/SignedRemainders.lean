@@ -6,7 +6,7 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.Algebra.Polynomial.Sturm.Local
-public import Mathlib.Algebra.Polynomial.Sturm.Sequence
+public import TauCeti.Algebra.Polynomial.Sturm.Sequence
 
 /-! # Positive-scaled signed remainder chains
 

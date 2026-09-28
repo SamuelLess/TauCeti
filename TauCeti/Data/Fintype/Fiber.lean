@@ -116,13 +116,15 @@ theorem occCount_apply_of_injective (f : X → S) (hinj : Function.Injective f) 
   classical
   rw [occCount_of_injective f hinj, ite_eq_left ⟨x, rfl⟩]
 
-/-- Weighting each value by its occurrence count gives the sum of the weights over all indices. -/
-theorem sum_occCount_nsmul [Fintype X] {K : Type*} [AddCommMonoid K]
+/-- Raising each weight to its occurrence count gives the product over all indices. -/
+@[to_additive
+  /-- Weighting each value by its occurrence count gives the sum over all indices. -/]
+theorem prod_occCount_pow [Fintype X] {K : Type*} [CommMonoid K]
     (f : X → S) {T : Finset S} (hT : ∀ x, f x ∈ T) (weight : S → K) :
-    ∑ y ∈ T, occCount f y • weight y = ∑ x, weight (f x) := by
+    ∏ y ∈ T, weight y ^ occCount f y = ∏ x, weight (f x) := by
   classical
-  simpa only [Finset.sum_const, occCount_eq_card_filter] using
-    Finset.sum_fiberwise_of_maps_to' (s := Finset.univ) (t := T) (g := f)
+  simpa only [Finset.prod_const, occCount_eq_card_filter] using
+    Finset.prod_fiberwise_of_maps_to' (s := Finset.univ) (t := T) (g := f)
       (fun x _ => hT x) weight
 
 /-- Occurrence counts over a finite set containing the range sum to the size of

@@ -77,12 +77,12 @@ variable {α : Type*}
 /-- The number of positions `i` of the word `w` at which the letter `a` is immediately followed by
 the letter `b`. -/
 def transitionCount {n : ℕ} (w : Fin (n + 1) → α) (a b : α) : ℕ :=
-  Nat.card {i : Fin n // w i.castSucc = a ∧ w i.succ = b}
+  occCount (fun i : Fin n => (w i.castSucc, w i.succ)) (a, b)
 
 /-- The transition count as the cardinality of a `Finset` of positions. -/
 theorem transitionCount_eq_card_filter [DecidableEq α] {n : ℕ} (w : Fin (n + 1) → α) (a b : α) :
     transitionCount w a b = #{i : Fin n | w i.castSucc = a ∧ w i.succ = b} := by
-  rw [transitionCount, Nat.card_eq_fintype_card, Fintype.card_subtype]
+  simp only [transitionCount, occCount_eq_card_filter, Prod.mk.injEq]
 
 /-- Splitting off the last transition: the transitions in a word are those in its initial segment
 together with a possible transition at the final position. -/
@@ -91,9 +91,9 @@ theorem transitionCount_comp_castSucc_add_last [DecidableEq α] {n : ℕ}
     transitionCount (w ∘ Fin.castSucc) a b +
         (if w (Fin.castSucc (Fin.last n)) = a ∧ w (Fin.last (n + 1)) = b then 1 else 0) =
       transitionCount w a b := by
-  rw [transitionCount_eq_card_filter, transitionCount_eq_card_filter, Finset.card_filter,
-    Finset.card_filter, Fin.sum_univ_castSucc]
-  rfl
+  simpa only [transitionCount, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
+    Fin.succ_last] using
+    occCount_castSucc (fun i : Fin (n + 1) => (w i.castSucc, w i.succ)) (a, b)
 
 /-- Splitting off the first transition: the transitions in a word are those in its final segment
 together with a possible transition at the first position. -/
@@ -101,9 +101,9 @@ theorem transitionCount_comp_succ_add_zero [DecidableEq α] {n : ℕ}
     (w : Fin (n + 2) → α) (a b : α) :
     transitionCount (w ∘ Fin.succ) a b + (if w 0 = a ∧ w 1 = b then 1 else 0) =
       transitionCount w a b := by
-  rw [transitionCount_eq_card_filter, transitionCount_eq_card_filter, Finset.card_filter,
-    Finset.card_filter, Fin.sum_univ_succ, Nat.add_comm]
-  rfl
+  simpa only [transitionCount, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
+    Fin.castSucc_zero, Fin.succ_zero_eq_one] using
+    occCount_succ (fun i : Fin (n + 1) => (w i.castSucc, w i.succ)) (a, b)
 
 /-! ## Words presented as lists
 
@@ -253,17 +253,9 @@ theorem prod_transitionCount {M : Type*} [CommMonoid M] {n : ℕ} (w : Fin (n + 
     ∏ i : Fin n, p (w i.castSucc) (w i.succ) =
       ∏ ab ∈ S ×ˢ S, p ab.1 ab.2 ^ transitionCount w ab.1 ab.2 := by
   classical
-  rw [← prod_fiberwise_of_maps_to (s := (univ : Finset (Fin n))) (t := S ×ˢ S)
-      (g := fun i : Fin n => (w i.castSucc, w i.succ))
-      (fun i _ => mem_product.2 (hS i)) fun i => p (w i.castSucc) (w i.succ)]
-  refine prod_congr rfl fun ab _ => ?_
-  have hval : ∀ i ∈ filter (fun i : Fin n => (w i.castSucc, w i.succ) = ab) univ,
-      p (w i.castSucc) (w i.succ) = p ab.1 ab.2 := fun i hi => by
-    rw [← (mem_filter.1 hi).2]
-  have hset : filter (fun i : Fin n => (w i.castSucc, w i.succ) = ab) univ =
-      filter (fun i : Fin n => w i.castSucc = ab.1 ∧ w i.succ = ab.2) univ :=
-    filter_congr fun i _ => by simp [Prod.ext_iff]
-  rw [prod_congr rfl hval, prod_const, transitionCount_eq_card_filter, hset]
+  simpa only [transitionCount] using
+    (Function.prod_occCount_pow (fun i : Fin n => (w i.castSucc, w i.succ))
+      (T := S ×ˢ S) (fun i => mem_product.mpr (hS i)) (fun ab => p ab.1 ab.2)).symm
 
 /-- **Words with the same transition counts have the same product of transition weights.** This is
 `prod_transitionCount` with the index set eliminated: the two words are compared through the common

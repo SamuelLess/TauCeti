@@ -11,7 +11,7 @@ public import TauCeti.Geometry.RealAlgebraic.SignDetermination.Roots
 /-! # Recovering Thom encodings from sign sums
 
 `signCount_iterate_derivative` counts each realized Thom encoding exactly once in a
-finite set of distinct roots. `Thom.fullInverse_mulVec` applies the full sign-moment inverse
+finite set of distinct roots. `fullInverse_mulVec_thomEncoding` applies the full sign-moment inverse
 to Tarski queries of derivative products, recovering zero or one for each encoding.
 The polynomial may have multiple roots.
 
@@ -46,11 +46,9 @@ theorem signCount_iterate_derivative (p : R[X]) (hrolle : PolynomialRolle R) (hp
     apply thomEncoding_injOn p hrolle hp (hZ a.val a.property) (hZ b.val b.property)
     simpa only [thomEncoding_def] using heq
 
-namespace Thom
-
 open scoped Classical in
 /-- Tarski queries of derivative products recover exactly the realized root encodings. -/
-theorem fullInverse_mulVec (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0)
+theorem fullInverse_mulVec_thomEncoding (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0)
     (σ : Fin p.natDegree → SignType) :
     (fullInverse (Fin p.natDegree) *ᵥ (fun e =>
       (tarskiQuery p (∏ j : Fin p.natDegree,
@@ -61,7 +59,5 @@ theorem fullInverse_mulVec (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0
     (fun x hx => isRoot_of_mem_roots (Multiset.mem_toFinset.mp hx))]
   simp only [Nat.cast_ite, Nat.cast_one, Nat.cast_zero, Multiset.mem_toFinset,
     mem_roots hp, IsRoot.def]
-
-end Thom
 
 end Polynomial

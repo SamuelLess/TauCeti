@@ -41,6 +41,15 @@ theorem signVariationsAtTop_nil : signVariationsAtTop ([] : List R[X]) = 0 := by
 theorem signVariationsAtTop_singleton (p : R[X]) : signVariationsAtTop [p] = 0 := by
   simp [signVariationsAtTop_def]
 
+/-- Matching the leading-coefficient signs realizes positive-infinity variations. -/
+theorem signVariationsAt_eq_atTop {cs : List (Polynomial R)} {x : R}
+    (h : ∀ p ∈ cs, SignType.sign (p.eval x) = SignType.sign p.leadingCoeff) :
+    signVariationsAt cs x = signVariationsAtTop cs := by
+  rw [signVariationsAt_def, signVariationsAtTop_def]
+  apply List.signVariations_congr
+  simp only [List.map_map]
+  exact List.map_congr_left h
+
 end Semiring
 
 section Ring
@@ -64,6 +73,16 @@ theorem signVariationsAtBot_nil : signVariationsAtBot ([] : List R[X]) = 0 := by
 theorem signVariationsAtBot_singleton (p : R[X]) : signVariationsAtBot [p] = 0 := by
   simp [signVariationsAtBot_def]
 
+/-- Matching the parity-adjusted leading signs realizes negative-infinity variations. -/
+theorem signVariationsAt_eq_atBot {cs : List (Polynomial R)} {x : R}
+    (h : ∀ p ∈ cs,
+      SignType.sign (p.eval x) = SignType.sign (p.leadingCoeff * (-1) ^ p.natDegree)) :
+    signVariationsAt cs x = signVariationsAtBot cs := by
+  rw [signVariationsAt_def, signVariationsAtBot_def]
+  apply List.signVariations_congr
+  simp only [List.map_map]
+  exact List.map_congr_left h
+
 end Ring
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
@@ -72,21 +91,13 @@ variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 theorem exists_signVariationsAtTop (cs : List (Polynomial R)) :
     ∃ B : R, ∀ x, B < x → signVariationsAt cs x = signVariationsAtTop cs := by
   obtain ⟨B, hB⟩ := List.exists_signs_atTop cs
-  refine ⟨B, fun x hx => ?_⟩
-  rw [signVariationsAt_def, signVariationsAtTop_def]
-  apply List.signVariations_congr
-  simp only [List.map_map]
-  exact List.map_congr_left fun p hp => hB p hp x hx
+  exact ⟨B, fun x hx => signVariationsAt_eq_atTop (fun p hp => hB p hp x hx)⟩
 
 /-- The variation count stabilizes at negative infinity, even for lists containing zero. -/
 theorem exists_signVariationsAtBot (cs : List (Polynomial R)) :
     ∃ B : R, ∀ x, x < B → signVariationsAt cs x = signVariationsAtBot cs := by
   obtain ⟨B, hB⟩ := List.exists_signs_atBot cs
-  refine ⟨B, fun x hx => ?_⟩
-  rw [signVariationsAt_def, signVariationsAtBot_def]
-  apply List.signVariations_congr
-  simp only [List.map_map]
-  exact List.map_congr_left fun p hp => hB p hp x hx
+  exact ⟨B, fun x hx => signVariationsAt_eq_atBot (fun p hp => hB p hp x hx)⟩
 
 /-- Far enough to the right, finite evaluation realizes the infinity signs and
 lies beyond every chain root. The bound belongs to the ordered field itself. -/
@@ -95,11 +106,7 @@ theorem exists_atTop (cs : List (Polynomial R)) (hne : ∀ p ∈ cs, p ≠ 0) :
       ∀ p ∈ cs, ∀ r, p.eval r = 0 → r ≤ B := by
   obtain ⟨B, hB⟩ := List.exists_signs_atTop cs
   refine ⟨B, ?_, ?_⟩
-  · intro x hx
-    rw [signVariationsAt_def, signVariationsAtTop_def]
-    apply List.signVariations_congr
-    simp only [List.map_map]
-    exact List.map_congr_left fun p hp => hB p hp x hx
+  · exact fun x hx => signVariationsAt_eq_atTop (fun p hp => hB p hp x hx)
   · intro p hp r hr
     by_contra! hBr
     have hs := hB p hp r hBr
@@ -113,11 +120,7 @@ theorem exists_atBot (cs : List (Polynomial R)) (hne : ∀ p ∈ cs, p ≠ 0) :
       ∀ p ∈ cs, ∀ r, p.eval r = 0 → B ≤ r := by
   obtain ⟨B, hB⟩ := List.exists_signs_atBot cs
   refine ⟨B, ?_, ?_⟩
-  · intro x hx
-    rw [signVariationsAt_def, signVariationsAtBot_def]
-    apply List.signVariations_congr
-    simp only [List.map_map]
-    exact List.map_congr_left fun p hp => hB p hp x hx
+  · exact fun x hx => signVariationsAt_eq_atBot (fun p hp => hB p hp x hx)
   · intro p hp r hr
     by_contra! hrB
     have hs := hB p hp r hrB

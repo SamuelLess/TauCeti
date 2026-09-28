@@ -12,7 +12,8 @@ name: PR status
 # Each run reconciles every PR touched since the previous successful run started
 # (scripts/pr_status/batch.py), so an event whose own run was collapsed away is still covered by the
 # run that replaced it. The price is latency: an update can wait for the run ahead of it, typically
-# well under a minute. A run that fails is not counted, so the next one repeats its window.
+# well under a minute. A run that fails (a rate limit, a configuration error) is not counted, so the
+# next one repeats its window; a single PR that fails is retried by the next run.
 # pr-labels.yml keeps the hourly reconcile-all sweep of labels and the manual re-sync.
 
 on:
@@ -50,8 +51,8 @@ jobs:
     timeout-minutes: 30
     # On the job, not the workflow: a workflow-level group admits runs before the `if` above is
     # evaluated, so an irrelevant event could displace the one pending run that mattered and then
-    # skip. Here only runs that pass the filter enter the group. pr-labels.yml's manual re-sync
-    # shares it, so the two never interleave a label's remove-then-add.
+    # skip. Here only runs that pass the filter enter the group. (Nothing else may share it: GitHub
+    # replaces a pending member with the newest, so a different kind of job would cancel a batch.)
     concurrency:
       group: pr-status
       cancel-in-progress: false
@@ -93,8 +94,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          last=$(gh api "repos/${{ github.repository }}/actions/workflows/pr-status.yml/runs?status=success&per_page=1" \
-                   --jq '.workflow_runs[0].run_started_at // ""')
+          prev=$(gh api "repos/${{ github.repository }}/actions/workflows/pr-status.yml/runs?status=success&per_page=1" \
+                   --jq '.workflow_runs[0] | "\(.run_started_at // "") \(.id // "")"')
+          last=${prev% *}
+          id=${prev#* }
+          # The PRs the previous successful run could not reconcile, to retry now. Best-effort: a
+          # missing artifact means nothing to retry.
+          if [ -n "$id" ]; then
+            gh run download "$id" -R "${{ github.repository }}" -n pr-status-retry -D "$RUNNER_TEMP/retry-in" \
+              2>/dev/null || true
+          fi
           python3 - "$last" >> "$GITHUB_OUTPUT" <<'EOF'
           import datetime as dt, sys
           now = dt.datetime.now(dt.timezone.utc)
@@ -118,6 +127,16 @@ jobs:
           PR: ${{ github.event.pull_request.number || github.event.issue.number || github.event.workflow_run.pull_requests[0].number }}
         # From the repository root: readiness finds the pinned policy at .tauceti-review/runner.
         run: |
-          args=(--since "$SINCE")
+          args=(--since "$SINCE" --retry-in "$RUNNER_TEMP/retry-in/retry.json" --retry-out "$RUNNER_TEMP/retry/retry.json")
+          mkdir -p "$RUNNER_TEMP/retry"
           case "$PR" in ''|*[!0-9]*) ;; *) args+=(--pr "$PR") ;; esac
           python3 scripts/pr_status/batch.py "${args[@]}"
+
+      - name: Hand the PRs to retry to the next run
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-status-retry
+          path: ${{ runner.temp }}/retry/retry.json
+          if-no-files-found: ignore
+          retention-days: 3

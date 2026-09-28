@@ -36,6 +36,7 @@ import datetime as dt
 import json
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import core
 import labels
@@ -45,6 +46,10 @@ REPO = core.REPO
 # Runs finish within GitHub's six-hour job limit, so a run that completed after `since` was created
 # no earlier than this before it.
 RUN_LOOKBACK = dt.timedelta(hours=7)
+# PRs reconciled at once. Each takes a few seconds, nearly all of it waiting on GitHub and Zulip; at
+# busy times some fifty PRs are touched in ten minutes, which one at a time would barely keep up with.
+# A PR's own label and Zulip steps stay in order; only different PRs overlap.
+PARALLEL = 4
 
 
 def log(msg):
@@ -156,13 +161,16 @@ def main(argv=None):
         return zulip.fail_config(str(exc))
 
     sha_of = {n: s for s, n in heads.items()}
-    label_failures, zulip_failures = [], []
-    for number in ordered:
+    label_failures, zulip_failures, stop = [], [], []
+
+    def one(number: int):
+        if stop:
+            return
         try:
             labels.reconcile(str(number))
         except core.RateLimited as exc:
-            log(f"stopping: {exc}")
-            return 1
+            stop.append(f"rate limited: {exc}")
+            return
         except Exception as exc:  # one PR's failure must not starve the rest
             label_failures.append(number)
             log(f"PR #{number}: label reconciliation failed: {exc}")
@@ -172,13 +180,20 @@ def main(argv=None):
             # any other gets one only while open, so churn on a closed PR never creates a late post.
             zulip.reconcile(z, str(number), number in opened, ci, bot_id=bot_id, create_if_open=True)
         except zulip.ConfigError as exc:
-            return zulip.fail_config(str(exc))
+            stop.append(f"Zulip configuration: {exc}")
         except core.RateLimited as exc:
-            log(f"stopping: {exc}")
-            return 1
+            stop.append(f"rate limited: {exc}")
         except Exception as exc:
             zulip_failures.append(number)
             log(f"PR #{number}: Zulip reconciliation failed: {exc}")
+
+    with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
+        list(pool.map(one, ordered))
+    if stop:
+        if stop[0].startswith("Zulip"):
+            return zulip.fail_config(stop[0])
+        log(f"stopping: {stop[0]}")
+        return 1
     log(f"done: {len(ordered)} PRs; label failures {label_failures}; Zulip failures {zulip_failures}")
     # Any failure fails the run, so it does not become the next run's watermark and its window is
     # covered again.

@@ -202,7 +202,7 @@ theorem sum_sign_sturmSeq_Ioi (p f : R[X])
   classical
   have hp : p ≠ 0 := fun h => ha (by simp [h])
   have hsigned := IsSignedRemainderSeq.sturmSeq p (f * p.derivative)
-  have hseed := IsTarskiSeed.sturmSeq p f
+  have hseed := (IsTarskiSeed.mul_derivative p f).sturmSeq
   rw [sturmSeq_cons hp] at hsigned hseed ⊢
   exact sum_sign_Ioi hsigned hseed hsimple ha
 
@@ -216,7 +216,7 @@ theorem sum_sign_sturmSeq_Iio (p f : R[X])
   classical
   have hp : p ≠ 0 := fun h => hb (by simp [h])
   have hsigned := IsSignedRemainderSeq.sturmSeq p (f * p.derivative)
-  have hseed := IsTarskiSeed.sturmSeq p f
+  have hseed := (IsTarskiSeed.mul_derivative p f).sturmSeq
   rw [sturmSeq_cons hp] at hsigned hseed ⊢
   exact sum_sign_Iio hsigned hseed hsimple hb
 
@@ -229,7 +229,7 @@ theorem sum_sign_sturmSeq_univ (p f : R[X])
   classical
   have hp : p ≠ 0 := fun h => hsimple 0 (by simp [h]) (by simp [h])
   have hsigned := IsSignedRemainderSeq.sturmSeq p (f * p.derivative)
-  have hseed := IsTarskiSeed.sturmSeq p f
+  have hseed := (IsTarskiSeed.mul_derivative p f).sturmSeq
   rw [sturmSeq_cons hp] at hsigned hseed ⊢
   exact sum_sign_univ hsigned hseed hsimple
 

@@ -91,23 +91,15 @@ theorem eval_eq_zero {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
   rw [hq, mul_zero, sign_zero] at hs
   exact sign_eq_zero_iff.mp hs.symm
 
-/-- Mathlib's sequence has a valid query seed, including its singleton case. -/
-theorem sturmSeq (p f : R[X]) :
-    IsTarskiSeed p f ((Polynomial.sturmSeq p (f * p.derivative)).tail.head?.getD 0) := by
+/-- A valid query seed remains valid as the second entry of Mathlib's sequence,
+including the singleton case. -/
+theorem sturmSeq {p f q : R[X]} (h : IsTarskiSeed p f q) :
+    IsTarskiSeed p f ((Polynomial.sturmSeq p q).tail.head?.getD 0) := by
   classical
   by_cases hp : p = 0
   · subst p
     simpa using mul_derivative (0 : R[X]) f
-  simpa only [head?_tail_sturmSeq hp] using mul_derivative p f
-
-/-- Reducing the derivative query first still supplies the seed of its Sturm sequence. -/
-theorem sturmSeq_mod (p f : R[X]) :
-    IsTarskiSeed p f ((Polynomial.sturmSeq p ((f * p.derivative) % p)).tail.head?.getD 0) := by
-  classical
-  by_cases hp : p = 0
-  · subst p
-    simpa using mod (0 : R[X]) f
-  simpa only [head?_tail_sturmSeq hp] using mod p f
+  simpa only [getD_head?_tail_sturmSeq hp] using h
 
 end IsTarskiSeed
 
@@ -267,7 +259,7 @@ theorem sum_sign_sturmSeq (p f : R[X])
   classical
   have hp : p ≠ 0 := fun h => ha (by simp [h])
   have hsigned := IsSignedRemainderSeq.sturmSeq p (f * p.derivative)
-  have hseed := IsTarskiSeed.sturmSeq p f
+  have hseed := (IsTarskiSeed.mul_derivative p f).sturmSeq
   rw [sturmSeq_cons hp] at hsigned hseed ⊢
   exact sum_sign hsigned hseed hsimple hab ha hb
 

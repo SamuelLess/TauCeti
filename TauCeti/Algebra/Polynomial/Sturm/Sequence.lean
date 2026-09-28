@@ -22,7 +22,7 @@ variable {K : Type*} [Field K] [DecidableEq K]
 /-- A nonzero-headed Sturm sequence has its second input as its second entry,
 with zero representing the missing entry of a singleton sequence. -/
 @[simp, grind =]
-theorem head?_tail_sturmSeq {p : K[X]} (hp : p ≠ 0) (q : K[X]) :
+theorem getD_head?_tail_sturmSeq {p : K[X]} (hp : p ≠ 0) (q : K[X]) :
     (sturmSeq p q).tail.head?.getD 0 = q := by
   rw [sturmSeq_cons hp, List.tail_cons]
   by_cases hq : q = 0

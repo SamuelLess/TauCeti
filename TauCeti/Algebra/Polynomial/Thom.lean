@@ -386,7 +386,7 @@ theorem exists_derivativeSign_ne (p : R[X]) (hrolle : PolynomialRolle R) (hp : p
     (fun j => derivativeSign p a j ≠ derivativeSign p b j)
   have hs : s.Nonempty := ⟨i.val + 1, by
     simp only [s, Finset.mem_filter, Finset.mem_range]
-    exact ⟨by omega, hi⟩⟩
+    exact ⟨by omega, by simpa only [thomEncoding_apply] using hi⟩⟩
   let k := s.max' hs
   have hk : k ∈ s := Finset.max'_mem s hs
   have hk' := (Finset.mem_filter.mp hk).2
@@ -419,6 +419,6 @@ theorem exists_thomEncoding_ne (p : R[X]) (hrolle : PolynomialRolle R) (hp : p �
   · simpa only [thomEncoding_apply, Nat.sub_add_cancel hk] using hne
   · intro j hj
     simp only [Fin.lt_def] at hj
-    exact ht (j.val + 1) (by omega)
+    simpa only [thomEncoding_apply] using ht (j.val + 1) (by omega)
 
 end Polynomial

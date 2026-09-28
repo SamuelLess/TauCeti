@@ -155,6 +155,51 @@ theorem thomEncoding_succ_lt_natDegree (p : R[X]) {a b : R} {i : Fin p.natDegree
   simp only [thomEncoding_apply] at hne
   exact hne (derivativeSign_const p a b hi)
 
+/-- Distinct Thom encodings have a last disagreement strictly below the degree.
+All larger derivative signs agree, including the highest derivative sign.
+For distinct roots, `thomEncoding_injOn` supplies the unequal encodings. -/
+theorem exists_derivativeSign_ne (p : R[X]) {a b : R}
+    (henc : thomEncoding p a ≠ thomEncoding p b) :
+    ∃ k, 0 < k ∧ k < p.natDegree ∧
+      derivativeSign p a k ≠ derivativeSign p b k ∧
+      ∀ j, k < j → derivativeSign p a j = derivativeSign p b j := by
+  obtain ⟨i, hi⟩ := Function.ne_iff.mp henc
+  let s := (Finset.range (p.natDegree + 1)).filter
+    (fun j => derivativeSign p a j ≠ derivativeSign p b j)
+  have hi_mem : i.val + 1 ∈ s := by
+    simp only [s, Finset.mem_filter, Finset.mem_range]
+    exact ⟨by omega, by simpa only [thomEncoding_apply] using hi⟩
+  have hs : s.Nonempty := ⟨i.val + 1, hi_mem⟩
+  let k := s.max' hs
+  have hk : k ∈ s := Finset.max'_mem s hs
+  have hk' := (Finset.mem_filter.mp hk).2
+  have hpos : 0 < k := (Nat.succ_pos i.val).trans_le (Finset.le_max' s _ hi_mem)
+  have hdeg : k < p.natDegree := by
+    by_contra hn
+    exact hk' (derivativeSign_const p a b (by omega))
+  refine ⟨k, hpos, hdeg, hk', ?_⟩
+  intro j hj
+  by_cases hd : p.natDegree ≤ j
+  · exact derivativeSign_const p a b hd
+  · by_contra hne
+    have hjs : j ∈ s := by
+      simp only [s, Finset.mem_filter, Finset.mem_range]
+      exact ⟨by omega, hne⟩
+    have hle : j ≤ k := Finset.le_max' s j hjs
+    omega
+
+/-- Distinct finite Thom encodings have a last differing coordinate. -/
+theorem exists_thomEncoding_ne (p : R[X]) {a b : R}
+    (henc : thomEncoding p a ≠ thomEncoding p b) :
+    ∃ i : Fin p.natDegree, thomEncoding p a i ≠ thomEncoding p b i ∧
+      ∀ j : Fin p.natDegree, i < j → thomEncoding p a j = thomEncoding p b j := by
+  obtain ⟨k, hk, hkd, hne, ht⟩ := exists_derivativeSign_ne p henc
+  refine ⟨⟨k - 1, by omega⟩, ?_, ?_⟩
+  · simpa only [thomEncoding_apply, Nat.sub_add_cancel hk] using hne
+  · intro j hj
+    simp only [Fin.lt_def] at hj
+    simpa only [thomEncoding_apply] using ht (j.val + 1) (by omega)
+
 end Basic
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
@@ -371,54 +416,5 @@ theorem thomEncoding_succ_ne_zero (p : R[X]) (hrolle : PolynomialRolle R) {a b :
   exact derivativeSign_succ_ne_zero p hrolle hne
     (derivativeSign_tail p (fun j hj => htail j (Nat.lt_of_succ_lt_succ hj)))
 
-/-- Distinct roots have a last disagreement strictly below the degree.
-All larger derivative signs agree, including the highest derivative sign. -/
-theorem exists_derivativeSign_ne (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0) {a b : R}
-    (ha : p.eval a = 0) (hb : p.eval b = 0) (hab : a ≠ b) :
-    ∃ k, 0 < k ∧ k < p.natDegree ∧
-      derivativeSign p a k ≠ derivativeSign p b k ∧
-      ∀ j, k < j → derivativeSign p a j = derivativeSign p b j := by
-  have henc : thomEncoding p a ≠ thomEncoding p b := by
-    intro heq
-    exact hab (thomEncoding_injOn p hrolle hp ha hb heq)
-  obtain ⟨i, hi⟩ := Function.ne_iff.mp henc
-  let s := (Finset.range (p.natDegree + 1)).filter
-    (fun j => derivativeSign p a j ≠ derivativeSign p b j)
-  have hs : s.Nonempty := ⟨i.val + 1, by
-    simp only [s, Finset.mem_filter, Finset.mem_range]
-    exact ⟨by omega, by simpa only [thomEncoding_apply] using hi⟩⟩
-  let k := s.max' hs
-  have hk : k ∈ s := Finset.max'_mem s hs
-  have hk' := (Finset.mem_filter.mp hk).2
-  have hpos : 0 < k := by
-    by_contra hn
-    have hk0 : k = 0 := by omega
-    apply hk'
-    simp [hk0, derivativeSign_def, ha, hb]
-  have hdeg : k < p.natDegree := by
-    by_contra hn
-    exact hk' (derivativeSign_const p a b (by omega))
-  refine ⟨k, hpos, hdeg, hk', ?_⟩
-  intro j hj
-  by_cases hd : p.natDegree ≤ j
-  · exact derivativeSign_const p a b hd
-  · by_contra hne
-    have hjs : j ∈ s := by
-      simp only [s, Finset.mem_filter, Finset.mem_range]
-      exact ⟨by omega, hne⟩
-    have hle : j ≤ k := Finset.le_max' s j hjs
-    omega
-
-/-- Distinct roots have a last differing coordinate in their finite Thom encodings. -/
-theorem exists_thomEncoding_ne (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0)
-    {a b : R} (ha : p.eval a = 0) (hb : p.eval b = 0) (hab : a ≠ b) :
-    ∃ i : Fin p.natDegree, thomEncoding p a i ≠ thomEncoding p b i ∧
-      ∀ j : Fin p.natDegree, i < j → thomEncoding p a j = thomEncoding p b j := by
-  obtain ⟨k, hk, hkd, hne, ht⟩ := exists_derivativeSign_ne p hrolle hp ha hb hab
-  refine ⟨⟨k - 1, by omega⟩, ?_, ?_⟩
-  · simpa only [thomEncoding_apply, Nat.sub_add_cancel hk] using hne
-  · intro j hj
-    simp only [Fin.lt_def] at hj
-    simpa only [thomEncoding_apply] using ht (j.val + 1) (by omega)
 
 end Polynomial

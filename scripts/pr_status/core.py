@@ -29,7 +29,7 @@ _INPROGRESS_RE = re.compile(r"<!--tauceti-review-in-progress (.*?)-->", re.S)
 _REPO_ASSOCIATED = ("OWNER", "MEMBER", "COLLABORATOR")
 
 # `gh` exits nonzero on a rate limit without retrying. The sinks driven by
-# pr-labels.yml, zulip-pr*.yml and housekeeping.yml read through gh_api against
+# pr-status.yml, pr-labels.yml and housekeeping.yml read through gh_api against
 # ONE shared App installation budget; stuck-alerts.yml runs on GITHUB_TOKEN and so
 # has its own. Either way a burst of merges can spend the budget out from under
 # whichever read comes next.

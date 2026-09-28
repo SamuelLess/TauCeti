@@ -573,13 +573,9 @@ theorem map_length_relators_presentation :
         5, 40, 18, 22, 22, 22, 24, 24, 20, 12, 20, 7, 15, 19, 26, 18, 16, 18,
         18, 2, 9, 16, 13, 18, 22, 13, 22, 22, 28, 6, 4, 6, 45, 29,
         13, 13, 12, 12, 21, 6, 10, 14, 4, 20, 50, 46, 83, 43] := by
-  simp only [GroupPresentation.relators_def, presentation, relatorList, relatorsOne, relatorsTwo,
-    relatorsThree, relatorsFour, cOne, cTwo, cThree, cFour, cFive, aOne, aTwo, aThree, aFour, u,
-    x23, x24, x25, x29, x47, x96, x129, x162, x163, x164, x165, x166, x167, x168, x169, x364,
-    x365, x366, x367, x368, x369, x370, x371, sourceCommutator, Relator.conj, Relator.div,
-    List.map_cons, List.map_nil, List.append_assoc, List.cons_append, List.nil_append,
-    Relator.toWord_gen, Relator.toWord_inv, Relator.toWord_mul, Relator.toWord_pow,
-    Relator.toWord_comm]
+  simp only [GroupPresentation.relators_def, presentation_transcribed, sourceCommutator,
+    Relator.conj, Relator.div, List.map_cons, List.map_nil, Relator.toWord_gen, Relator.toWord_inv,
+    Relator.toWord_mul, Relator.toWord_pow, Relator.toWord_comm]
   decide
 
 /-- The compiled relator words have `1007` letters in total. -/
@@ -595,13 +591,9 @@ theorem map_length_reduce_relators_presentation :
         5, 40, 16, 20, 22, 22, 24, 24, 20, 12, 20, 7, 13, 19, 24, 18, 12, 18,
         18, 2, 7, 14, 11, 18, 18, 11, 18, 22, 26, 6, 4, 6, 45, 27,
         13, 13, 12, 12, 21, 6, 10, 14, 4, 20, 50, 46, 83, 43] := by
-  simp only [GroupPresentation.relators_def, presentation, relatorList, relatorsOne, relatorsTwo,
-    relatorsThree, relatorsFour, cOne, cTwo, cThree, cFour, cFive, aOne, aTwo, aThree, aFour, u,
-    x23, x24, x25, x29, x47, x96, x129, x162, x163, x164, x165, x166, x167, x168, x169, x364,
-    x365, x366, x367, x368, x369, x370, x371, sourceCommutator, Relator.conj, Relator.div,
-    List.map_cons, List.map_nil, List.append_assoc, List.cons_append, List.nil_append,
-    Relator.toWord_gen, Relator.toWord_inv, Relator.toWord_mul, Relator.toWord_pow,
-    Relator.toWord_comm]
+  simp only [GroupPresentation.relators_def, presentation_transcribed, sourceCommutator,
+    Relator.conj, Relator.div, List.map_cons, List.map_nil, Relator.toWord_gen, Relator.toWord_inv,
+    Relator.toWord_mul, Relator.toWord_pow, Relator.toWord_comm]
   decide
 
 /-- The freely reduced relator words have `975` letters in total. The source prints no length

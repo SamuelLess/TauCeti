@@ -3,26 +3,26 @@
 <rect x="0.5" y="0.5" width="979" height="439" rx="12.0" fill="#101936" stroke="#1b2547" stroke-width="1.0"/>
 <text class="title" x="64" y="36">The merge queue</text>
 <text class="subtitle" x="64" y="58">Merge-queue builds by outcome (bars) and PRs landed (dashed, right scale); UTC days 20 Sep to 26 Sep</text>
-<line class="grid" x1="64" x2="960" y1="380.0" y2="380.0"/><text class="tick" x="56" y="384.0" text-anchor="end">0</text>
-<line class="grid" x1="64" x2="960" y1="294.7" y2="294.7"/><text class="tick" x="56" y="298.7" text-anchor="end">100</text>
-<line class="grid" x1="64" x2="960" y1="209.3" y2="209.3"/><text class="tick" x="56" y="213.3" text-anchor="end">200</text>
-<line class="grid" x1="64" x2="960" y1="124.0" y2="124.0"/><text class="tick" x="56" y="128.0" text-anchor="end">300</text>
+<line class="grid" x1="64" x2="928" y1="380.0" y2="380.0"/><text class="tick" x="56" y="384.0" text-anchor="end">0</text>
+<line class="grid" x1="64" x2="928" y1="294.7" y2="294.7"/><text class="tick" x="56" y="298.7" text-anchor="end">100</text>
+<line class="grid" x1="64" x2="928" y1="209.3" y2="209.3"/><text class="tick" x="56" y="213.3" text-anchor="end">200</text>
+<line class="grid" x1="64" x2="928" y1="124.0" y2="124.0"/><text class="tick" x="56" y="128.0" text-anchor="end">300</text>
 <text class="tick" transform="translate(16,252) rotate(-90)" text-anchor="middle">merge-queue builds</text>
-<text class="tick" x="128.0" y="398" text-anchor="middle">20 Sep</text>
-<text class="tick" x="256.0" y="398" text-anchor="middle">21 Sep</text>
-<text class="tick" x="384.0" y="398" text-anchor="middle">22 Sep</text>
-<text class="tick" x="512.0" y="398" text-anchor="middle">23 Sep</text>
-<text class="tick" x="640.0" y="398" text-anchor="middle">24 Sep</text>
-<text class="tick" x="768.0" y="398" text-anchor="middle">25 Sep</text>
-<text class="tick" x="896.0" y="398" text-anchor="middle">26 Sep</text>
-<line class="axis" x1="64" x2="960" y1="380" y2="380"/>
-<rect x="79.4" y="375.7" width="97.3" height="4.3" fill="#4ade80" fill-opacity="0.9"/>
-<rect x="847.4" y="178.6" width="97.3" height="201.4" fill="#4ade80" fill-opacity="0.9"/>
-<rect x="847.4" y="153.0" width="97.3" height="25.6" fill="#fb7185" fill-opacity="0.9"/>
-<polyline fill="none" stroke="#eef2fb" stroke-width="2.0" stroke-dasharray="5 3" points="128.0,375.2 256.0,380.0 384.0,380.0 512.0,380.0 640.0,380.0 768.0,380.0 896.0,124.0"/>
-<text class="tick" x="962" y="384.0" text-anchor="end" dx="-4">0</text>
-<text class="tick" x="962" y="256.0" text-anchor="end" dx="-4">132.5</text>
-<text class="tick" x="962" y="128.0" text-anchor="end" dx="-4">265</text>
+<text class="tick" x="125.7" y="398" text-anchor="middle">20 Sep</text>
+<text class="tick" x="249.1" y="398" text-anchor="middle">21 Sep</text>
+<text class="tick" x="372.6" y="398" text-anchor="middle">22 Sep</text>
+<text class="tick" x="496.0" y="398" text-anchor="middle">23 Sep</text>
+<text class="tick" x="619.4" y="398" text-anchor="middle">24 Sep</text>
+<text class="tick" x="742.9" y="398" text-anchor="middle">25 Sep</text>
+<text class="tick" x="866.3" y="398" text-anchor="middle">26 Sep</text>
+<line class="axis" x1="64" x2="928" y1="380" y2="380"/>
+<rect x="78.8" y="375.7" width="93.8" height="4.3" fill="#4ade80" fill-opacity="0.9"/>
+<rect x="819.4" y="178.6" width="93.8" height="201.4" fill="#4ade80" fill-opacity="0.9"/>
+<rect x="819.4" y="153.0" width="93.8" height="25.6" fill="#fb7185" fill-opacity="0.9"/>
+<polyline fill="none" stroke="#eef2fb" stroke-width="2.0" stroke-dasharray="5 3" points="125.7,375.2 249.1,380.0 372.6,380.0 496.0,380.0 619.4,380.0 742.9,380.0 866.3,124.0"/>
+<text class="tick" x="934" y="384.0" text-anchor="start">0</text>
+<text class="tick" x="934" y="256.0" text-anchor="start">132.5</text>
+<text class="tick" x="934" y="128.0" text-anchor="start">265</text>
 <rect x="64" y="72" width="12" height="12" rx="2" fill="#4ade80"/>
 <text class="legend" x="81" y="82">success</text>
 <rect x="289" y="72" width="12" height="12" rx="2" fill="#fb7185"/>

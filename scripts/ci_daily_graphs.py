@@ -203,7 +203,7 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
 # --- rendering ----------------------------------------------------------------------------------
 
 W, H = 980, 440
-L, R, TOP, BOTTOM = 64, 20, 124, 380
+L, R, TOP, BOTTOM = 64, 52, 124, 380
 
 
 def frame(title: str, subtitle: str) -> list[str]:
@@ -321,8 +321,8 @@ def stacked_chart(title, subtitle, days, series, ylabel, line=None, line_fmt=lam
                 out.append(f'<polyline fill="none" stroke="{colour}" stroke-width="{svg_unit(W, 2)}" '
                            f'stroke-dasharray="5 3" points="' + " ".join(f"{a:.1f},{b:.1f}" for a, b in seg) + '"/>')
         for frac in (0, 0.5, 1):
-            out.append(f'<text class="tick" x="{W-R+2}" y="{yr(vmax*frac)+4:.1f}" text-anchor="end" '
-                       f'dx="-4">{line_fmt(vmax*frac)}</text>')
+            out.append(f'<text class="tick" x="{W-R+6}" y="{yr(vmax*frac)+4:.1f}" '
+                       f'text-anchor="start">{line_fmt(vmax*frac)}</text>')
         items.append((label, colour))
     legend(out, items, {line[0]} if line else set())
     out.append("</svg>")

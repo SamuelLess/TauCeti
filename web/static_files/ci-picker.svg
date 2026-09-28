@@ -3,22 +3,22 @@
 <rect x="0.5" y="0.5" width="979" height="439" rx="12.0" fill="#101936" stroke="#1b2547" stroke-width="1.0"/>
 <text class="title" x="64" y="36">PR builds on GitHub-hosted runners</text>
 <text class="subtitle" x="64" y="58">Share of PR builds the runner picker sent to GitHub rather than Namespace; UTC days 20 Sep to 26 Sep</text>
-<line class="grid" x1="64" x2="960" y1="380.0" y2="380.0"/><text class="tick" x="56" y="384.0" text-anchor="end">0%</text>
-<line class="grid" x1="64" x2="960" y1="316.0" y2="316.0"/><text class="tick" x="56" y="320.0" text-anchor="end">20%</text>
-<line class="grid" x1="64" x2="960" y1="252.0" y2="252.0"/><text class="tick" x="56" y="256.0" text-anchor="end">40%</text>
-<line class="grid" x1="64" x2="960" y1="188.0" y2="188.0"/><text class="tick" x="56" y="192.0" text-anchor="end">60%</text>
-<line class="grid" x1="64" x2="960" y1="124.0" y2="124.0"/><text class="tick" x="56" y="128.0" text-anchor="end">80%</text>
+<line class="grid" x1="64" x2="928" y1="380.0" y2="380.0"/><text class="tick" x="56" y="384.0" text-anchor="end">0%</text>
+<line class="grid" x1="64" x2="928" y1="316.0" y2="316.0"/><text class="tick" x="56" y="320.0" text-anchor="end">20%</text>
+<line class="grid" x1="64" x2="928" y1="252.0" y2="252.0"/><text class="tick" x="56" y="256.0" text-anchor="end">40%</text>
+<line class="grid" x1="64" x2="928" y1="188.0" y2="188.0"/><text class="tick" x="56" y="192.0" text-anchor="end">60%</text>
+<line class="grid" x1="64" x2="928" y1="124.0" y2="124.0"/><text class="tick" x="56" y="128.0" text-anchor="end">80%</text>
 <text class="tick" transform="translate(16,252) rotate(-90)" text-anchor="middle">share</text>
-<text class="tick" x="128.0" y="398" text-anchor="middle">20 Sep</text>
-<text class="tick" x="256.0" y="398" text-anchor="middle">21 Sep</text>
-<text class="tick" x="384.0" y="398" text-anchor="middle">22 Sep</text>
-<text class="tick" x="512.0" y="398" text-anchor="middle">23 Sep</text>
-<text class="tick" x="640.0" y="398" text-anchor="middle">24 Sep</text>
-<text class="tick" x="768.0" y="398" text-anchor="middle">25 Sep</text>
-<text class="tick" x="896.0" y="398" text-anchor="middle">26 Sep</text>
-<line class="axis" x1="64" x2="960" y1="380" y2="380"/>
-<circle cx="128.0" cy="380.0" r="2.5" fill="#60a5fa"/>
-<circle cx="896.0" cy="167.6" r="2.5" fill="#60a5fa"/>
+<text class="tick" x="125.7" y="398" text-anchor="middle">20 Sep</text>
+<text class="tick" x="249.1" y="398" text-anchor="middle">21 Sep</text>
+<text class="tick" x="372.6" y="398" text-anchor="middle">22 Sep</text>
+<text class="tick" x="496.0" y="398" text-anchor="middle">23 Sep</text>
+<text class="tick" x="619.4" y="398" text-anchor="middle">24 Sep</text>
+<text class="tick" x="742.9" y="398" text-anchor="middle">25 Sep</text>
+<text class="tick" x="866.3" y="398" text-anchor="middle">26 Sep</text>
+<line class="axis" x1="64" x2="928" y1="380" y2="380"/>
+<circle cx="125.7" cy="380.0" r="2.5" fill="#60a5fa"/>
+<circle cx="866.3" cy="167.6" r="2.5" fill="#60a5fa"/>
 <rect x="64" y="72" width="12" height="12" rx="2" fill="#60a5fa"/>
 <text class="legend" x="81" y="82">share on GitHub</text>
 </svg>

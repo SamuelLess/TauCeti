@@ -72,6 +72,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
           ORG: ${{ github.repository_owner }}
           BUDGET: ${{ vars.HOSTED_RUNNER_BUDGET || '16' }}
+          QUEUED_LIMIT: "3"
         run: |
           set -uo pipefail
           decide() {
@@ -86,11 +87,28 @@ jobs:
           repos=$(api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[] | select(.archived | not) | .name') \
             || decide false "Could not list the repositories of $ORG: using Namespace."
 
+          # The cheap answer first. A run is `queued` while its first jobs wait for a runner, so more
+          # than a few queued runs across the organisation means the GitHub-hosted slots are already
+          # full, and the answer is Namespace without counting a single job. That is the usual state
+          # at busy times, when the full count below costs a call for every one of the 60 or more
+          # active runs, and pickers doing it for every build drained the App's hourly API budget
+          # (which it shares with the review and merge automation) within the hour. One call per
+          # repository answers it instead. A merge-queue build waiting for a Namespace runner is
+          # also a queued run, which is why the threshold is above zero.
+          export ORG
+          queued=$(printf '%s\n' $repos | xargs -r -P 8 -n 1 bash -c '
+                     timeout 30 gh api "repos/$ORG/$0/actions/runs?status=queued&per_page=1" --jq .total_count' \
+                   | awk '{ s += $1 } END { print s + 0 }') \
+            || decide false "Could not count the queued runs in $ORG: using Namespace."
+          if [ "$queued" -gt "$QUEUED_LIMIT" ]; then
+            busy="saturated"
+            decide false "$queued runs queued in $ORG: GitHub-hosted slots are full; using Namespace."
+          fi
+
           # The calls are independent, so run them eight at a time: one at a time takes most of a
           # minute when the organisation is busy, and every build waits for this answer.
           # Both listings stop at one page of 100; a larger total fails the call, and so answers
           # Namespace, rather than silently undercounting.
-          export ORG
           runs=$(printf '%s\n' $repos | xargs -r -P 8 -n 1 bash -c '
                    set -o pipefail
                    for status in in_progress queued; do

@@ -88,6 +88,12 @@ theorem derivativeSign_C (a x : R) (k : ℕ) :
   | zero => simp [derivativeSign_def]
   | succ k => simp
 
+/-- Taking one derivative advances the derivative-sign index by one. -/
+@[simp, grind =]
+theorem derivativeSign_derivative (p : R[X]) (x : R) (k : ℕ) :
+    derivativeSign p.derivative x k = derivativeSign p x (k + 1) := by
+  simp only [derivativeSign_def, Function.iterate_succ_apply]
+
 /-- Shifting the polynomial shifts the derivative index. -/
 @[simp, grind =]
 theorem derivativeSign_iterate_derivative (p : R[X]) (x : R) (i j : ℕ) :
@@ -167,7 +173,7 @@ private theorem sign_between_aux (hrolle : PolynomialRolle R) (n : ℕ) (p : R[X
       simpa only [Function.iterate_succ_apply] using hn
     have hs : ∀ k, derivativeSign p.derivative a k = derivativeSign p.derivative b k := by
       intro k
-      simpa only [derivativeSign_def, Function.iterate_succ_apply] using h (k + 1)
+      simpa only [derivativeSign_derivative] using h (k + 1)
     have hd_sign (y : R) (hy : y ∈ Icc a b) :
         sign (p.derivative.eval y) = sign (p.derivative.eval a) := ih p.derivative hd hy hs
     have h0 : sign (p.eval a) = sign (p.eval b) := by
@@ -196,15 +202,16 @@ private theorem sign_between (p : R[X]) (hrolle : PolynomialRolle R) {a b x : R}
   sign_between_aux hrolle (p.natDegree + 1) p (iterate_derivative_eq_zero (by omega))
     hx h
 
-/-- Equal full derivative sign vectors agree throughout the interval between their realizations. -/
+/-- Agreement of all derivative signs from index `k` onward forces the sign at
+index `k` to be constant between the endpoints. -/
 theorem derivativeSign_eq_on_Icc (p : R[X]) (hrolle : PolynomialRolle R) {a b x : R}
-    (hx : x ∈ Icc a b) (h : derivativeSign p a = derivativeSign p b) :
-    derivativeSign p x = derivativeSign p a := by
-  funext k
+    (hx : x ∈ Icc a b) {k : ℕ}
+    (h : ∀ j, k ≤ j → derivativeSign p a j = derivativeSign p b j) :
+    derivativeSign p x k = derivativeSign p a k := by
   apply sign_between (derivative^[k] p) hrolle hx
   intro j
   simp only [derivativeSign_iterate_derivative]
-  exact congrFun h (j + k)
+  exact h (j + k) (Nat.le_add_left _ _)
 
 /-- A full derivative sign condition is order-convex. Empty conditions are
 allowed; this statement does not assert that an arbitrary word is realizable. -/
@@ -213,7 +220,9 @@ theorem ordConnected_preimage_derivativeSign (p : R[X]) (hrolle : PolynomialRoll
     OrdConnected (derivativeSign p ⁻¹' {σ}) := by
   constructor
   intro a ha b hb x hx
-  exact (derivativeSign_eq_on_Icc p hrolle hx (ha.trans hb.symm)).trans ha
+  funext k
+  exact (derivativeSign_eq_on_Icc p hrolle hx
+    (fun j _ => congrFun (ha.trans hb.symm) j)).trans (congrFun ha k)
 
 /-- A finite Thom sign condition is order-convex, including unrealized conditions. -/
 theorem ordConnected_preimage_thomEncoding (p : R[X]) (hrolle : PolynomialRolle R)
@@ -223,11 +232,8 @@ theorem ordConnected_preimage_thomEncoding (p : R[X]) (hrolle : PolynomialRolle 
   apply Eq.trans ?_ ha
   apply (thomEncoding_eq_iff p x a).mpr
   intro k hk
-  rw [derivativeSign_def, derivativeSign_def]
-  apply sign_between _ hrolle hx
-  intro j
-  rw [derivativeSign_iterate_derivative, derivativeSign_iterate_derivative]
-  exact (thomEncoding_eq_iff p a b).mp (ha.trans hb.symm) (j + k) (by omega)
+  exact derivativeSign_eq_on_Icc p hrolle hx
+    (fun j hj => (thomEncoding_eq_iff p a b).mp (ha.trans hb.symm) j (hk.trans_le hj))
 
 /-- Roots with equal signs of every positive-order derivative are equal.
 The polynomial need not be squarefree. -/
@@ -265,9 +271,8 @@ private theorem sign_order_aux (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     (sign (p.derivative.eval a) = -1 ∧ sign (p.eval b) < sign (p.eval a)) := by
   have hd (x : R) (hx : x ∈ Icc a b) :
       sign (p.derivative.eval x) = sign (p.derivative.eval a) := by
-    apply sign_between p.derivative hrolle hx
-    intro k
-    simpa only [derivativeSign_def, Function.iterate_succ_apply] using htail (k + 1) (by omega)
+    simpa only [derivativeSign_def, Function.iterate_one] using
+      derivativeSign_eq_on_Icc p hrolle hx (k := 1) (fun j hj => htail j hj)
   rcases lt_trichotomy (p.derivative.eval a) 0 with hn | hz | hp
   · have hm : StrictAntiOn p.eval (Icc a b) :=
       hrolle.strictAntiOn p (by

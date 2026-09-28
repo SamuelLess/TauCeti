@@ -135,21 +135,6 @@ end Basic
 
 end Finset
 
-namespace TauCeti.SignDetermination
-
-variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
-
-/-- Polynomial evaluation followed by sign and a sign-code cast. -/
-noncomputable def signEval {K : Type*} [MulZeroOneClass K] [HasDistribNeg K] (x : R) : R[X] →*₀ K :=
-  SignType.castHom.comp (signHom.comp (Polynomial.evalRingHom x).toMonoidWithZeroHom)
-
-@[simp, grind =]
-theorem signEval_apply {K : Type*} [MulZeroOneClass K] [HasDistribNeg K]
-    (x : R) (p : R[X]) :
-    signEval x p = (sign (p.eval x) : K) := (rfl)
-
-end TauCeti.SignDetermination
-
 namespace Finset
 
 open TauCeti.SignDetermination
@@ -159,8 +144,11 @@ variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 /-- The sign sum of a product is the sum of the products of its pointwise signs. -/
 private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
-  change (∑ x : Z, signEval x.val (∏ j, Q j)) = _
-  simp only [map_prod, signEval_apply]
+  rw [signSum_eq_sum_subtype]
+  simp_rw [eval_prod]
+  change (∑ x : Z, SignType.castHom (signHom (∏ j, (Q j).eval x.val))) = _
+  simp only [map_prod]
+  rfl
 
 /-- After casting to a commutative ring, a sign sum of powers is a sum of sign products. -/
 theorem signSum_prod_pow {K : Type*} [CommRing K] {J : Type*} [Fintype J]

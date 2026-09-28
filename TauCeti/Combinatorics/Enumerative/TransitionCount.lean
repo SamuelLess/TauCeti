@@ -7,9 +7,7 @@ module
 
 public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Algebra.BigOperators.Fin
-public import Mathlib.Data.Fintype.EquivFin
 public import Mathlib.Data.List.GetD
-public import Mathlib.Logic.Equiv.Basic
 
 /-!
 # Occurrence and transition counts of a finite word
@@ -79,10 +77,14 @@ the letter `b`. -/
 def transitionCount {n : ℕ} (w : Fin (n + 1) → α) (a b : α) : ℕ :=
   occCount (fun i : Fin n => (w i.castSucc, w i.succ)) (a, b)
 
+/-- Transition counts are occurrence counts of consecutive pairs. -/
+theorem transitionCount_def {n : ℕ} (w : Fin (n + 1) → α) (a b : α) :
+    transitionCount w a b = occCount (fun i : Fin n => (w i.castSucc, w i.succ)) (a, b) := (rfl)
+
 /-- The transition count as the cardinality of a `Finset` of positions. -/
 theorem transitionCount_eq_card_filter [DecidableEq α] {n : ℕ} (w : Fin (n + 1) → α) (a b : α) :
     transitionCount w a b = #{i : Fin n | w i.castSucc = a ∧ w i.succ = b} := by
-  simp only [transitionCount, occCount_eq_card_filter, Prod.mk.injEq]
+  simp only [transitionCount_def, occCount_eq_card_filter, Prod.mk.injEq]
 
 /-- Splitting off the last transition: the transitions in a word are those in its initial segment
 together with a possible transition at the final position. -/
@@ -91,7 +93,7 @@ theorem transitionCount_comp_castSucc_add_last [DecidableEq α] {n : ℕ}
     transitionCount (w ∘ Fin.castSucc) a b +
         (if w (Fin.castSucc (Fin.last n)) = a ∧ w (Fin.last (n + 1)) = b then 1 else 0) =
       transitionCount w a b := by
-  simpa only [transitionCount, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
+  simpa only [transitionCount_def, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
     Fin.succ_last] using
     occCount_castSucc (fun i : Fin (n + 1) => (w i.castSucc, w i.succ)) (a, b)
 
@@ -101,7 +103,7 @@ theorem transitionCount_comp_succ_add_zero [DecidableEq α] {n : ℕ}
     (w : Fin (n + 2) → α) (a b : α) :
     transitionCount (w ∘ Fin.succ) a b + (if w 0 = a ∧ w 1 = b then 1 else 0) =
       transitionCount w a b := by
-  simpa only [transitionCount, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
+  simpa only [transitionCount_def, Function.comp_def, Prod.mk.injEq, Fin.succ_castSucc,
     Fin.castSucc_zero, Fin.succ_zero_eq_one] using
     occCount_succ (fun i : Fin (n + 1) => (w i.castSucc, w i.succ)) (a, b)
 
@@ -253,7 +255,7 @@ theorem prod_transitionCount {M : Type*} [CommMonoid M] {n : ℕ} (w : Fin (n + 
     ∏ i : Fin n, p (w i.castSucc) (w i.succ) =
       ∏ ab ∈ S ×ˢ S, p ab.1 ab.2 ^ transitionCount w ab.1 ab.2 := by
   classical
-  simpa only [transitionCount] using
+  simpa only [transitionCount_def] using
     (Function.prod_occCount_pow (fun i : Fin n => (w i.castSucc, w i.succ))
       (T := S ×ˢ S) (fun i => mem_product.mpr (hS i)) (fun ab => p ab.1 ab.2)).symm
 

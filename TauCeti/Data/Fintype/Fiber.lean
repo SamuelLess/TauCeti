@@ -23,7 +23,10 @@ covering the range is weighted by its occurrence count.
 * `Function.occCount_of_injective`: an injective function has count one on its range
   and zero outside.
 * `Function.occCount_le_of_comp`, `Function.occCount_lt_of_comp`: comparison along embeddings.
-* `Function.sum_occCount_nsmul`: regroup a sum by counting the occurrences of each value.
+* `Function.occCount_eq_card_preimage`: the count as the cardinality of a singleton preimage.
+* `Function.prod_occCount_pow` and its additive form `Function.sum_occCount_nsmul`:
+  regroup a product or sum by counting the occurrences of each value.
+* `Function.occCount_castSucc`, `Function.occCount_succ`: split off the last or first position.
 * `Function.sum_occCount_eq_card`: the total occurrence count is the cardinality of the index type.
 * `Function.exists_perm_of_occCount_eq`: equal counts on finite families give a permutation.
 
@@ -86,7 +89,8 @@ theorem occCount_pos (f : X → S) (y : S) [Finite {x // f x = y}] :
   simp only [occCount_def, Nat.card_pos_iff, nonempty_subtype,
     and_iff_left (inferInstance : Finite {x // f x = y})]
 
-private theorem occCount_eq_card_preimage (f : X → S) (y : S) :
+/-- Occurrence counts are the cardinalities of singleton preimages. -/
+theorem occCount_eq_card_preimage (f : X → S) (y : S) :
     occCount f y = Nat.card (f ⁻¹' {y}) := by
   rw [occCount_def]
   exact Nat.card_congr (Equiv.subtypeEquivRight fun x => by

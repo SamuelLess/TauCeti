@@ -58,17 +58,23 @@ private theorem complex_isSquare_aux (z : QuadraticAlgebra R (-1) 0) : IsSquare 
       have : 0 < z.im ^ 2 := sq_pos_of_ne_zero him
       have : -z.re < m := by nlinarith
       exact div_pos (by linarith) (by norm_num)
-    obtain ⟨s, hs0, hs⟩ := exists_nonneg_sq hpos.le
-    have hspos : 0 < s := lt_of_le_of_ne hs0 (by intro h; subst s; simp at hs; linarith)
+    obtain ⟨s, _, hs⟩ := exists_nonneg_sq hpos.le
+    have hsne : s ≠ 0 := fun h => hpos.ne' (by rw [← hs, h]; ring)
     have hs2 : 2 * s ^ 2 = m + z.re := by linarith
-    refine ⟨⟨s, z.im / (2 * s)⟩, ?_⟩
+    let t := z.im / (2 * s)
+    have ht : 2 * s * t = z.im := by
+      dsimp only [t]
+      field_simp
+    have hprod : (2 * s) ^ 2 * (s ^ 2 - t ^ 2 - z.re) = 0 := by
+      linear_combination (2 * s ^ 2 + m - z.re) * hs2 + hm - (2 * s * t + z.im) * ht
+    have hre : s ^ 2 - t ^ 2 = z.re := sub_eq_zero.mp
+      ((mul_eq_zero.mp hprod).resolve_left (pow_ne_zero _ (mul_ne_zero two_ne_zero hsne)))
+    refine ⟨⟨s, t⟩, ?_⟩
     apply QuadraticAlgebra.ext
     · simp only [QuadraticAlgebra.re_mul]
-      field_simp
-      linear_combination -(2 * s ^ 2 + m - z.re) * hs2 - hm
+      linear_combination -hre
     · simp only [QuadraticAlgebra.im_mul]
-      field_simp
-      ring
+      linear_combination -ht
 
 omit [LinearOrder R] [IsStrictOrderedRing R] in
 /-- Every element of `R[i]` is a square when `R` is real closed, without choosing an order. -/

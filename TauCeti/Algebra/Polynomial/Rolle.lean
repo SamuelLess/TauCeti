@@ -58,15 +58,21 @@ theorem Rolle.exists_eval_sub_eq_derivative_eval_mul (h : Rolle R) (p : R[X]) {a
   rw [hd']
   exact hm.symm
 
+/-- The mean value point for a subinterval lies in the surrounding open interval. -/
+private theorem Rolle.exists_sub_eq (h : Rolle R) (p : R[X]) {a b u v : R}
+    (hu : u ∈ Icc a b) (hv : v ∈ Icc a b) (huv : u < v) :
+    ∃ c ∈ Ioo a b, p.eval v - p.eval u = p.derivative.eval c * (v - u) := by
+  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
+  exact ⟨c, ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩, he⟩
+
 /-- Polynomial Rolle implies monotonicity where the derivative is nonnegative. -/
 theorem Rolle.monotoneOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, 0 ≤ p.derivative.eval x) : MonotoneOn p.eval (Icc a b) := by
   intro u hu v hv huv
   rcases huv.eq_or_lt with rfl | huv
   · exact le_rfl
-  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
-  have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
-  exact sub_nonneg.mp (he.symm ▸ mul_nonneg hdc (sub_pos.mpr huv).le)
+  obtain ⟨c, hc, he⟩ := h.exists_sub_eq p hu hv huv
+  exact sub_nonneg.mp (he.symm ▸ mul_nonneg (hd c hc) (sub_pos.mpr huv).le)
 
 /-- Polynomial Rolle implies antitonicity where the derivative is nonpositive. -/
 theorem Rolle.antitoneOn (h : Rolle R) (p : R[X]) {a b : R}
@@ -74,24 +80,21 @@ theorem Rolle.antitoneOn (h : Rolle R) (p : R[X]) {a b : R}
   intro u hu v hv huv
   rcases huv.eq_or_lt with rfl | huv
   · exact le_rfl
-  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
-  have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
-  exact sub_nonpos.mp (he.symm ▸ mul_nonpos_of_nonpos_of_nonneg hdc (sub_pos.mpr huv).le)
+  obtain ⟨c, hc, he⟩ := h.exists_sub_eq p hu hv huv
+  exact sub_nonpos.mp (he.symm ▸ mul_nonpos_of_nonpos_of_nonneg (hd c hc) (sub_pos.mpr huv).le)
 
 /-- Strict positivity of the derivative gives strict monotonicity. -/
 theorem Rolle.strictMonoOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, 0 < p.derivative.eval x) : StrictMonoOn p.eval (Icc a b) := by
   intro u hu v hv huv
-  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
-  have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
-  exact sub_pos.mp (he.symm ▸ mul_pos hdc (sub_pos.mpr huv))
+  obtain ⟨c, hc, he⟩ := h.exists_sub_eq p hu hv huv
+  exact sub_pos.mp (he.symm ▸ mul_pos (hd c hc) (sub_pos.mpr huv))
 
 /-- Strict negativity of the derivative gives strict antitonicity. -/
 theorem Rolle.strictAntiOn (h : Rolle R) (p : R[X]) {a b : R}
     (hd : ∀ x ∈ Ioo a b, p.derivative.eval x < 0) : StrictAntiOn p.eval (Icc a b) := by
   intro u hu v hv huv
-  obtain ⟨c, hc, he⟩ := h.exists_eval_sub_eq_derivative_eval_mul p huv
-  have hdc := hd c ⟨hu.1.trans_lt hc.1, hc.2.trans_le hv.2⟩
-  exact sub_neg.mp (he.symm ▸ mul_neg_of_neg_of_pos hdc (sub_pos.mpr huv))
+  obtain ⟨c, hc, he⟩ := h.exists_sub_eq p hu hv huv
+  exact sub_neg.mp (he.symm ▸ mul_neg_of_neg_of_pos (hd c hc) (sub_pos.mpr huv))
 
 end Polynomial

@@ -64,6 +64,7 @@ theorem _root_.Polynomial.exists_derivative_root_of_consecutive (p : R[X]) {a b 
     apply hroot x ⟨hax, hxb⟩
     rw [hpq, hqr]
     simp [h]
+  -- Removing `(X - C a) ^ m * (X - C b) ^ n` from the derivative leaves the factor `d`.
   let d : R[X] := C ((m : R) + 1) * (X - C b) * r +
     C ((n : R) + 1) * (X - C a) * r + (X - C a) * (X - C b) * r.derivative
   have hderiv : p.derivative = (X - C a) ^ m * (X - C b) ^ n * d := by

@@ -8,7 +8,7 @@ module
 public import Mathlib.Algebra.CharP.Invertible
 public import Mathlib.LinearAlgebra.BilinearForm.Orthogonal
 public import Mathlib.LinearAlgebra.QuadraticForm.Prod
-public import Mathlib.LinearAlgebra.Isomorphisms
+import Mathlib.LinearAlgebra.Isomorphisms
 public import Mathlib.LinearAlgebra.QuadraticForm.Radical
 
 /-!

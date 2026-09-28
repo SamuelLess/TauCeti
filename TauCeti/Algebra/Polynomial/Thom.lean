@@ -16,6 +16,8 @@ public import Mathlib.Basic.Sign.Defs
 Sign conditions on all formal derivatives are order-convex. Consequently the
 signs of the positive-order derivatives distinguish roots of a nonzero
 polynomial, including multiple roots. No squarefreeness assumption is needed.
+The finite Thom encoding records derivatives 1 through `natDegree`. The last
+differing derivative sign and the next common sign determine the order of two points.
 The only extra premise on the ordered field is polynomial Rolle, supplied by
 `TauCeti.RealClosure.polynomialRolle_of_isRealClosed` over every real closed ordered field.
 
@@ -75,7 +77,7 @@ theorem derivativeSign_index_zero (p : R[X]) (x : R) :
   simp [derivativeSign_def]
 
 @[simp, grind =]
-theorem derivativeSign_of_lt (p : R[X]) (x : R) {k : ℕ} (hk : p.natDegree < k) :
+theorem derivativeSign_eq_zero (p : R[X]) (x : R) {k : ℕ} (hk : p.natDegree < k) :
     derivativeSign p x k = 0 := by
   simp [derivativeSign_def, iterate_derivative_eq_zero hk]
 
@@ -115,11 +117,23 @@ private theorem derivativeSign_tail (p : R[X]) {a b : R} {n : ℕ}
     have he := h ⟨k - 1, by omega⟩
       (by simpa only [Fin.val_mk, Nat.sub_add_cancel hkpos] using hk)
     simpa only [thomEncoding_apply, Nat.sub_add_cancel hkpos] using he
-  · simp [derivativeSign_of_lt p _ (by omega : p.natDegree < k)]
+  · simp [derivativeSign_eq_zero p _ (by omega : p.natDegree < k)]
+
+/-- Finite Thom encodings agree exactly when all positive-order derivative signs agree. -/
+theorem thomEncoding_eq_iff (p : R[X]) (a b : R) :
+    thomEncoding p a = thomEncoding p b ↔
+      ∀ k, 0 < k → derivativeSign p a k = derivativeSign p b k := by
+  constructor
+  · intro h
+    exact derivativeSign_tail p (fun i _ => congrFun h i)
+  · intro h
+    funext i
+    simp only [thomEncoding_apply]
+    exact h (i.val + 1) (Nat.succ_pos _)
 
 /-- At and above the degree the derivative is constant, so its sign is
 independent of the point. -/
-theorem derivativeSign_of_le (p : R[X]) (a b : R) {k : ℕ} (hk : p.natDegree ≤ k) :
+theorem derivativeSign_const (p : R[X]) (a b : R) {k : ℕ} (hk : p.natDegree ≤ k) :
     derivativeSign p a k = derivativeSign p b k := by
   have hd : (derivative^[k] p).natDegree = 0 :=
     Nat.eq_zero_of_le_zero ((natDegree_iterate_derivative p k).trans (by omega))
@@ -129,11 +143,11 @@ theorem derivativeSign_of_le (p : R[X]) (a b : R) {k : ℕ} (hk : p.natDegree �
 
 /-- A differing finite Thom coordinate lies below the top derivative,
 so a next coordinate exists. -/
-theorem thomEncoding_lt_natDegree (p : R[X]) {a b : R} {i : Fin p.natDegree}
+theorem thomEncoding_succ_lt_natDegree (p : R[X]) {a b : R} {i : Fin p.natDegree}
     (hne : thomEncoding p a i ≠ thomEncoding p b i) : i.val + 1 < p.natDegree := by
   by_contra! hi
   simp only [thomEncoding_apply] at hne
-  exact hne (derivativeSign_of_le p a b hi)
+  exact hne (derivativeSign_const p a b hi)
 
 end Basic
 
@@ -182,7 +196,7 @@ private theorem sign_between (p : R[X]) (hrolle : PolynomialRolle R) {a b x : R}
     hx h
 
 /-- Equal full derivative sign vectors agree throughout the interval between their realizations. -/
-theorem derivativeSign_between (p : R[X]) (hrolle : PolynomialRolle R) {a b x : R}
+theorem derivativeSign_eq_on_Icc (p : R[X]) (hrolle : PolynomialRolle R) {a b x : R}
     (hx : x ∈ Icc a b) (h : derivativeSign p a = derivativeSign p b) :
     derivativeSign p x = derivativeSign p a := by
   funext k
@@ -193,11 +207,12 @@ theorem derivativeSign_between (p : R[X]) (hrolle : PolynomialRolle R) {a b x : 
 
 /-- A full derivative sign condition is order-convex. Empty conditions are
 allowed; this statement does not assert that an arbitrary word is realizable. -/
-theorem ordConnected_derivativeSign (p : R[X]) (hrolle : PolynomialRolle R) (σ : ℕ → SignType) :
+theorem ordConnected_preimage_derivativeSign (p : R[X]) (hrolle : PolynomialRolle R)
+    (σ : ℕ → SignType) :
     OrdConnected (derivativeSign p ⁻¹' {σ}) := by
   constructor
   intro a ha b hb x hx
-  exact (derivativeSign_between p hrolle hx (ha.trans hb.symm)).trans ha
+  exact (derivativeSign_eq_on_Icc p hrolle hx (ha.trans hb.symm)).trans ha
 
 private theorem eq_zero_of_sign (p : R[X]) {a b : R} (hab : a < b)
     (h : ∀ x ∈ Ioo a b, sign (p.eval x) = 0) : p = 0 :=
@@ -229,7 +244,7 @@ theorem thomEncoding_injOn (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0
     Set.InjOn (thomEncoding p) {x | p.eval x = 0} := by
   intro a ha b hb h
   apply eq_of_derivativeSign_eq p hrolle hp ha hb
-  exact derivativeSign_tail p (fun i _ => congrFun h i)
+  exact (thomEncoding_eq_iff p a b).mp h
 
 private theorem sign_order_aux (p : R[X]) (hrolle : PolynomialRolle R) {a b : R} (hab : a < b)
     (hne : sign (p.eval a) ≠ sign (p.eval b))
@@ -296,7 +311,7 @@ theorem lt_iff_derivativeSign (p : R[X]) (hrolle : PolynomialRolle R) {a b : R} 
       · rw [← heq, hneg] at hpos'; cases hpos'
       · exact (lt_asymm hlt hlt').elim
 
-/-- The comparison rule directly on finite Thom words. `thomEncoding_lt_natDegree` supplies
+/-- The comparison rule directly on finite Thom words. `thomEncoding_succ_lt_natDegree` supplies
 existence of the next coordinate from the differing signs. Every coordinate
 above the disagreement must agree. -/
 theorem lt_iff_thomEncoding (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
@@ -304,9 +319,9 @@ theorem lt_iff_thomEncoding (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     (hne : thomEncoding p a i ≠ thomEncoding p b i)
     (htail : ∀ j : Fin p.natDegree, i < j → thomEncoding p a j = thomEncoding p b j) :
     (a < b ↔
-      (thomEncoding p a ⟨i.val + 1, thomEncoding_lt_natDegree p hne⟩ = 1 ∧
+      (thomEncoding p a ⟨i.val + 1, thomEncoding_succ_lt_natDegree p hne⟩ = 1 ∧
         thomEncoding p a i < thomEncoding p b i) ∨
-      (thomEncoding p a ⟨i.val + 1, thomEncoding_lt_natDegree p hne⟩ = -1 ∧
+      (thomEncoding p a ⟨i.val + 1, thomEncoding_succ_lt_natDegree p hne⟩ = -1 ∧
         thomEncoding p b i < thomEncoding p a i)) := by
   simp only [thomEncoding_apply] at hne ⊢
   apply lt_iff_derivativeSign p hrolle hne
@@ -327,11 +342,11 @@ theorem derivativeSign_succ_ne_zero (p : R[X]) (hrolle : PolynomialRolle R) {a b
       simp only [h.1, ne_eq, reduceCtorEq, not_false_eq_true]
 
 /-- The common finite Thom coordinate immediately above the last disagreement is nonzero. -/
-theorem thomEncoding_next_ne_zero (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
+theorem thomEncoding_succ_ne_zero (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     (i : Fin p.natDegree)
     (hne : thomEncoding p a i ≠ thomEncoding p b i)
     (htail : ∀ j : Fin p.natDegree, i < j → thomEncoding p a j = thomEncoding p b j) :
-    thomEncoding p a ⟨i.val + 1, thomEncoding_lt_natDegree p hne⟩ ≠ 0 := by
+    thomEncoding p a ⟨i.val + 1, thomEncoding_succ_lt_natDegree p hne⟩ ≠ 0 := by
   simp only [thomEncoding_apply] at hne ⊢
   exact derivativeSign_succ_ne_zero p hrolle hne
     (derivativeSign_tail p (fun j hj => htail j (Nat.lt_of_succ_lt_succ hj)))
@@ -362,11 +377,11 @@ theorem exists_derivativeSign_ne (p : R[X]) (hrolle : PolynomialRolle R) (hp : p
     simp [hk0, derivativeSign_def, ha, hb]
   have hdeg : k < p.natDegree := by
     by_contra hn
-    exact hk' (derivativeSign_of_le p a b (by omega))
+    exact hk' (derivativeSign_const p a b (by omega))
   refine ⟨k, hpos, hdeg, hk', ?_⟩
   intro j hj
   by_cases hd : p.natDegree ≤ j
-  · exact derivativeSign_of_le p a b hd
+  · exact derivativeSign_const p a b hd
   · by_contra hne
     have hjs : j ∈ s := by
       simp only [s, Finset.mem_filter, Finset.mem_range]

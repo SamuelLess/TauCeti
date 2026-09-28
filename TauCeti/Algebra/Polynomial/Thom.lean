@@ -48,12 +48,12 @@ noncomputable def derivativeSign (p : R[X]) (x : R) (k : ℕ) : SignType :=
 theorem derivativeSign_def (p : R[X]) (x : R) (k : ℕ) :
     derivativeSign p x k = sign ((derivative^[k] p).eval x) := (rfl)
 
-@[simp, grind =]
+@[grind =]
 theorem derivativeSign_eq_one_iff (p : R[X]) (x : R) (k : ℕ) :
     derivativeSign p x k = 1 ↔ 0 < (derivative^[k] p).eval x := by
   rw [derivativeSign_def, sign_eq_one_iff]
 
-@[simp, grind =]
+@[grind =]
 theorem derivativeSign_eq_neg_one_iff (p : R[X]) (x : R) (k : ℕ) :
     derivativeSign p x k = -1 ↔ (derivative^[k] p).eval x < 0 := by
   rw [derivativeSign_def, sign_eq_neg_one_iff]
@@ -170,7 +170,8 @@ private theorem sign_between_aux (hrolle : PolynomialRolle R) (n : ℕ) (p : R[X
       simpa only [derivativeSign_def, Function.iterate_succ_apply] using h (k + 1)
     have hd_sign (y : R) (hy : y ∈ Icc a b) :
         sign (p.derivative.eval y) = sign (p.derivative.eval a) := ih p.derivative hd hy hs
-    have h0 : sign (p.eval a) = sign (p.eval b) := h 0
+    have h0 : sign (p.eval a) = sign (p.eval b) := by
+      simpa only [derivativeSign_index_zero] using h 0
     rcases le_total 0 (p.derivative.eval a) with hp | hp
     · have hm : MonotoneOn p.eval (Icc a b) :=
         hrolle.monotoneOn p (by
@@ -213,6 +214,20 @@ theorem ordConnected_preimage_derivativeSign (p : R[X]) (hrolle : PolynomialRoll
   constructor
   intro a ha b hb x hx
   exact (derivativeSign_eq_on_Icc p hrolle hx (ha.trans hb.symm)).trans ha
+
+/-- A finite Thom sign condition is order-convex, including unrealized conditions. -/
+theorem ordConnected_preimage_thomEncoding (p : R[X]) (hrolle : PolynomialRolle R)
+    (τ : Fin p.natDegree → SignType) : OrdConnected (thomEncoding p ⁻¹' {τ}) := by
+  constructor
+  intro a ha b hb x hx
+  apply Eq.trans ?_ ha
+  apply (thomEncoding_eq_iff p x a).mpr
+  intro k hk
+  rw [derivativeSign_def, derivativeSign_def]
+  apply sign_between _ hrolle hx
+  intro j
+  rw [derivativeSign_iterate_derivative, derivativeSign_iterate_derivative]
+  exact (thomEncoding_eq_iff p a b).mp (ha.trans hb.symm) (j + k) (by omega)
 
 private theorem eq_zero_of_sign (p : R[X]) {a b : R} (hab : a < b)
     (h : ∀ x ∈ Ioo a b, sign (p.eval x) = 0) : p = 0 :=
@@ -291,6 +306,7 @@ theorem lt_iff_derivativeSign (p : R[X]) (hrolle : PolynomialRolle R) {a b : R} 
       (ht : ∀ j, k < j → derivativeSign p u j = derivativeSign p v j) :
       (derivativeSign p u (k + 1) = 1 ∧ derivativeSign p u k < derivativeSign p v k) ∨
       (derivativeSign p u (k + 1) = -1 ∧ derivativeSign p v k < derivativeSign p u k) := by
+    simp only [derivativeSign_def] at hne
     have h := sign_order_aux (derivative^[k] p) hrolle huv hne (by
       intro j hj
       rw [derivativeSign_iterate_derivative, derivativeSign_iterate_derivative]

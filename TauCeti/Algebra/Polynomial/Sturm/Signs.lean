@@ -5,7 +5,7 @@ Authors: Kim Morrison
 -/
 module
 
-public import TauCeti.FieldTheory.RealClosure.IVT
+public import TauCeti.Algebra.Polynomial.RealClosed.Sign
 public import TauCeti.Data.List.SignVariations
 
 /-! # Sign bookkeeping for abstract Sturm chains
@@ -52,25 +52,26 @@ private theorem SignRelation.signVariations_eq {L M : List R} (h : SignRelation 
   | nil => exact ⟨rfl, rfl⟩
   | @same x y l m hx hy hs h ih =>
     refine ⟨?_, ?_⟩
-    · rw [signVariations_cons l hx, signVariations_cons m hy, ih.1, ih.2, hs]
-    · rw [firstSign_cons_ne l hx, firstSign_cons_ne m hy, hs]
+    · rw [signVariations_cons_of_ne_zero l hx, signVariations_cons_of_ne_zero m hy, ih.1, ih.2, hs]
+    · rw [firstSign_cons_of_ne_zero l hx, firstSign_cons_of_ne_zero m hy, hs]
   | @collapse x X x' l m y y' hx hX hy' hsx hsy hopp h ih =>
     have hy : y ≠ 0 := by
       intro hy0; rw [hy0, sign_zero, mul_zero] at hopp; exact absurd hopp (by decide)
     have hx' : x' ≠ 0 := by
       intro hx0; rw [hx0, sign_zero] at hsx; exact hx (sign_eq_zero_iff.mp hsx)
     refine ⟨?_, ?_⟩
-    · rw [signVariations_cons (X :: y :: l) hx,
-        firstSign_cons_ne (y :: l) hX, signVariations_cons (y :: l) hX,
-        firstSign_cons_ne l hy]
-      rw [signVariations_cons (0 :: y' :: m) hx',
-        firstSign_cons_zero (y' :: m), firstSign_cons_ne m hy',
+    · rw [signVariations_cons_of_ne_zero (X :: y :: l) hx,
+        firstSign_cons_of_ne_zero (y :: l) hX, signVariations_cons_of_ne_zero (y :: l) hX,
+        firstSign_cons_of_ne_zero l hy]
+      rw [signVariations_cons_of_ne_zero (0 :: y' :: m) hx',
+        firstSign_zero_cons (y' :: m), firstSign_cons_of_ne_zero m hy',
         List.signVariations_zero_cons]
       rw [← add_assoc, ih.1]
       congr 1
       rw [← hsx, ← hsy, ite_eq_left hopp]
       exact sign_changes_of_opposite _ _ _ hopp (fun h => hX (sign_eq_zero_iff.mp h))
-    · rw [firstSign_cons_ne (X :: y :: l) hx, firstSign_cons_ne (0 :: y' :: m) hx', hsx]
+    · rw [firstSign_cons_of_ne_zero (X :: y :: l) hx,
+        firstSign_cons_of_ne_zero (0 :: y' :: m) hx', hsx]
 
 end Signs
 
@@ -79,13 +80,36 @@ section Polynomials
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- The zero-skipping variations of a polynomial list at a point. -/
-noncomputable def variation (cs : List (Polynomial R)) (x : R) : ℕ :=
+noncomputable def signVariationsAt (cs : List (Polynomial R)) (x : R) : ℕ :=
   List.signVariations (cs.map (Polynomial.eval x))
 
 omit [IsStrictOrderedRing R] in
 /-- Variations are computed on the list of evaluations. -/
-theorem variation_eq (cs : List (Polynomial R)) (x : R) :
-    variation cs x = List.signVariations (cs.map (Polynomial.eval x)) := (rfl)
+theorem signVariationsAt_def (cs : List (Polynomial R)) (x : R) :
+    signVariationsAt cs x = List.signVariations (cs.map (Polynomial.eval x)) := (rfl)
+
+omit [IsStrictOrderedRing R] in
+@[simp]
+theorem signVariationsAt_nil (x : R) : signVariationsAt [] x = 0 := by simp [signVariationsAt_def]
+
+omit [IsStrictOrderedRing R] in
+@[simp]
+theorem signVariationsAt_singleton (p : Polynomial R) (x : R) : signVariationsAt [p] x = 0 := by
+  simp [signVariationsAt_def]
+
+/-- Multiplying every entry by a polynomial that does not vanish at the point
+preserves the sign variations at that point. -/
+theorem signVariationsAt_map_mul (cs : List (Polynomial R)) {d : Polynomial R} {x : R}
+    (hd : d.eval x ≠ 0) : signVariationsAt (cs.map (d * ·)) x = signVariationsAt cs x := by
+  simp only [signVariationsAt_def]
+  have heq : (cs.map (d * ·)).map (Polynomial.eval x) =
+      (cs.map (Polynomial.eval x)).map (d.eval x * ·) := by simp [List.map_map, Function.comp_def]
+  rw [heq]
+  rcases lt_or_gt_of_ne hd with hd | hd
+  · exact List.signVariations_map_of_sign_eq_neg
+      (fun y => by rw [sign_mul, sign_neg hd, neg_one_mul]) _
+  · exact List.signVariations_map
+      (fun y => by rw [sign_mul, sign_pos hd, one_mul]) _
 
 private theorem signRelation_eval (a r : R) :
     ∀ (cs : List (Polynomial R)),
@@ -160,7 +184,7 @@ private theorem signRelation_eval (a r : R) :
         exact SignRelation.same ha0 hr0 (hsame q0 (by simp) hr0) IH
 
 /-- Interior zero entries may be erased without changing variations. -/
-theorem variation_at (cs : List (Polynomial R)) (a r : R)
+theorem signVariationsAt_eq (cs : List (Polynomial R)) (a r : R)
     (hne : ∀ q ∈ cs, q.eval a ≠ 0)
     (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
     (hlast : ∀ q, cs.getLast? = some q → q.eval r ≠ 0)
@@ -169,26 +193,18 @@ theorem variation_at (cs : List (Polynomial R)) (a r : R)
       q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0)
     (hsame : ∀ q ∈ cs, q.eval r ≠ 0 →
       SignType.sign (q.eval a) = SignType.sign (q.eval r)) :
-    variation cs a = variation cs r :=
+    signVariationsAt cs a = signVariationsAt cs r :=
   (signRelation_eval a r cs hne hfront hlast halt hsame).signVariations_eq.1
 
 variable [IsRealClosed R]
 
-/-- A polynomial has a constant sign on a root-free interval. -/
-theorem eval_sign_eq {p : Polynomial R} {a b : R} (hab : a ≤ b)
-    (hz : ∀ x ∈ Set.Icc a b, p.eval x ≠ 0) :
-    SignType.sign (p.eval a) = SignType.sign (p.eval b) := by
-  rcases mul_pos_iff.mp (p.eval_mul_pos_of_no_roots hab hz) with h | h
-  · rw [sign_pos h.1, sign_pos h.2]
-  · rw [sign_neg h.1, sign_neg h.2]
-
 /-- Variations are constant if no chain entry vanishes on the interval. -/
-theorem variation_const (cs : List (Polynomial R)) {a b : R} (hab : a ≤ b)
+theorem signVariationsAt_const (cs : List (Polynomial R)) {a b : R} (hab : a ≤ b)
     (hz : ∀ q ∈ cs, ∀ x ∈ Set.Icc a b, q.eval x ≠ 0) :
-    variation cs a = variation cs b := by
+    signVariationsAt cs a = signVariationsAt cs b := by
   apply List.signVariations_congr
   simp only [List.map_map]
-  exact List.map_congr_left fun q hq => eval_sign_eq hab (hz q hq)
+  exact List.map_congr_left fun q hq => Polynomial.sign_eval_const q hab (hz q hq)
 
 end Polynomials
 

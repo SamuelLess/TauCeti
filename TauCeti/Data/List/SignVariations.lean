@@ -27,17 +27,17 @@ noncomputable def firstSign (l : List R) : SignType :=
 theorem firstSign_nil : firstSign ([] : List R) = 0 := (rfl)
 
 @[simp, grind =]
-theorem firstSign_cons_zero (l : List R) : firstSign (0 :: l) = firstSign l := by
+theorem firstSign_zero_cons (l : List R) : firstSign (0 :: l) = firstSign l := by
   simp [firstSign]
 
 @[simp, grind =]
-theorem firstSign_cons_ne {a : R} (l : List R) (ha : a ≠ 0) :
+theorem firstSign_cons_of_ne_zero {a : R} (l : List R) (ha : a ≠ 0) :
     firstSign (a :: l) = SignType.sign a := by
   simp [firstSign, ha]
 
-/-- Prepending a nonzero entry `a` adds one variation exactly when its sign is
+/-- Prepending a nonzero entry `a` adds one signVariationsAt exactly when its sign is
 opposite the sign of the next surviving entry. -/
-theorem signVariations_cons {a : R} (l : List R) (ha : a ≠ 0) :
+theorem signVariations_cons_of_ne_zero {a : R} (l : List R) (ha : a ≠ 0) :
     List.signVariations (a :: l) =
       (if SignType.sign a * firstSign l = -1 then 1 else 0) + List.signVariations l := by
   induction l with
@@ -46,8 +46,8 @@ theorem signVariations_cons {a : R} (l : List R) (ha : a ≠ 0) :
     by_cases hb : b = 0
     · subst b
       simpa only [List.signVariations_cons_zero_cons, List.signVariations_zero_cons,
-        firstSign_cons_zero] using ih
-    · rw [firstSign_cons_ne l hb, List.signVariations_cons_cons_of_ne_zero l ha hb]
+        firstSign_zero_cons] using ih
+    · rw [firstSign_cons_of_ne_zero l hb, List.signVariations_cons_cons_of_ne_zero l ha hb]
       have ha' : SignType.sign a ≠ 0 := by simpa using ha
       have hb' : SignType.sign b ≠ 0 := by simpa using hb
       have h : (if SignType.sign a = SignType.sign b then (0 : ℕ) else 1) =

@@ -5,7 +5,7 @@ Authors: Kim Morrison
 -/
 module
 
-public import TauCeti.Algebra.Polynomial.Sturm.SturmSum
+public import TauCeti.Algebra.Polynomial.Sturm.Local
 public import Mathlib.Algebra.Polynomial.Sturm.Sequence
 
 /-! # Positive-scaled signed remainder chains
@@ -26,7 +26,7 @@ open Polynomial
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- A positively scaled signed remainder identity. -/
-def Remainder (p q r : Polynomial R) : Prop :=
+def IsRemainder (p q r : Polynomial R) : Prop :=
   ∃ a b : R, ∃ u : Polynomial R, 0 < a ∧ 0 < b ∧ C a * p = u * q - C b * r
 
 /-- The algebraic relations of a signed remainder chain, including its exact
@@ -37,25 +37,26 @@ structure Signed (cs : List (Polynomial R)) : Prop where
   nonzero : ∀ p ∈ cs, p ≠ 0
   /-- Successive triples satisfy a positively scaled signed remainder identity. -/
   relation : ∀ (i : ℕ) (p q r : Polynomial R), cs[i]? = some p →
-    cs[i + 1]? = some q → cs[i + 2]? = some r → Remainder p q r
+    cs[i + 1]? = some q → cs[i + 2]? = some r → IsRemainder p q r
   /-- The final remainder vanishes, so the last entry divides its predecessor. -/
   terminal : ∀ pre p q, cs = pre ++ [p, q] → q ∣ p
 
-namespace Remainder
+namespace IsRemainder
 
 omit [IsStrictOrderedRing R] in
 /-- Construct the signed remainder relation from positive scalings and a polynomial identity. -/
 theorem of_identity {p q r : Polynomial R} (a b : R) (u : Polynomial R)
-    (ha : 0 < a) (hb : 0 < b) (heq : C a * p = u * q - C b * r) : Remainder p q r :=
+    (ha : 0 < a) (hb : 0 < b) (heq : C a * p = u * q - C b * r) : IsRemainder p q r :=
   ⟨a, b, u, ha, hb, heq⟩
 
 omit [IsStrictOrderedRing R] in
 /-- A signed remainder relation supplies positive scalings and its polynomial identity. -/
-theorem exists_identity {p q r : Polynomial R} (h : Remainder p q r) :
+theorem exists_identity {p q r : Polynomial R} (h : IsRemainder p q r) :
     ∃ a b : R, ∃ u : Polynomial R, 0 < a ∧ 0 < b ∧ C a * p = u * q - C b * r := h
 
 omit [IsStrictOrderedRing R] in
-theorem dvd {p q r d : Polynomial R} (h : Remainder p q r) (hq : d ∣ q) (hr : d ∣ r) :
+/-- A common divisor of the two later entries divides the earlier entry. -/
+theorem dvd {p q r d : Polynomial R} (h : IsRemainder p q r) (hq : d ∣ q) (hr : d ∣ r) :
     d ∣ p := by
   obtain ⟨a, b, u, ha, _, heq⟩ := h.exists_identity
   have hu : IsUnit (C a) := isUnit_C.mpr (isUnit_iff_ne_zero.mpr ha.ne')
@@ -65,7 +66,7 @@ theorem dvd {p q r d : Polynomial R} (h : Remainder p q r) (hq : d ∣ q) (hr : 
 
 /-- At a zero of the middle entry, the neighbors have opposite signs,
 provided the right neighbor does not vanish. -/
-theorem alternate {p q r : Polynomial R} (h : Remainder p q r) {x : R}
+theorem alternate {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
     (hq : q.eval x = 0) (hr : r.eval x ≠ 0) :
     p.eval x ≠ 0 ∧ r.eval x ≠ 0 ∧ p.eval x * r.eval x < 0 := by
   obtain ⟨a, b, u, ha, hb, heq⟩ := h.exists_identity
@@ -88,14 +89,15 @@ theorem alternate {p q r : Polynomial R} (h : Remainder p q r) {x : R}
     exact mul_neg_of_neg_of_pos hp' hr
 
 omit [IsStrictOrderedRing R] in
-theorem zero_next {p q r : Polynomial R} (h : Remainder p q r) {x : R}
+/-- If the first two entries vanish at a point, the third entry vanishes there too. -/
+theorem next_eval_eq_zero {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
     (hp : p.eval x = 0) (hq : q.eval x = 0) : r.eval x = 0 := by
   obtain ⟨a, b, u, _, hb, heq⟩ := h.exists_identity
   have he := congrArg (Polynomial.eval x) heq
   simp only [eval_mul, eval_C, eval_sub, hp, hq, mul_zero, zero_sub, zero_eq_neg] at he
   exact (mul_eq_zero.mp he).resolve_left hb.ne'
 
-end Remainder
+end IsRemainder
 
 namespace Signed
 
@@ -126,7 +128,7 @@ theorem pair {p q : Polynomial R} (hp : p ≠ 0) (hq : q ≠ 0) (hdvd : q ∣ p)
 omit [IsStrictOrderedRing R] in
 /-- Prepend one signed recurrence to a chain. -/
 theorem cons {p q r : Polynomial R} {cs : List (Polynomial R)}
-    (hp : p ≠ 0) (hrel : Remainder p q r) (h : Signed (q :: r :: cs)) :
+    (hp : p ≠ 0) (hrel : IsRemainder p q r) (h : Signed (q :: r :: cs)) :
     Signed (p :: q :: r :: cs) where
   nonzero s hs := by
     rcases List.mem_cons.mp hs with rfl | hs
@@ -211,7 +213,7 @@ theorem regular {cs : List (Polynomial R)} (h : Signed cs)
         | cons r cs =>
           have h2' : r = q2 := by simpa using h2
           subst q2
-          exact (h.relation 0 p q r rfl rfl rfl).alternate hz (ht.second_ne hz)
+          exact (h.relation 0 p q r rfl rfl rfl).alternate hz (ht.second_eval_ne_zero hz)
 
 end Signed
 
@@ -241,16 +243,17 @@ theorem signed_sturmSeq (p q : R[X]) : Signed (sturmSeq p q) := by
       exact Signed.pair hp hq (dvd_neg.mp (EuclideanDomain.mod_eq_zero.mp hr))
     · rw [sturmSeq_cons hr]
       refine Signed.cons hp ?_ ?_
-      · refine Remainder.of_identity 1 1 (p / q) zero_lt_one zero_lt_one ?_
+      · refine IsRemainder.of_identity 1 1 (p / q) zero_lt_one zero_lt_one ?_
         simpa only [map_one, one_mul, mul_one, neg_mod, sub_neg_eq_add, mul_comm, add_comm] using
           (EuclideanDomain.mod_add_div p q).symm
       · rwa [sturmSeq_cons hq, sturmSeq_cons hr] at ih
 
 omit [IsStrictOrderedRing R] in
-theorem Remainder.cancel {d p q r : Polynomial R} (hd : d ≠ 0)
-    (h : Remainder (d * p) (d * q) (d * r)) : Remainder p q r := by
+/-- Cancel a nonzero common polynomial factor from a signed remainder identity. -/
+theorem IsRemainder.cancel {d p q r : Polynomial R} (hd : d ≠ 0)
+    (h : IsRemainder (d * p) (d * q) (d * r)) : IsRemainder p q r := by
   obtain ⟨a, b, u, ha, hb, heq⟩ := h.exists_identity
-  refine Remainder.of_identity a b u ha hb (mul_left_cancel₀ hd ?_)
+  refine IsRemainder.of_identity a b u ha hb (mul_left_cancel₀ hd ?_)
   calc
     d * (C a * p) = C a * (d * p) := by ring
     _ = u * (d * q) - C b * (d * r) := heq
@@ -259,11 +262,12 @@ theorem Remainder.cancel {d p q r : Polynomial R} (hd : d ≠ 0)
 namespace Signed
 
 omit [IsStrictOrderedRing R] in
-/-- Exact cancellation preserves the positive scaling in every recurrence. -/
+/-- Dividing out a nonzero common factor preserves the signed chain conditions:
+if `cs.map (d * ·)` is signed, so is `cs`. -/
 theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
     (h : Signed (cs.map (d * ·))) : Signed cs where
   nonzero p hp hp0 := h.nonzero (d * p) (List.mem_map.mpr ⟨p, hp, rfl⟩) (by simp [hp0])
-  relation i p q r h0 h1 h2 := Remainder.cancel hd (h.relation i (d * p) (d * q) (d * r)
+  relation i p q r h0 h1 h2 := IsRemainder.cancel hd (h.relation i (d * p) (d * q) (d * r)
     (by simp [List.getElem?_map, h0]) (by simp [List.getElem?_map, h1])
     (by simp [List.getElem?_map, h2]))
   terminal pre p q heq := (mul_dvd_mul_iff_left hd).mp
@@ -271,7 +275,7 @@ theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
 
 /-- Divide every entry by the terminal common factor. The resulting chain is
 regular and ends at `1`, even when the original terminal factor is nonconstant. -/
-theorem reduce {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
+theorem exists_regular {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
     (hd : cs.getLast? = some d) :
     ∃ ds : List (Polynomial R), cs = ds.map (d * ·) ∧
       ds.getLast? = some 1 ∧ Signed ds ∧ Regular ds := by
@@ -293,18 +297,5 @@ theorem reduce {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
   simp
 
 end Signed
-
-/-- Multiplying all entries by a common nonzero value preserves variations. -/
-theorem variation_mul (cs : List (Polynomial R)) {d : Polynomial R} {x : R}
-    (hd : d.eval x ≠ 0) : variation (cs.map (d * ·)) x = variation cs x := by
-  simp only [variation_eq]
-  have heq : (cs.map (d * ·)).map (Polynomial.eval x) =
-      (cs.map (Polynomial.eval x)).map (d.eval x * ·) := by simp [List.map_map, Function.comp_def]
-  rw [heq]
-  rcases lt_or_gt_of_ne hd with hd | hd
-  · exact List.signVariations_map_of_sign_eq_neg
-      (fun y => by rw [sign_mul, sign_neg hd, neg_one_mul]) _
-  · exact List.signVariations_map
-      (fun y => by rw [sign_mul, sign_pos hd, one_mul]) _
 
 end TauCeti.Sturm

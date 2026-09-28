@@ -16,8 +16,12 @@ import Mathlib.AlgebraicTopology.FundamentalGroupoid.InducedMaps
 
 For a topological space `X` and a basepoint `x₀ : X`, this file introduces the space
 `BasedPath x₀` of continuous maps `γ : C(I, X)` with `γ 0 = x₀`, topologized as a subspace of
-`C(I, X)` with the compact-open topology. This is the space whose quotient by endpoint-preserving
-homotopy is the universal cover of `X` at `x₀`. It is adapted from
+`C(I, X)` with the compact-open topology. Its quotient by endpoint-preserving homotopy is the
+model `TauCeti.UniversalCover x₀` used to construct the universal cover. When `X` is locally
+path-connected and semilocally simply connected, that quotient is simply connected and its endpoint
+projection is a covering map whose range is the path component of `x₀`
+(`TauCeti/AlgebraicTopology/UniversalCover/Covering.lean`); it is then a universal cover of that
+path component, and of `X` when `X` is path-connected. This file is adapted from
 [#38292](https://github.com/leanprover-community/mathlib4/pull/38292) by Kim Morrison.
 
 The main results concern the path components of `endpoint ⁻¹' U`. For sufficiently small open
@@ -180,7 +184,7 @@ variable {v : X} (γ : BasedPath x₀) (δ : Path (endpoint γ) v) {a b : ℝ}
 `γ` on `[0, a]`, traverses `γ|_[a, 1]` on `[a, b]`, and traverses `δ` on `[b, 1]`. When `a` is
 close to `1` and the range of `δ` lies in a small neighborhood of the endpoint, this stays in
 a prescribed compact-open neighborhood of `γ`. -/
-@[expose] public noncomputable def deformTerminal (ha : 0 ≤ a) (hab : a < b) (hb : b < 1) :
+public noncomputable def deformTerminal (ha : 0 ≤ a) (hab : a < b) (hb : b < 1) :
     BasedPath x₀ :=
   let f : ℝ → X := fun t ↦
     if t ≤ a then γ.toPath.extend t
@@ -290,9 +294,17 @@ public theorem isOpenMap_endpoint [LocallyPathConnectedSpace X] (x₀ : X) :
 /-! ### Initial segments -/
 
 /-- The family `t ↦ γ|_[0, t]` of initial segments of a based path. -/
-@[expose] public noncomputable def initialSegmentFamily (γ : BasedPath x₀) (t : I) :
+public noncomputable def initialSegmentFamily (γ : BasedPath x₀) (t : I) :
     BasedPath x₀ :=
   ofPath (γ.toPath.initialSegmentFamily t)
+
+@[simp] public theorem initialSegmentFamily_apply (γ : BasedPath x₀) (t s : I) :
+    γ.initialSegmentFamily t s = γ.toPath.extend (min (s : ℝ) t) :=
+  Path.initialSegmentFamily_apply γ.toPath t s
+
+@[simp] public theorem endpoint_initialSegmentFamily (γ : BasedPath x₀) (t : I) :
+    endpoint (γ.initialSegmentFamily t) = γ t :=
+  endpoint_ofPath _
 
 @[simp] public theorem initialSegmentFamily_zero (γ : BasedPath x₀) :
     γ.initialSegmentFamily 0 = refl x₀ := by

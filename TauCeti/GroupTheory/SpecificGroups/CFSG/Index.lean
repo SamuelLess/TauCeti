@@ -71,6 +71,7 @@ namespace TauCeti
 /-- A prime power `p ^ exponent`, retaining the prime and positive exponent needed to construct its
 finite field. Unlike the proposition `IsPrimePow`, this is parameter data rather than a property of
 an already specified cardinality. -/
+@[ext]
 structure PrimePower where
   /-- The prime base of the prime power. -/
   p : ℕ
@@ -81,13 +82,6 @@ structure PrimePower where
   deriving DecidableEq
 
 namespace PrimePower
-
-/-- Two prime-power parameters are equal when their bases and exponents are equal. -/
-@[ext]
-theorem ext (q r : PrimePower) (hp : q.p = r.p) (he : q.exponent = r.exponent) : q = r := by
-  cases q
-  cases r
-  simp_all
 
 /-- The cardinality represented by a prime-power parameter. -/
 def card (q : PrimePower) : ℕ := q.p ^ q.exponent

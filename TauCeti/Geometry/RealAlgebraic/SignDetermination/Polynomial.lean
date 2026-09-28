@@ -147,12 +147,13 @@ private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
   simp only [signSum, map_prod, signEval_apply]
 
-/-- The sign sum of a product of powers is the sum of the pointwise sign products. -/
-private theorem signSum_prod_pow {J : Type*} [Fintype J]
+/-- After casting to a commutative ring, a sign sum of powers is a sum of sign products. -/
+theorem signSum_prod_pow {K : Type*} [CommRing K] {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
-    signSum Z (∏ j, Q j ^ e j) =
-      ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) ^ e j := by
-  simp only [signSum_prod, eval_pow, sign_pow, SignType.coe_pow]
+    (signSum Z (∏ j, Q j ^ e j) : K) =
+      ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : K) ^ e j := by
+  simp only [signSum_prod, eval_pow, sign_pow, SignType.coe_pow,
+    Int.cast_sum, Int.cast_prod, Int.cast_pow, SignType.intCast_cast]
 
 /-- The polynomial moment identity on any complete restricted column set and
 any selected exponent rows. Exponents need not be bounded by two. -/
@@ -166,8 +167,7 @@ theorem mulVec_signCount {K : Type*} [CommRing K] {J C I : Type*} [Fintype J]
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K) := by
   classical
   simp_rw [signSum_prod_pow]
-  simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow, SignType.intCast_cast,
-    signCount_eq_occCount] using
+  simpa only [signCount_eq_occCount] using
     mulVec_occCount _ columns hinj (fun x : Z => cover x.val x.property)
       (fun i σ => ∏ j, (σ j : K) ^ rows i j)
 
@@ -184,12 +184,9 @@ theorem eq_signCount {K : Type*} [CommRing K] {J C I : Type*}
     (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) :
     proposed = fun c => (signCount Z Q (columns c) : K) := by
-  simpa only [signCount_eq_occCount] using
-    eq_occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) columns hinj
-      (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j) A hA proposed
-      (hsolve.trans (funext fun i => by
-        simp only [signSum_prod_pow, Int.cast_sum, Int.cast_prod, Int.cast_pow,
-          SignType.intCast_cast]))
+  have hm := mulVec_signCount (K := K) Z Q columns rows hinj cover
+  have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
+  simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
 
 /-- Positive entries of a solved, complete polynomial moment system are exactly
 its realizable candidate sign conditions. -/
@@ -205,12 +202,8 @@ theorem signCount_solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
     (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) (c : C) :
     0 < proposed c ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = columns c j := by
-  simpa only [Subtype.exists, exists_prop, funext_iff] using
-    solution_pos_iff (fun x : Z => fun j => sign ((Q j).eval x.val)) columns hinj
-      (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j) A hA proposed
-      (hsolve.trans (funext fun i => by
-        simp only [signSum_prod_pow, Int.cast_sum, Int.cast_prod, Int.cast_pow,
-          SignType.intCast_cast])) c
+  rw [eq_signCount Z Q columns rows hinj cover A hA proposed hsolve]
+  simp only [Nat.cast_pos, signCount_pos]
 
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
 theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
@@ -218,8 +211,7 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
   simp_rw [signSum_prod_pow]
-  simpa only [Int.cast_sum, Int.cast_prod, Int.cast_pow,
-    signCount_eq_occCount, SignType.intCast_cast] using
+  simpa only [signCount_eq_occCount] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
 /-- The integer BKR moment identity on a finite set of sample points. -/
@@ -228,11 +220,9 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     signSum Z (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
   classical
-  simp only [signSum_prod_pow]
-  simpa only [id_eq, signCount_eq_occCount, nsmul_eq_mul, Nat.cast_comm] using
-    (Function.sum_occCount_nsmul (fun x : Z => fun j => sign ((Q j).eval x.val))
-      (T := Finset.univ) (fun _ => Finset.mem_univ _)
-      (fun σ => ∏ j, (σ j : ℤ) ^ e j)).symm
+  have h := congrFun (mulVec_signCount (K := ℤ) Z Q id (fun _ : Unit => e)
+    Function.injective_id (fun x _ => ⟨_, rfl⟩)) ()
+  simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
 
 /-- The recovered sign pattern is positive exactly when it is realized. -/
 theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]

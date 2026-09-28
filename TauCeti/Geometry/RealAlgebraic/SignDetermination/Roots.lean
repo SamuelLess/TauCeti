@@ -13,7 +13,11 @@ public import Mathlib.Algebra.Polynomial.Roots
 `tarskiQuery p q` sums the signs of `q` at the distinct roots of `p`.
 For nonzero `p`, these are precisely its zeros in the coefficient ring.
 For `p = 0`, the query is defined to be zero; it does not describe the infinite zero set.
-The moment identities here specialize finite sign determination without using Sturm theory.
+`tarskiQuery_eq_sum_signCount` is the BKR matrix identity at polynomial roots;
+`fullInverse_mulVec_tarskiQuery` recovers every root sign multiplicity from these queries.
+The zero and unit laws reduce queries to zero or a distinct-root count, while
+`tarskiQuery_eq_card_sub_card` expresses a query as a difference of sign counts.
+The proofs use finite sign determination without Sturm theory.
 -/
 
 public section

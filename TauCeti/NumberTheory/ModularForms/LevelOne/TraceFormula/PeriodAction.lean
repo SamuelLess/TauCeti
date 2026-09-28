@@ -214,7 +214,11 @@ theorem ExchangeRelations.periodAction_mem_ker_one_add_U_add_U_sq (hw : Even w)
   have hS : P + binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ)) P = 0 := by simpa using hP
   obtain ⟨θ, hθ⟩ := hξ.one_add_U_add_U_sq
   have h := congrArg (fun ζ : R[TraceFormulaMatrixModule n] ↦ periodAction (R := R) hw ζ P) hθ
-  rw [show (T : PSL(2, ℤ)) * S = ((T * S : SL(2, ℤ)) : PSL(2, ℤ)) by simp] at h
+  -- The exchange relation multiplies the images of `T` and `S` in `PSL(2, ℤ)`, while
+  -- `periodAction_right_one_add_add_sq` takes the image of a single matrix `U = T S` of
+  -- `SL(2, ℤ)`; the projection `SL(2, ℤ) → PSL(2, ℤ)` is multiplicative.
+  have hU : ((T * S : SL(2, ℤ)) : PSL(2, ℤ)) = (T : PSL(2, ℤ)) * S := QuotientGroup.mk_mul _ _ _
+  rw [← hU] at h
   rw [periodAction_left_one_add hw S θ P, hS, map_zero,
     periodAction_right_one_add_add_sq hw (T * S) ξ P] at h
   simpa [pow_two] using h.symm

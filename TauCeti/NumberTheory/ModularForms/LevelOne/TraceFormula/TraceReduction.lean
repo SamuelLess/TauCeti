@@ -41,14 +41,6 @@ namespace TauCeti.TraceFormulaMatrixModule
 
 variable {K : Type*} [Field K] {n : ℤ} {w : ℕ}
 
-/-- The traces of the restrictions of `f` to equal submodules agree. -/
-private theorem trace_restrict_congr {V : Type*} [AddCommGroup V] [Module K V]
-    {p q : Submodule K V} (hpq : p = q) (f : V →ₗ[K] V) (hp : ∀ x ∈ p, f x ∈ p)
-    (hq : ∀ x ∈ q, f x ∈ q) :
-    LinearMap.trace K p (f.restrict hp) = LinearMap.trace K q (f.restrict hq) := by
-  subst hpq
-  rfl
-
 /-- The trace of `ξ` on the period polynomials, computed on `ker (1 + S) ⊓ ker (1 + U + U²)`. -/
 private theorem ExchangeRelations.trace_periodActionRestrict_eq_trace_restrict_inf (hw : Even w)
     {ξ : K[TraceFormulaMatrixModule n]} (hξ : ExchangeRelations K n ξ) :
@@ -65,7 +57,7 @@ private theorem ExchangeRelations.trace_periodActionRestrict_eq_trace_restrict_i
       fun _ hP ↦ hξ.periodAction_mem_periodPolynomials hw hP :=
     LinearMap.ext fun P ↦ Subtype.ext (hξ.coe_periodActionRestrict_apply hw P)
   rw [h]
-  exact trace_restrict_congr periodPolynomials_def _ _ _
+  exact LinearMap.trace_restrict_congr periodPolynomials_def _ _ _
 
 /-- **The trace reduction** (Popa–Zagier, §2, Proposition 3): over a field of characteristic zero
 and for positive even `w`, the action of an element `ξ` satisfying the exchange relations has the

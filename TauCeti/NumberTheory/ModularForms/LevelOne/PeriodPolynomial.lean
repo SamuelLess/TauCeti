@@ -7,6 +7,7 @@ module
 
 public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 public import TauCeti.NumberTheory.ModularForms.BinaryForms
+import TauCeti.LinearAlgebra.End.OrderTwoThree
 import TauCeti.RingTheory.MvPolynomial.Finrank
 
 /-!
@@ -66,8 +67,10 @@ use this to reduce the trace of an operator exchanging `A` and `B` on `W_w` to i
 ## Implementation notes
 
 Popa and Zagier prove `ker(1 + S) + ker(1 + U + U²) = V_w` with a nondegenerate `SL(2, ℤ)`-invariant
-pairing on `V_w`. Here it is proved directly. For even `w`, `P - P ∣ S` lies in `ker(1 + S)` and
-`P - P ∣ U` lies in `ker(1 + U + U²)`, so `P - P ∣ T` lies in their sum, as `T = -U S`. The
+pairing on `V_w`. Here it is proved directly. For even `w`, `S² = 1` and `U³ = 1` on `V_w`, so
+`P - P ∣ S` lies in `ker(1 + S)` and `P - P ∣ U` lies in `ker(1 + U + U²)`
+(`TauCeti.End.range_one_sub_le_ker_one_add`, `TauCeti.End.range_one_sub_le_ker_one_add_add_sq`),
+and `P - P ∣ T` lies in their sum, as `T = -U S`. The
 substitution `T : X ↦ X + Y` is unitriangular on the monomials `X^a Y^b`, so induction on `a`
 puts every `X^a Y^b` with `a < w` in the sum, and then `X^w = Y^w - (Y^w - Y^w ∣ S)` as well.
 
@@ -346,38 +349,16 @@ private lemma U_mul_S_eq_neg_T :
   ext i j
   fin_cases i <;> fin_cases j <;> rfl
 
-/-- For even `w`, applying `S` twice fixes every degree-`w` binary form. -/
-private lemma binaryFormRep_S_sq_of_even (hw : Even w) (P : homogeneousSubmodule (Fin 2) R w) :
-    binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ))
-      (binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ)) P) = P := by
-  rw [← binaryFormRep_op_mul_apply, S_mul_S_eq, binaryFormRep_op_neg_of_even hw, op_one, map_one,
-    Module.End.one_apply]
+/-- For even `w`, `S` acts on `V_w` as an involution, since `S² = -1` acts trivially. -/
+private lemma binaryFormRep_S_sq_of_even (hw : Even w) :
+    binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ)) ^ 2 = 1 := by
+  rw [← map_pow, ← op_pow, sq, S_mul_S_eq, binaryFormRep_op_neg_of_even hw, op_one, map_one]
 
-/-- For even `w`, applying `U = T S` three times fixes every degree-`w` binary form. -/
-private lemma binaryFormRep_U_pow_three_of_even (hw : Even w)
-    (P : homogeneousSubmodule (Fin 2) R w) :
-    binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ))
-      (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ))
-        (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P)) = P := by
-  rw [← binaryFormRep_op_mul_apply, ← binaryFormRep_op_mul_apply, U_mul_U_mul_U_eq_neg_one,
-    binaryFormRep_op_neg_of_even hw, op_one, map_one, Module.End.one_apply]
-
-/-- For even `w`, `P - P ∣ S` lies in `ker (1 + S)`. -/
-private lemma sub_binaryFormRep_S_mem_ker (hw : Even w) (P : homogeneousSubmodule (Fin 2) R w) :
-    P - binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ)) P ∈
-      LinearMap.ker (1 + binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ))) := by
-  rw [LinearMap.mem_ker, LinearMap.add_apply, Module.End.one_apply, map_sub,
-    binaryFormRep_S_sq_of_even hw]
-  abel
-
-/-- For even `w`, `P - P ∣ U` lies in `ker (1 + U + U²)`, where `U = T S`. -/
-private lemma sub_binaryFormRep_U_mem_ker (hw : Even w) (P : homogeneousSubmodule (Fin 2) R w) :
-    P - binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P ∈
-      LinearMap.ker (1 + binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) +
-        binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) ^ 2) := by
-  rw [LinearMap.mem_ker, LinearMap.add_apply, LinearMap.add_apply, Module.End.one_apply, pow_two,
-    Module.End.mul_apply, map_sub, map_sub, binaryFormRep_U_pow_three_of_even hw]
-  abel
+/-- For even `w`, `U = T S` acts on `V_w` with cube `1`, since `U³ = -1` acts trivially. -/
+private lemma binaryFormRep_U_pow_three_of_even (hw : Even w) :
+    binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) ^ 3 = 1 := by
+  rw [← map_pow, ← op_pow, pow_three, U_mul_U_mul_U_eq_neg_one, binaryFormRep_op_neg_of_even hw,
+    op_one, map_one]
 
 /-- For even `w`, `P - P ∣ T` lies in `ker (1 + S) + ker (1 + U + U²)`, where `U = T S`. -/
 private lemma sub_binaryFormRep_T_mem_sup (hw : Even w) (P : homogeneousSubmodule (Fin 2) R w) :
@@ -389,16 +370,20 @@ private lemma sub_binaryFormRep_T_mem_sup (hw : Even w) (P : homogeneousSubmodul
       binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ))
         (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P) := by
     rw [← binaryFormRep_op_mul_apply, U_mul_S_eq_neg_T, binaryFormRep_op_neg_of_even hw]
-  -- `P - P ∣ T = (P ∣ U - (P ∣ U) ∣ S) + (P - P ∣ U)`
+  -- `P - P ∣ T = (1 - S) (P ∣ U) + (1 - U) P`; for `S² = 1` and `U³ = 1`, `1 + S` kills the range
+  -- of `1 - S` and `1 + U + U²` kills the range of `1 - U`
   have h : P - binaryFormRep R w (op (T : Matrix (Fin 2) (Fin 2) ℤ)) P =
-      (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P -
-        binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ))
-          (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P)) +
-      (P - binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P) := by
-    rw [hT]
+      (1 - binaryFormRep R w (op (S : Matrix (Fin 2) (Fin 2) ℤ)))
+          (binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) P) +
+        (1 - binaryFormRep R w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ))) P := by
+    rw [LinearMap.sub_apply, LinearMap.sub_apply, Module.End.one_apply, Module.End.one_apply, hT]
     abel
   rw [h]
-  exact Submodule.add_mem_sup (sub_binaryFormRep_S_mem_ker hw _) (sub_binaryFormRep_U_mem_ker hw P)
+  exact Submodule.add_mem_sup
+    (End.range_one_sub_le_ker_one_add (binaryFormRep_S_sq_of_even hw)
+      (LinearMap.mem_range_self _ _))
+    (End.range_one_sub_le_ker_one_add_add_sq (binaryFormRep_U_pow_three_of_even hw)
+      (LinearMap.mem_range_self _ _))
 
 section Field
 
@@ -495,7 +480,11 @@ theorem codisjoint_ker_one_add_S_ker_one_add_U_add_U_sq [CharZero K] (hw : Even 
       (LinearMap.ker (1 + binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) +
         binaryFormRep K w (op ((T * S : SL(2, ℤ)) : Matrix (Fin 2) (Fin 2) ℤ)) ^ 2)) :=
   codisjoint_iff.2 <| eq_top_of_sub_binaryFormRep_mem hw₀ (sub_binaryFormRep_T_mem_sup hw)
-    fun P ↦ Submodule.mem_sup_left (sub_binaryFormRep_S_mem_ker hw P)
+    fun P ↦ Submodule.mem_sup_left <| by
+      -- `P - P ∣ S = (1 - S) P`, and `1 + S` kills the range of `1 - S` as `S² = 1`
+      simpa only [LinearMap.sub_apply, Module.End.one_apply] using
+        End.range_one_sub_le_ker_one_add (binaryFormRep_S_sq_of_even hw)
+          (LinearMap.mem_range_self _ P)
 
 end Field
 

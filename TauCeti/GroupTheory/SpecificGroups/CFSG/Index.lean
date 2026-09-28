@@ -8,7 +8,7 @@ module
 public import TauCeti.LinearAlgebra.RootSystem.DynkinType
 public import Mathlib.Algebra.IsPrimePow
 public import Mathlib.Data.Fintype.Card
-public import Mathlib.Data.Fintype.OfMap
+import Mathlib.Tactic.DeriveFintype
 
 /-!
 # Indices for the classification of finite simple groups
@@ -1461,11 +1461,7 @@ inductive SporadicName where
   deriving DecidableEq
 
 /-- The finite enumeration of the twenty-six sporadic group names. -/
-instance : Fintype SporadicName :=
-  Fintype.ofList
-    [.M11, .M12, .M22, .M23, .M24, .J1, .J2, .J3, .J4, .HS, .McL, .He, .Ru, .Suz, .ONan,
-      .Co1, .Co2, .Co3, .Fi22, .Fi23, .Fi24Prime, .HN, .Ly, .Th, .B, .M]
-    (by intro x; cases x <;> simp)
+instance : Fintype SporadicName := derive_fintype% _
 
 end
 

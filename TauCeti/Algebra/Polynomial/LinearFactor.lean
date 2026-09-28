@@ -6,6 +6,7 @@ Authors: The Tau Ceti contributors
 module
 
 public import Mathlib.Algebra.Polynomial.Div
+public import Mathlib.Algebra.Polynomial.Derivative
 public import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Polynomial.FieldDivision
 import Mathlib.Tactic.ByContra
@@ -36,6 +37,7 @@ that does not vanish at the root.
 
 * `Polynomial.linear_eval_mul_pos_of_no_roots`: constant nonzero sign on a root-free
   closed interval.
+* `Polynomial.derivative_root_factors`: factor the derivative of a polynomial with two root powers.
 * `Polynomial.IsRoot.exists_eq_pow_succ_mul`: factor out a positive power of `X - C x`, leaving a
   cofactor nonzero at `x`.
 
@@ -103,6 +105,17 @@ theorem linear_eval_mul_pos_of_no_roots {R : Type*} [Field R] [LinearOrder R]
       exact mul_pos_of_neg_of_neg (sub_neg.mpr (hab.trans_lt hb)) (sub_neg.mpr hb)
   simp only [hc, eval_mul, eval_C, eval_sub, eval_X]
   convert mul_pos (mul_self_pos.mpr hcne) hprod using 1
+  ring
+
+/-- Factor the derivative after removing the powers contributed by two roots. -/
+theorem derivative_root_factors {A : Type*} [CommRing A] (a b : A) (m n : ℕ) (r : A[X]) :
+    ((X - C a) ^ (m + 1) * ((X - C b) ^ (n + 1) * r)).derivative =
+      (X - C a) ^ m * (X - C b) ^ n *
+        (C ((m : A) + 1) * (X - C b) * r + C ((n : A) + 1) * (X - C a) * r +
+          (X - C a) * (X - C b) * r.derivative) := by
+  simp only [derivative_mul, derivative_pow_succ, derivative_sub, derivative_X,
+    derivative_C, sub_zero, mul_one]
+  simp only [pow_succ]
   ring
 
 end Polynomial

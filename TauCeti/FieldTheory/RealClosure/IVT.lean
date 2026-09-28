@@ -6,7 +6,6 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.FieldTheory.RealClosure.AlgebraicClosed
-import Mathlib.FieldTheory.Minpoly.Finite
 import TauCeti.Algebra.Polynomial.LinearFactor
 import TauCeti.Algebra.Polynomial.RealClosed.Quadratic
 
@@ -18,10 +17,6 @@ is the constant-sign result used by polynomial Rolle.
 
 Irreducible factors have degree at most two; quadratic factors have constant
 nonzero sign, so a sign change forces a root of a linear factor.
-
-The degree bound generalizes Mathlib's `Irreducible.natDegree_le_two` from
-`Mathlib.Analysis.Complex.Polynomial.Basic`, following its root, minimal polynomial,
-and finite-dimension proof over an arbitrary real closed field.
 
 ## References
 
@@ -37,19 +32,6 @@ namespace TauCeti.RealClosure
 open Polynomial
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
-
-omit [LinearOrder R] [IsStrictOrderedRing R] in
-/-- Irreducible polynomials over a real closed field have degree at most two. -/
-theorem _root_.Polynomial.natDegree_le_two_of_irreducible {p : R[X]} (hp : Irreducible p) :
-    p.natDegree ≤ 2 := by
-  have := isAlgClosed_quadraticAlgebra (R := R)
-  obtain ⟨z, hz⟩ := IsAlgClosed.exists_aeval_eq_zero
-    (QuadraticAlgebra R (-1) 0) p (degree_pos_of_irreducible hp).ne'
-  have heq := minpoly.eq_of_irreducible hp hz
-  have hdeg : p.natDegree = (minpoly R z).natDegree := by
-    rw [← heq, natDegree_mul_C (inv_ne_zero (leadingCoeff_ne_zero.mpr hp.ne_zero))]
-  rw [hdeg]
-  exact (minpoly.natDegree_le z).trans_eq (QuadraticAlgebra.finrank_eq_two _ _)
 
 /-- A polynomial has constant nonzero sign on any closed interval containing
 none of its roots. -/
@@ -77,7 +59,7 @@ theorem _root_.Polynomial.eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a
       apply hroot x hx
       simp [hq]
     have hdeg : q.natDegree = 1 ∨ q.natDegree = 2 := by
-      have := natDegree_le_two_of_irreducible hq
+      have := q.natDegree_le_two_of_irreducible hq
       have := hq.natDegree_pos
       omega
     have hqpos : 0 < q.eval a * q.eval b := hdeg.elim

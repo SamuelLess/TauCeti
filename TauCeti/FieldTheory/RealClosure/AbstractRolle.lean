@@ -16,7 +16,7 @@ import Mathlib.Tactic.Positivity
 /-! # Polynomial Rolle over an abstract real closed field
 
 `polynomialRolle_of_isRealClosed` supplies `TauCeti.PolynomialRolle R` from `IsRealClosed R`.
-The direct `Polynomial.exists_derivative_root_of_eval_eq` and
+The direct `Polynomial.exists_derivative_root` and
 `Polynomial.exists_eval_sub_eq_derivative_eval_mul` give Rolle and mean value without a separate
 Rolle premise. The four `Polynomial.*On_of_derivative_*` theorems give monotonicity,
 antitonicity, and their strict variants on closed intervals. Under `IsRealClosed`, use these
@@ -39,17 +39,6 @@ public section
 namespace TauCeti.RealClosure
 
 open Polynomial Set
-
-/-- Factor the derivative after removing the powers contributed by two roots. -/
-private theorem derivative_factor {A : Type*} [CommRing A] (a b : A) (m n : ℕ) (r : A[X]) :
-    ((X - C a) ^ (m + 1) * ((X - C b) ^ (n + 1) * r)).derivative =
-      (X - C a) ^ m * (X - C b) ^ n *
-        (C ((m : A) + 1) * (X - C b) * r + C ((n : A) + 1) * (X - C a) * r +
-          (X - C a) * (X - C b) * r.derivative) := by
-  simp only [derivative_mul, derivative_pow_succ, derivative_sub, derivative_X,
-    derivative_C, sub_zero, mul_one]
-  simp only [pow_succ]
-  ring
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
 
@@ -88,7 +77,7 @@ private theorem exists_derivative_root_of_consecutive (p : R[X]) {a b : R} (hab 
     C ((n : R) + 1) * (X - C a) * r + (X - C a) * (X - C b) * r.derivative
   have hderiv : p.derivative = (X - C a) ^ m * (X - C b) ^ n * d := by
     rw [hpq, hqr]
-    exact derivative_factor a b m n r
+    exact derivative_root_factors a b m n r
   have hda : d.eval a = ((m : R) + 1) * (a - b) * r.eval a := by simp [d]
   have hdb : d.eval b = ((n : R) + 1) * (b - a) * r.eval b := by simp [d]
   have hm : 0 < (m : R) + 1 := by positivity
@@ -103,7 +92,7 @@ private theorem exists_derivative_root_of_consecutive (p : R[X]) {a b : R} (hab 
   exact ⟨c, hc, by rw [hderiv]; simp [hd]⟩
 
 /-- Between any two distinct roots there is a root of the formal derivative. -/
-theorem _root_.Polynomial.exists_derivative_root (p : R[X]) {a b : R} (hab : a < b)
+theorem _root_.Polynomial.exists_derivative_root_of_isRoot (p : R[X]) {a b : R} (hab : a < b)
     (ha : p.eval a = 0) (hb : p.eval b = 0) :
     ∃ c ∈ Ioo a b, p.derivative.eval c = 0 := by
   classical
@@ -126,12 +115,12 @@ theorem _root_.Polynomial.exists_derivative_root (p : R[X]) {a b : R} (hab : a <
 theorem polynomialRolle_of_isRealClosed : PolynomialRolle R := by
   apply PolynomialRolle.of_forall
   intro p a b hab heq
-  obtain ⟨c, hc, hd⟩ := exists_derivative_root (p - C (p.eval a)) hab
+  obtain ⟨c, hc, hd⟩ := exists_derivative_root_of_isRoot (p - C (p.eval a)) hab
     (by simp) (by simp [heq])
   exact ⟨c, hc, by simpa using hd⟩
 
 /-- Equal endpoint values give an interior derivative root over a real closed field. -/
-theorem _root_.Polynomial.exists_derivative_root_of_eval_eq (p : R[X]) {a b : R}
+theorem _root_.Polynomial.exists_derivative_root (p : R[X]) {a b : R}
     (hab : a < b) (h : p.eval a = p.eval b) : ∃ c ∈ Ioo a b, p.derivative.eval c = 0 :=
   polynomialRolle_of_isRealClosed.exists_derivative_root p hab h
 

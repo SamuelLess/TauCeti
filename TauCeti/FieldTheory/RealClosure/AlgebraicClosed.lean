@@ -8,6 +8,7 @@ module
 public import TauCeti.FieldTheory.RealClosure.Galois
 public import TauCeti.FieldTheory.RealClosure.Complexification
 public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
+import Mathlib.FieldTheory.Minpoly.Finite
 
 /-! # Algebraic closedness of the complexification
 
@@ -15,10 +16,15 @@ public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 square-closed extension of a real closed field is trivial. `isAlgClosed_of_forall_isSquare`
 then proves algebraic closedness of that square-closed field. In particular,
 `isAlgClosed_quadraticAlgebra` proves that `R[i] = QuadraticAlgebra R (-1) 0` is
-algebraically closed; the polynomial IVT development uses this to bound irreducible degrees.
+algebraically closed. `Polynomial.natDegree_le_two_of_irreducible` bounds irreducible degrees
+by two; the polynomial IVT development uses this bound.
 
 The proof puts finite extensions inside a finite normal closure. The 2-group argument
 then applies to the Galois group over a square-closed intermediate field.
+
+The degree bound generalizes Mathlib's `Irreducible.natDegree_le_two` from
+`Mathlib.Analysis.Complex.Polynomial.Basic`, following its root, minimal polynomial,
+and finite-dimension proof over an arbitrary real closed field.
 
 ## References
 
@@ -72,5 +78,18 @@ theorem isAlgClosed_of_forall_isSquare (hsq : ∀ x : C, IsSquare x) : IsAlgClos
 /-- The complexification `R[i]` of a real closed field is algebraically closed. -/
 theorem isAlgClosed_quadraticAlgebra : IsAlgClosed (QuadraticAlgebra R (-1) 0) :=
   isAlgClosed_of_forall_isSquare (R := R) QuadraticAlgebra.isSquare
+
+open Polynomial in
+/-- Irreducible polynomials over a real closed field have degree at most two. -/
+theorem _root_.Polynomial.natDegree_le_two_of_irreducible (p : R[X]) (hp : Irreducible p) :
+    p.natDegree ≤ 2 := by
+  have := isAlgClosed_quadraticAlgebra (R := R)
+  obtain ⟨z, hz⟩ := IsAlgClosed.exists_aeval_eq_zero
+    (QuadraticAlgebra R (-1) 0) p (degree_pos_of_irreducible hp).ne'
+  have heq := minpoly.eq_of_irreducible hp hz
+  have hdeg : p.natDegree = (minpoly R z).natDegree := by
+    rw [← heq, natDegree_mul_C (inv_ne_zero (leadingCoeff_ne_zero.mpr hp.ne_zero))]
+  rw [hdeg]
+  exact (minpoly.natDegree_le z).trans_eq (QuadraticAlgebra.finrank_eq_two _ _)
 
 end TauCeti.RealClosure

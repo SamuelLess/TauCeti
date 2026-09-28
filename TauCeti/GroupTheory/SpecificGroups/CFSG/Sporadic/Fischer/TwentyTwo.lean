@@ -145,10 +145,6 @@ private abbrev b : Relator (Fin 2) := .gen 1
 @[inherit_doc Relator.mul]
 local infixl:70 " ⬝ " => Relator.mul
 
-/-- The source's commutator `[r, s] = r⁻¹ s⁻¹ r s`, represented in Mathlib's convention. -/
-private abbrev sourceComm (r s : Relator (Fin 2)) : Relator (Fin 2) :=
-  .comm (.inv r) (.inv s)
-
 /-- The ATLAS finite presentation of the Fischer group `Fi₂₂` on its standard generators `a`
 and `b`.
 
@@ -183,15 +179,15 @@ def fi22Presentation : GroupPresentation where
       .pow b 13,
       .pow (a ⬝ b) 11,
       .pow (a ⬝ .pow b 2) 21,
-      .pow (sourceComm a b) 3,
-      .pow (sourceComm a (.pow b 2)) 3,
-      .pow (sourceComm a (.pow b 3)) 3,
-      .pow (sourceComm a (.pow b 4)) 2,
-      .pow (sourceComm a (.pow b 5)) 3,
-      .pow (sourceComm a (b ⬝ a ⬝ .pow b 2)) 3,
-      .pow (sourceComm a (.inv b ⬝ a ⬝ .pow (.inv b) 2)) 2,
-      .pow (sourceComm a (b ⬝ a ⬝ .pow b 5)) 2,
-      .pow (sourceComm a (.pow b 2 ⬝ a ⬝ .pow b 5)) 2 ]
+      .pow (.sourceCommutator a b) 3,
+      .pow (.sourceCommutator a (.pow b 2)) 3,
+      .pow (.sourceCommutator a (.pow b 3)) 3,
+      .pow (.sourceCommutator a (.pow b 4)) 2,
+      .pow (.sourceCommutator a (.pow b 5)) 3,
+      .pow (.sourceCommutator a (b ⬝ a ⬝ .pow b 2)) 3,
+      .pow (.sourceCommutator a (.inv b ⬝ a ⬝ .pow (.inv b) 2)) 2,
+      .pow (.sourceCommutator a (b ⬝ a ⬝ .pow b 5)) 2,
+      .pow (.sourceCommutator a (.pow b 2 ⬝ a ⬝ .pow b 5)) 2 ]
 
 /-- The generator names recorded for `Fi₂₂`. The row's body is sealed, so this is what lets a
 consumer see that it is a two-generator presentation. -/

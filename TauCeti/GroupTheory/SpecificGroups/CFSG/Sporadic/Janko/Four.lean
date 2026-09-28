@@ -116,10 +116,6 @@ private abbrev t : Relator (Fin 3) := .gen 2
 @[inherit_doc Relator.mul]
 local infixl:70 " ⬝ " => Relator.mul
 
-/-- The source's commutator `[r,s] = r⁻¹s⁻¹rs`, represented in Mathlib's convention. -/
-private abbrev sourceComm (r s : Relator (Fin 3)) : Relator (Fin 3) :=
-  .comm (.inv r) (.inv s)
-
 /-- The source's conjugate `r^s = s⁻¹rs`. -/
 private abbrev sourceConj (r s : Relator (Fin 3)) : Relator (Fin 3) :=
   .inv s ⬝ r ⬝ s
@@ -167,13 +163,13 @@ def j4Presentation : GroupPresentation where
     [ .pow x 2,
       .pow y 3,
       .pow (x ⬝ y) 23,
-      .pow (sourceComm x y) 12,
-      .pow (sourceComm x (y ⬝ x ⬝ y)) 5,
+      .pow (.sourceCommutator x y) 12,
+      .pow (.sourceCommutator x (y ⬝ x ⬝ y)) 5,
       sixthWord,
       .pow (x ⬝ y ⬝ .pow (x ⬝ y ⬝ x ⬝ .inv y) 3) 4,
       .pow t 2,
-      sourceComm t x,
-      sourceComm t (y ⬝ x ⬝ y ⬝ .pow (x ⬝ .inv y) 2 ⬝ .pow (x ⬝ y) 3),
+      .sourceCommutator t x,
+      .sourceCommutator t (y ⬝ x ⬝ y ⬝ .pow (x ⬝ .inv y) 2 ⬝ .pow (x ⬝ y) 3),
       .pow (y ⬝ sourceConj t firstConjugator) 3,
       .pow (.pow (y ⬝ x ⬝ y ⬝ x ⬝ y ⬝ x ⬝ y) 3 ⬝ t ⬝
         sourceConj t secondConjugator) 2 ]

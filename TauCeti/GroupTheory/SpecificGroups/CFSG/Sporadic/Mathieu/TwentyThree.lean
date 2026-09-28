@@ -158,10 +158,6 @@ private abbrev b : Relator (Fin 2) := .gen 1
 @[inherit_doc Relator.mul]
 local infixl:70 " ⬝ " => Relator.mul
 
-/-- The source's commutator `[r, s] = r⁻¹ s⁻¹ r s`, which is `⁅r⁻¹, s⁻¹⁆` in Mathlib's
-convention. -/
-private abbrev sourceComm (r s : Relator (Fin 2)) : Relator (Fin 2) := .comm (.inv r) (.inv s)
-
 /-- The syllable `a * b`. -/
 private abbrev ab1 : Relator (Fin 2) := a ⬝ b
 
@@ -205,7 +201,7 @@ def m23Presentation : GroupPresentation where
       .pow b 4,
       .pow ab1 23,
       .pow ab2 6,
-      .pow (sourceComm a b) 6,
+      .pow (.sourceCommutator a b) 6,
       .pow (ab1 ⬝ abNeg1 ⬝ ab2) 4,
       .pow ab1 3 ⬝ abNeg1 ⬝ ab2 ⬝ .pow (ab1 ⬝ abNeg1) 2 ⬝ .pow ab1 3 ⬝ .pow abNeg1 3,
       .pow (ab1 ⬝ ab2 ⬝ ab2) 6,

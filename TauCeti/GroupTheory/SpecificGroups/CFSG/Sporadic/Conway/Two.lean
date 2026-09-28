@@ -157,10 +157,6 @@ private abbrev b : Relator (Fin 2) := .gen 1
 @[inherit_doc Relator.mul]
 local infixl:70 " ⬝ " => Relator.mul
 
-/-- The source's commutator `[r, s] = r⁻¹ s⁻¹ r s`, which is `⁅r⁻¹, s⁻¹⁆` in Mathlib's
-convention. -/
-private abbrev sourceComm (r s : Relator (Fin 2)) : Relator (Fin 2) := .comm (.inv r) (.inv s)
-
 /-- The syllable `a * b`. -/
 private abbrev ab1 : Relator (Fin 2) := a ⬝ b
 
@@ -207,12 +203,12 @@ def co2Presentation : GroupPresentation where
     [ .pow a 2,
       .pow b 5,
       .pow ab2 9,
-      .pow (sourceComm a b) 4,
-      .pow (sourceComm a (.pow b 2)) 4,
-      .pow (sourceComm a (b ⬝ a ⬝ b)) 3,
-      .pow (sourceComm a (b ⬝ ab2 ⬝ ab1)) 2,
-      .pow (sourceComm a (b ⬝ abNeg2)) 3,
-      .pow (sourceComm a (.pow (.inv b) 2 ⬝ ab1 ⬝ abNeg2)) 2,
+      .pow (.sourceCommutator a b) 4,
+      .pow (.sourceCommutator a (.pow b 2)) 4,
+      .pow (.sourceCommutator a (b ⬝ a ⬝ b)) 3,
+      .pow (.sourceCommutator a (b ⬝ ab2 ⬝ ab1)) 2,
+      .pow (.sourceCommutator a (b ⬝ abNeg2)) 3,
+      .pow (.sourceCommutator a (.pow (.inv b) 2 ⬝ ab1 ⬝ abNeg2)) 2,
       .pow (ab1 ⬝ ab2 ⬝ abNeg1 ⬝ abNeg2) 7 ]
 
 /-- The generator names recorded for `Co₂`. The row's body is sealed, so this is what lets a

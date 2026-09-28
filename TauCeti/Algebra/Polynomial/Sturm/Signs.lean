@@ -77,27 +77,25 @@ end Signs
 
 section Polynomials
 
-variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+section Basic
+
+variable {R : Type*} [Semiring R] [LinearOrder R]
 
 /-- The zero-skipping variations of a polynomial list at a point. -/
 noncomputable def signVariationsAt (cs : List (Polynomial R)) (x : R) : ℕ :=
   List.signVariations (cs.map (Polynomial.eval x))
 
-omit [IsStrictOrderedRing R] in
 /-- Variations are computed on the list of evaluations. -/
 theorem signVariationsAt_def (cs : List (Polynomial R)) (x : R) :
     signVariationsAt cs x = List.signVariations (cs.map (Polynomial.eval x)) := (rfl)
 
-omit [IsStrictOrderedRing R] in
 @[simp, grind =]
 theorem signVariationsAt_nil (x : R) : signVariationsAt [] x = 0 := by simp [signVariationsAt_def]
 
-omit [IsStrictOrderedRing R] in
 @[simp, grind =]
 theorem signVariationsAt_singleton (p : Polynomial R) (x : R) : signVariationsAt [p] x = 0 := by
   simp [signVariationsAt_def]
 
-omit [IsStrictOrderedRing R] in
 /-- Prepending an evaluation contributes one variation exactly when its
 sign is opposite to the first nonzero sign of the remaining evaluations. -/
 theorem signVariationsAt_cons (cs : List (Polynomial R)) {p : Polynomial R} {x : R}
@@ -106,6 +104,10 @@ theorem signVariationsAt_cons (cs : List (Polynomial R)) {p : Polynomial R} {x :
         then 1 else 0) + signVariationsAt cs x := by
   rw [signVariationsAt_def, List.map_cons, List.signVariations_cons,
     signVariationsAt_def]
+
+end Basic
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- Multiplying every entry by a polynomial that does not vanish at the point
 preserves the sign variations at that point. -/

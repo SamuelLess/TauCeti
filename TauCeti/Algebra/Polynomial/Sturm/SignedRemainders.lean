@@ -32,7 +32,7 @@ def IsRemainder (p q r : Polynomial R) : Prop :=
 /-- The algebraic relations of a signed remainder chain, including its exact
 termination. Degree descent is needed to construct such a chain, but not to
 verify its signed root-sum identity. -/
-structure Signed (cs : List (Polynomial R)) : Prop where
+structure IsSignedRemainderSeq (cs : List (Polynomial R)) : Prop where
   /-- Every entry is a nonzero polynomial. -/
   nonzero : ∀ p ∈ cs, p ≠ 0
   /-- Successive triples satisfy a positively scaled signed remainder identity. -/
@@ -99,12 +99,12 @@ theorem next_eval_eq_zero {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
 
 end IsRemainder
 
-namespace Signed
+namespace IsSignedRemainderSeq
 
 omit [IsStrictOrderedRing R] in
 /-- A two-entry chain terminates when its second polynomial divides its first. -/
 theorem pair {p q : Polynomial R} (hp : p ≠ 0) (hdvd : q ∣ p) :
-    Signed [p, q] where
+    IsSignedRemainderSeq [p, q] where
   nonzero s hs := by
     have hq : q ≠ 0 := fun h => hp (zero_dvd_iff.mp (h ▸ hdvd))
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hs
@@ -129,8 +129,8 @@ theorem pair {p q : Polynomial R} (hp : p ≠ 0) (hdvd : q ∣ p) :
 omit [IsStrictOrderedRing R] in
 /-- Prepend one signed recurrence to a chain. -/
 theorem cons {p q r : Polynomial R} {cs : List (Polynomial R)}
-    (hp : p ≠ 0) (hrel : IsRemainder p q r) (h : Signed (q :: r :: cs)) :
-    Signed (p :: q :: r :: cs) where
+    (hp : p ≠ 0) (hrel : IsRemainder p q r) (h : IsSignedRemainderSeq (q :: r :: cs)) :
+    IsSignedRemainderSeq (p :: q :: r :: cs) where
   nonzero s hs := by
     rcases List.mem_cons.mp hs with rfl | hs
     · exact hp
@@ -152,8 +152,8 @@ theorem cons {p q r : Polynomial R} {cs : List (Polynomial R)}
       exact h.terminal pre p0 p1 ht
 
 omit [IsStrictOrderedRing R] in
-theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : Signed (p :: cs)) :
-    Signed cs where
+theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : IsSignedRemainderSeq (p :: cs)) :
+    IsSignedRemainderSeq cs where
   nonzero q hq := h.nonzero q (List.mem_cons_of_mem _ hq)
   relation i q0 q1 q2 h0 h1 h2 :=
     h.relation (i + 1) q0 q1 q2 (by simpa using h0) (by simpa using h1) (by simpa using h2)
@@ -161,7 +161,7 @@ theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : Signed (p :: cs)
 
 omit [IsStrictOrderedRing R] in
 /-- The terminal polynomial divides every chain entry. -/
-theorem last_dvd {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
+theorem last_dvd {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs) {d : Polynomial R}
     (hd : cs.getLast? = some d) : ∀ p ∈ cs, d ∣ p := by
   induction cs with
   | nil => simp at hd
@@ -186,12 +186,12 @@ theorem last_dvd {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
       · exact ht s hs
 
 /-- A signed remainder chain with a root-free last entry is regular. -/
-theorem regular {cs : List (Polynomial R)} (h : Signed cs)
-    (hlast : ∀ q, cs.getLast? = some q → ∀ x, q.eval x ≠ 0) : Regular cs := by
+theorem alternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
+    (hlast : ∀ q, cs.getLast? = some q → ∀ x, q.eval x ≠ 0) : IsAlternating cs := by
   induction cs with
   | nil => exact ⟨h.nonzero, hlast, by simp⟩
   | cons p cs ih =>
-    have ht : Regular cs := ih h.tail (fun q hq x => by
+    have ht : IsAlternating cs := ih h.tail (fun q hq x => by
       cases cs with
       | nil => simp at hq
       | cons s cs => exact hlast q (by simpa using hq) x)
@@ -216,10 +216,10 @@ theorem regular {cs : List (Polynomial R)} (h : Signed cs)
           subst q2
           exact (h.relation 0 p q r rfl rfl rfl).alternate hz (ht.second_eval_ne_zero hz)
 
-end Signed
+end IsSignedRemainderSeq
 
 /-- Mathlib's signed remainder sequence satisfies the algebraic chain conditions. -/
-theorem signed_sturmSeq (p q : R[X]) : Signed (sturmSeq p q) := by
+theorem IsSignedRemainderSeq.sturmSeq (p q : R[X]) : IsSignedRemainderSeq (sturmSeq p q) := by
   classical
   induction p, q using sturmSeq.induct
   next q =>
@@ -241,9 +241,9 @@ theorem signed_sturmSeq (p q : R[X]) : Signed (sturmSeq p q) := by
     rw [sturmSeq_cons hp, sturmSeq_cons hq]
     by_cases hr : -p % q = 0
     · rw [hr, sturmSeq_zero_left]
-      exact Signed.pair hp (dvd_neg.mp (EuclideanDomain.mod_eq_zero.mp hr))
+      exact IsSignedRemainderSeq.pair hp (dvd_neg.mp (EuclideanDomain.mod_eq_zero.mp hr))
     · rw [sturmSeq_cons hr]
-      refine Signed.cons hp ?_ ?_
+      refine IsSignedRemainderSeq.cons hp ?_ ?_
       · refine IsRemainder.of_identity 1 1 (p / q) zero_lt_one zero_lt_one ?_
         rw [map_one, one_mul, one_mul, neg_mod, sub_neg_eq_add]
         exact (EuclideanDomain.mod_add_div p q).symm.trans (by ring)
@@ -260,13 +260,13 @@ theorem IsRemainder.cancel {d p q r : Polynomial R} (hd : d ≠ 0)
     _ = u * (d * q) - C b * (d * r) := heq
     _ = d * (u * q - C b * r) := by ring
 
-namespace Signed
+namespace IsSignedRemainderSeq
 
 omit [IsStrictOrderedRing R] in
 /-- Dividing out a nonzero common factor preserves the signed chain conditions:
 if `cs.map (d * ·)` is signed, so is `cs`. -/
 theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
-    (h : Signed (cs.map (d * ·))) : Signed cs where
+    (h : IsSignedRemainderSeq (cs.map (d * ·))) : IsSignedRemainderSeq cs where
   nonzero p hp hp0 := h.nonzero (d * p) (List.mem_map.mpr ⟨p, hp, rfl⟩) (by simp [hp0])
   relation i p q r h0 h1 h2 := IsRemainder.cancel hd (h.relation i (d * p) (d * q) (d * r)
     (by simp [List.getElem?_map, h0]) (by simp [List.getElem?_map, h1])
@@ -276,10 +276,11 @@ theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
 
 /-- Divide every entry by the terminal common factor. The resulting chain is
 regular and ends at `1`, even when the original terminal factor is nonconstant. -/
-theorem exists_regular {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomial R}
+theorem exists_alternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
+    {d : Polynomial R}
     (hd : cs.getLast? = some d) :
     ∃ ds : List (Polynomial R), cs = ds.map (d * ·) ∧
-      ds.getLast? = some 1 ∧ Signed ds ∧ Regular ds := by
+      ds.getLast? = some 1 ∧ IsSignedRemainderSeq ds ∧ IsAlternating ds := by
   have hdm : d ∈ cs := List.mem_of_getLast? hd
   have hd0 : d ≠ 0 := h.nonzero d hdm
   let ds := cs.map (· / d)
@@ -290,13 +291,13 @@ theorem exists_regular {cs : List (Polynomial R)} (h : Signed cs) {d : Polynomia
     exact List.map_congr_left (fun p hp => EuclideanDomain.mul_div_cancel' hd0 (h.last_dvd hd p hp))
   have hlast : ds.getLast? = some 1 := by
     simp [ds, List.getLast?_map, hd, EuclideanDomain.div_self hd0]
-  have hs : Signed ds := cancel hd0 (hmap ▸ h)
-  refine ⟨ds, hmap, hlast, hs, hs.regular ?_⟩
+  have hs : IsSignedRemainderSeq ds := cancel hd0 (hmap ▸ h)
+  refine ⟨ds, hmap, hlast, hs, hs.alternating ?_⟩
   intro q hq x
   rw [hlast] at hq
   cases hq
   simp
 
-end Signed
+end IsSignedRemainderSeq
 
 end TauCeti.Sturm

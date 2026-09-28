@@ -91,6 +91,18 @@ theorem eval_eq_zero {p f q : Polynomial R} (h : IsTarskiSeed p f q) {r : R}
   rw [hq, mul_zero, sign_zero] at hs
   exact sign_eq_zero_iff.mp hs.symm
 
+/-- Mathlib's sequence has a valid query seed, including its singleton case. -/
+theorem sturmSeq (p f : R[X]) :
+    IsTarskiSeed p f ((Polynomial.sturmSeq p (f * p.derivative)).tail.head?.getD 0) := by
+  classical
+  by_cases hp : p = 0
+  · subst p
+    simpa using mul_derivative (0 : R[X]) f
+  rw [sturmSeq_cons hp, List.tail_cons]
+  by_cases hq : f * p.derivative = 0
+  · simpa only [hq, sturmSeq_zero_left, List.head?_nil, Option.getD_none] using mul_derivative p f
+  · simpa only [head?_sturmSeq hq, Option.getD_some] using mul_derivative p f
+
 end IsTarskiSeed
 
 /-- Removing a common factor preserves the query sum: its lost roots have zero query sign. -/
@@ -123,14 +135,25 @@ private theorem IsTarskiSeed.sum_roots_mul {p f q d p0 q0 : R[X]}
     rw [hseed.eval_eq_zero hpr (hsimple r hi.1 hi.2 hpr) hqr, sign_zero]
     rfl
 
+/-- A zero query seed makes the query vanish at every simple root, so its
+sign sum is zero on any finite set of such roots. -/
+theorem IsTarskiSeed.sum_sign_eq_zero {p f : Polynomial R} (hseed : IsTarskiSeed p f 0)
+    (Z : Finset R) (hsimple : ∀ r ∈ Z, p.derivative.eval r ≠ 0)
+    (hZ : ∀ r ∈ Z, p.eval r = 0) :
+    ∑ r ∈ Z, (SignType.sign (f.eval r) : ℤ) = 0 := by
+  apply Finset.sum_eq_zero
+  intro r hr
+  rw [hseed.eval_eq_zero (hZ r hr) (hsimple r hr) (by simp), sign_zero]
+  rfl
+
 variable [IsRealClosed R]
 
 /-- **Sturm–Tarski**, for a positively scaled signed remainder chain. The last
 entry may be a nonconstant common factor. Roots at which the query vanishes
 contribute zero, and roots of interior entries at the endpoints are allowed.
 The head polynomial is required to have simple roots only inside the interval. -/
-theorem sum_sign {p f q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Signed (p :: q :: cs)) (hseed : IsTarskiSeed p f q)
+private theorem sum_sign_cons {p f q : Polynomial R} {cs : List (Polynomial R)}
+    (h : IsSignedRemainderSeq (p :: q :: cs)) (hseed : IsTarskiSeed p f q)
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
@@ -141,7 +164,7 @@ theorem sum_sign {p f q : Polynomial R} {cs : List (Polynomial R)}
   -- then restore roots of the common factor, whose query contributions vanish.
   obtain ⟨d, hd⟩ : ∃ d, (p :: q :: cs).getLast? = some d :=
     ⟨_, List.getLast?_eq_some_getLast (by simp)⟩
-  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_regular hd
+  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_alternating hd
   cases ds with
   | nil => simp at hmap
   | cons p0 ds =>
@@ -184,7 +207,7 @@ theorem sum_sign {p f q : Polynomial R} {cs : List (Polynomial R)}
           signVariationsAt (p :: q :: cs) x = signVariationsAt (p0 :: q0 :: ds) x := by
         rw [hmap]
         exact signVariationsAt_map_mul _ hx
-      rw [hV a ha0.1, hV b hb0.1, hreg.sum hsimple0 hab ha0.2 hb0.2]
+      rw [hV a ha0.1, hV b hb0.1, hreg.sum_sign hsimple0 hab ha0.2 hb0.2]
       have hp0 : p0 ≠ 0 := hreg.nonzero p0 (by simp)
       calc
         _ = ∑ r ∈ p0.roots.toFinset.filter (fun r => a < r ∧ r < b),
@@ -195,28 +218,37 @@ theorem sum_sign {p f q : Polynomial R} {cs : List (Polynomial R)}
             ((mem_roots hp0).mp (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))]
         _ = _ := hseed.sum_roots_mul hp hq (h.nonzero p (by simp)) hp0 hsimple
 
+/-- **Sturm–Tarski** for any nonempty signed remainder chain, including a singleton.
+The seed is the second entry, or zero when the chain has only its head.
+Only roots inside the queried interval must be simple. -/
+theorem sum_sign {p f : Polynomial R} {cs : List (Polynomial R)}
+    (h : IsSignedRemainderSeq (p :: cs)) (hseed : IsTarskiSeed p f (cs.head?.getD 0))
+    {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
+    (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
+    (signVariationsAt (p :: cs) a : ℤ) - signVariationsAt (p :: cs) b =
+      ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
+        (SignType.sign (f.eval r) : ℤ) := by
+  classical
+  cases cs with
+  | nil =>
+    simpa using (hseed.sum_sign_eq_zero _
+      (fun r hr => hsimple r (Finset.mem_filter.mp hr).2.1 (Finset.mem_filter.mp hr).2.2
+        (isRoot_of_mem_roots (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1)))
+      (fun r hr => isRoot_of_mem_roots
+        (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))).symm
+  | cons q cs => exact sum_sign_cons h hseed hsimple hab ha hb
+
 /-- Squarefreeness supplies the simple-root hypothesis in Sturm–Tarski. -/
-theorem sum_sign_squarefree {p f q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Signed (p :: q :: cs)) (hseed : IsTarskiSeed p f q) (hp : Squarefree p)
+theorem sum_sign_squarefree {p f : Polynomial R} {cs : List (Polynomial R)}
+    (h : IsSignedRemainderSeq (p :: cs)) (hseed : IsTarskiSeed p f (cs.head?.getD 0))
+    (hp : Squarefree p)
     {a b : R} (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
-    (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
+    (signVariationsAt (p :: cs) a : ℤ) - signVariationsAt (p :: cs) b =
       ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
         (SignType.sign (f.eval r) : ℤ) := by
   apply sum_sign h hseed ?_ hab ha hb
   intro r _ _ hr
   exact hp.eval_derivative_ne_zero hr
-
-omit [IsRealClosed R] in
-/-- A zero query seed makes the query vanish at every simple root, so its
-sign sum is zero on any finite set of such roots. -/
-theorem IsTarskiSeed.sum_sign_eq_zero {p f : Polynomial R} (hseed : IsTarskiSeed p f 0)
-    (Z : Finset R) (hsimple : ∀ r ∈ Z, p.derivative.eval r ≠ 0)
-    (hZ : ∀ r ∈ Z, p.eval r = 0) :
-    ∑ r ∈ Z, (SignType.sign (f.eval r) : ℤ) = 0 := by
-  apply Finset.sum_eq_zero
-  intro r hr
-  rw [hseed.eval_eq_zero (hZ r hr) (hsimple r hr) (by simp), sign_zero]
-  rfl
 
 /-- Sturm–Tarski directly for Mathlib's concrete signed remainder sequence. -/
 theorem sum_sign_sturmSeq (p f : R[X])
@@ -228,21 +260,13 @@ theorem sum_sign_sturmSeq (p f : R[X])
         (SignType.sign (f.eval r) : ℤ) := by
   classical
   have hp : p ≠ 0 := fun h => ha (by simp [h])
-  have hseed := IsTarskiSeed.mul_derivative p f
-  by_cases hq : f * p.derivative = 0
-  · rw [hq] at hseed ⊢
-    rw [sturmSeq_zero_right, ite_eq_right hp]
-    simpa using (hseed.sum_sign_eq_zero _
-      (fun r hr => hsimple r (Finset.mem_filter.mp hr).2.1 (Finset.mem_filter.mp hr).2.2
-        (isRoot_of_mem_roots (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1)))
-      (fun r hr => isRoot_of_mem_roots
-        (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))).symm
-  · have hsigned := signed_sturmSeq p (f * p.derivative)
-    rw [sturmSeq_cons hp, sturmSeq_cons hq] at hsigned ⊢
-    exact sum_sign hsigned hseed hsimple hab ha hb
+  have hsigned := IsSignedRemainderSeq.sturmSeq p (f * p.derivative)
+  have hseed := IsTarskiSeed.sturmSeq p f
+  rw [sturmSeq_cons hp] at hsigned hseed ⊢
+  exact sum_sign hsigned hseed hsimple hab ha hb
 
 /-- Classical Sturm root counting for a polynomial with simple roots. -/
-theorem count_roots (p : R[X])
+theorem card_roots (p : R[X])
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (sturmSeq p p.derivative) a : ℤ) -

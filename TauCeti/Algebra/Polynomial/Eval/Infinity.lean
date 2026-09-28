@@ -6,7 +6,7 @@ Authors: Kim Morrison
 module
 
 public import Mathlib.Algebra.Polynomial.Eval.Degree
-public import Mathlib.Basic.Sign.Basic
+public import Mathlib.Basic.Sign.Defs
 import Mathlib.Algebra.Order.Ring.Abs
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Order.BigOperators.Group.Finset

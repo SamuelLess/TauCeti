@@ -9,7 +9,7 @@ public import TauCeti.Algebra.Polynomial.Sturm.Signs
 
 /-! # Local variation jumps for regular signed polynomial chains
 
-`Regular` records the sign conditions of a chain whose last entry has no roots.
+`IsAlternating` records the sign conditions of a chain whose last entry has no roots.
 Interior zeros preserve sign variations. Crossing a simple root of the first
 entry changes the variation by the sign of its derivative times the second entry.
 These local identities supply the signed root sum in `Sturm.Sum`.
@@ -26,7 +26,7 @@ variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 /-- A regular signed chain has opposite neighbors at every interior zero and
 no real zero in its last entry. These are the properties of a signed remainder
 chain after its common polynomial factor has been removed. -/
-structure Regular (cs : List (Polynomial R)) : Prop where
+structure IsAlternating (cs : List (Polynomial R)) : Prop where
   /-- Every entry is a nonzero polynomial. -/
   nonzero : ∀ q ∈ cs, q ≠ 0
   /-- The terminal polynomial has no root in the ordered field. -/
@@ -36,11 +36,11 @@ structure Regular (cs : List (Polynomial R)) : Prop where
     cs[i + 1]? = some q1 → cs[i + 2]? = some q2 → ∀ r, q1.eval r = 0 →
     q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0
 
-namespace Regular
+namespace IsAlternating
 
 omit [IsStrictOrderedRing R] in
-theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : Regular (p :: cs)) :
-    Regular cs where
+theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : IsAlternating (p :: cs)) :
+    IsAlternating cs where
   nonzero q hq := h.nonzero q (List.mem_cons_of_mem _ hq)
   last q hq r := by
     cases cs with
@@ -52,7 +52,7 @@ theorem tail {p : Polynomial R} {cs : List (Polynomial R)} (h : Regular (p :: cs
 
 /-- A regular chain has the same variations at two points if no entry vanishes
 at the first, the head does not vanish at the second, and all surviving signs agree. -/
-theorem variations_eq {cs : List (Polynomial R)} (h : Regular cs) (a r : R)
+theorem signVariationsAt_eq {cs : List (Polynomial R)} (h : IsAlternating cs) (a r : R)
     (hne : ∀ q ∈ cs, q.eval a ≠ 0)
     (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
     (hsame : ∀ q ∈ cs, q.eval r ≠ 0 →
@@ -64,7 +64,7 @@ theorem variations_eq {cs : List (Polynomial R)} (h : Regular cs) (a r : R)
 omit [IsStrictOrderedRing R] in
 /-- Consecutive entries of a regular chain cannot both vanish. -/
 theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Regular (p :: q :: cs)) {r : R} (hr : p.eval r = 0) : q.eval r ≠ 0 := by
+    (h : IsAlternating (p :: q :: cs)) {r : R} (hr : p.eval r = 0) : q.eval r ≠ 0 := by
   cases cs with
   | nil => exact h.last q (by simp) r
   | cons s cs =>
@@ -75,7 +75,7 @@ theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
 variable [IsRealClosed R]
 
 /-- Crossing isolated interior zeros does not change variations. -/
-theorem eq_at_nonroot {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
+theorem signVariationsAt_nonroot {cs : List (Polynomial R)} (h : IsAlternating cs) {a r b : R}
     (har : a < r) (hrb : r < b)
     (hfront : ∀ q, cs.head? = some q → q.eval r ≠ 0)
     (hz : ∀ q ∈ cs, ∀ x ∈ Set.Icc a b, x ≠ r → q.eval x ≠ 0) :
@@ -83,12 +83,12 @@ theorem eq_at_nonroot {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
       signVariationsAt cs r = signVariationsAt cs b := by
   have hab := (har.trans hrb).le
   constructor
-  · refine h.variations_eq a r
+  · refine h.signVariationsAt_eq a r
       (fun q hq => hz q hq a ⟨le_rfl, hab⟩ har.ne) hfront ?_
     intro q hq hqr
     exact (q.signs_at_nonroot har hrb hqr (hz q hq)).1
   · symm
-    refine h.variations_eq b r
+    refine h.signVariationsAt_eq b r
       (fun q hq => hz q hq b ⟨hab, le_rfl⟩ hrb.ne.symm) hfront ?_
     intro q hq hqr
     exact (q.signs_at_nonroot har hrb hqr (hz q hq)).2
@@ -96,14 +96,14 @@ theorem eq_at_nonroot {cs : List (Polynomial R)} (h : Regular cs) {a r b : R}
 /-- At a simple root of the head, the variation jump is the sign of the
 product of the head derivative and the second entry. -/
 theorem root_jump {p q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Regular (p :: q :: cs)) {a r b : R} (har : a < r) (hrb : r < b)
+    (h : IsAlternating (p :: q :: cs)) {a r b : R} (har : a < r) (hrb : r < b)
     (hr : p.eval r = 0) (hd : p.derivative.eval r ≠ 0)
     (hz : ∀ s ∈ p :: q :: cs, ∀ x ∈ Set.Icc a b, x ≠ r → s.eval x ≠ 0) :
     (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
       (SignType.sign (p.derivative.eval r * q.eval r) : ℤ) := by
   have hq := h.second_eval_ne_zero hr
   have hab := (har.trans hrb).le
-  have ht := h.tail.eq_at_nonroot har hrb
+  have ht := h.tail.signVariationsAt_nonroot har hrb
     (fun s hs => by cases hs; simpa using hq)
     (fun s hs => hz s (List.mem_cons_of_mem _ hs))
   have hpz := hz p (by simp)
@@ -130,6 +130,6 @@ theorem root_jump {p q : Polynomial R} {cs : List (Polynomial R)}
   omega
 
 
-end Regular
+end IsAlternating
 
 end TauCeti.Sturm

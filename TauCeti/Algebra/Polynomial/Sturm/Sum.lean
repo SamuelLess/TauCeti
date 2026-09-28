@@ -8,7 +8,7 @@ module
 public import TauCeti.Algebra.Polynomial.Sturm.Local
 public import TauCeti.Data.Finset.Jumps
 
-/-! # Signed root sums for regular Sturm chains
+/-! # IsSignedRemainderSeq root sums for regular Sturm chains
 
 The local jumps of a regular chain telescope to a signed sum over the roots
 of its first polynomial in an open interval. Only those roots must be simple;
@@ -24,27 +24,27 @@ open Polynomial
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- The finite union of the roots of all entries of a polynomial list. -/
-noncomputable def rootsFinset (cs : List (Polynomial R)) : Finset R :=
+private noncomputable def rootsFinset (cs : List (Polynomial R)) : Finset R :=
   cs.toFinset.biUnion (fun q => q.roots.toFinset)
 
 omit [IsStrictOrderedRing R] in
-theorem mem_rootsFinset {cs : List (Polynomial R)} (hne : ∀ q ∈ cs, q ≠ 0) {x : R} :
+private theorem mem_rootsFinset {cs : List (Polynomial R)} (hne : ∀ q ∈ cs, q ≠ 0) {x : R} :
     x ∈ rootsFinset cs ↔ ∃ q ∈ cs, q.eval x = 0 := by
   simp only [rootsFinset, Finset.mem_biUnion, List.mem_toFinset, Multiset.mem_toFinset]
   exact exists_congr fun q => and_congr_right fun hq => Polynomial.mem_roots (hne q hq)
 
-namespace Regular
+namespace IsAlternating
 
 variable [IsRealClosed R]
 
 /-- Moving right from a nonroot of the head changes no variations until the
 next chain zero, even if an interior entry vanishes at the endpoint. -/
-theorem eq_right {cs : List (Polynomial R)} (h : Regular cs) {a c : R} (hac : a < c)
+private theorem eq_right {cs : List (Polynomial R)} (h : IsAlternating cs) {a c : R} (hac : a < c)
     (ha : ∀ p, cs.head? = some p → p.eval a ≠ 0)
     (hz : ∀ x, a < x → x ≤ c → x ∉ rootsFinset cs) :
     signVariationsAt cs a = signVariationsAt cs c := by
   symm
-  refine h.variations_eq c a ?_ ha ?_
+  refine h.signVariationsAt_eq c a ?_ ha ?_
   · intro q hq hqc
     exact hz c hac le_rfl ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqc⟩)
   · intro q hq hqa
@@ -56,11 +56,11 @@ theorem eq_right {cs : List (Polynomial R)} (h : Regular cs) {a c : R} (hac : a 
     · exact hz x hax hx.2 ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqx⟩)
 
 /-- The corresponding left-endpoint identity. -/
-theorem eq_left {cs : List (Polynomial R)} (h : Regular cs) {c b : R} (hcb : c < b)
+private theorem eq_left {cs : List (Polynomial R)} (h : IsAlternating cs) {c b : R} (hcb : c < b)
     (hb : ∀ p, cs.head? = some p → p.eval b ≠ 0)
     (hz : ∀ x, c ≤ x → x < b → x ∉ rootsFinset cs) :
     signVariationsAt cs c = signVariationsAt cs b := by
-  refine h.variations_eq c b ?_ hb ?_
+  refine h.signVariationsAt_eq c b ?_ hb ?_
   · intro q hq hqc
     exact hz c le_rfl hcb ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqc⟩)
   · intro q hq hqb
@@ -71,8 +71,8 @@ theorem eq_left {cs : List (Polynomial R)} (h : Regular cs) {c b : R} (hcb : c <
     · exact hz x hx.1 hxb ((mem_rootsFinset h.nonzero).mpr ⟨q, hq, hqx⟩)
 
 /-- The signed variation formula with endpoints away from every chain zero. -/
-private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Regular (p :: q :: cs))
+private theorem sum_sign_of_nonzero {p q : Polynomial R} {cs : List (Polynomial R)}
+    (h : IsAlternating (p :: q :: cs))
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : a ∉ rootsFinset (p :: q :: cs))
     (hb : b ∉ rootsFinset (p :: q :: cs)) :
@@ -97,7 +97,7 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
       by_cases hr : p.eval r = 0
       · simpa [w, hr] using h.root_jump har hrb hr
           (hsimple r (haa.trans_lt har) (hrb.trans_le hbb) hr) hz
-      · have hsame := h.eq_at_nonroot har hrb (fun s hs => by cases hs; exact hr) hz
+      · have hsame := h.signVariationsAt_nonroot har hrb (fun s hs => by cases hs; exact hr) hz
         simp only [w, chain, ite_eq_right hr, hsame.1.trans hsame.2, sub_self]) hab ha hb
   rw [hsum]
   let A := p.roots.toFinset.filter (fun r => a < r ∧ r < b)
@@ -127,8 +127,8 @@ private theorem sum_of_regular_endpoints {p q : Polynomial R} {cs : List (Polyno
 
 /-- The signed Sturm formula on an interval whose endpoints are not roots of
 the head polynomial. Interior entries may vanish at either endpoint. -/
-theorem sum {p q : Polynomial R} {cs : List (Polynomial R)}
-    (h : Regular (p :: q :: cs))
+theorem sum_sign {p q : Polynomial R} {cs : List (Polynomial R)}
+    (h : IsAlternating (p :: q :: cs))
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
     (signVariationsAt (p :: q :: cs) a : ℤ) - signVariationsAt (p :: q :: cs) b =
@@ -162,9 +162,9 @@ theorem sum {p q : Polynomial R} {cs : List (Polynomial R)}
       exact ⟨hr, hac.trans hcr, hrd.trans hdb⟩
   rw [hfilters]
   rw [haV, ← hbV]
-  exact h.sum_of_regular_endpoints
+  exact h.sum_sign_of_nonzero
     (fun r hcr hrd => hsimple r (hac.trans hcr) (hrd.trans hdb)) hcd hcZ hdZ
 
-end Regular
+end IsAlternating
 
 end TauCeti.Sturm

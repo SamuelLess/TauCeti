@@ -23,6 +23,9 @@ current state instead:
   - the Zulip post is created if missing only while the PR is open (`create_if_open`), which is
     what the opened/reopened events did, without letting later churn on a closed PR resurrect it.
 
+Any failure (a label or Zulip reconciliation, a rate limit, missing Zulip credentials) makes the
+run fail, so it is not counted as the watermark and the next run covers its window again.
+
 Requires authenticated gh, TAUCETI_REVIEW_RUNNER (for labels), and ZULIP_EMAIL/ZULIP_API_KEY.
 """
 
@@ -32,7 +35,6 @@ import argparse
 import datetime as dt
 import json
 import os
-import subprocess
 import sys
 
 import core
@@ -40,9 +42,9 @@ import labels
 import zulip
 
 REPO = core.REPO
-# A generous cap on one pass. More than this means a long outage; the hourly reconcile-all sweep in
-# pr-labels.yml catches up whatever is left.
-MAX_PRS = 150
+# Runs finish within GitHub's six-hour job limit, so a run that completed after `since` was created
+# no earlier than this before it.
+RUN_LOOKBACK = dt.timedelta(hours=7)
 
 
 def log(msg):
@@ -57,27 +59,27 @@ def lines(path: str, jq: str, paginate: bool = False) -> list[str]:
     return [l for l in core.gh_api(path, jq=jq, paginate=paginate).splitlines() if l]
 
 
-def updated_prs(since: str) -> list[int]:
-    """PRs whose updated_at is at or after `since`, newest first. The list is sorted by update time,
-    so paging stops at the first page that reaches back past `since`."""
-    out = []
+def updated_prs(since: str) -> tuple[list[int], set[int]]:
+    """PRs whose updated_at is at or after `since`, newest first, and those of them created at or
+    after `since`. The list is sorted by update time, so paging stops at the first page that reaches
+    back past `since`."""
+    out, opened = [], set()
     page = 1
-    while page <= 10:
+    while True:
         rows = lines(f"/repos/{REPO}/pulls?state=all&sort=updated&direction=desc&per_page=100&page={page}",
-                     jq='.[] | "\\(.number) \\(.updated_at)"')
-        if not rows:
-            break
+                     jq='.[] | "\\(.number) \\(.updated_at) \\(.created_at)"')
         done = False
         for row in rows:
-            number, updated = row.split()
+            number, updated, created = row.split()
             if updated < since:
                 done = True
                 break
             out.append(int(number))
+            if created >= since:
+                opened.add(int(number))
         if done or len(rows) < 100:
-            break
+            return out, opened
         page += 1
-    return out
 
 
 def open_heads() -> dict[str, int]:
@@ -92,7 +94,7 @@ def open_heads() -> dict[str, int]:
 
 def workflow_runs(workflow: str, query: str) -> list[dict]:
     rows = lines(f"/repos/{REPO}/actions/workflows/{workflow}/runs?{query}&per_page=100",
-                 jq='.workflow_runs[] | {head_sha, status, created_at, updated_at} | tojson')
+                 jq='.workflow_runs[] | {head_sha, status, created_at, updated_at} | tojson', paginate=True)
     return [json.loads(r) for r in rows]
 
 
@@ -100,13 +102,15 @@ def touched_by_runs(since: str, heads: dict[str, int]) -> tuple[set[int], set[st
     """PRs whose pr-build or Review runs moved since `since`, and the heads with a pr-build run
     still queued or in progress (whose CI therefore reads as running)."""
     prs, running = set(), set()
-    for workflow in ("pr-build.yml", "review.yml"):
+    lookback = iso(dt.datetime.fromisoformat(since.replace("Z", "+00:00")) - RUN_LOOKBACK)
+    # pr-build runs for PRs are pull_request_target runs; Review is started by workflow_run and
+    # issue_comment events, so its runs are listed whatever their event.
+    for workflow, event in (("pr-build.yml", "&event=pull_request_target"), ("review.yml", "")):
         for status in ("queued", "in_progress", "completed"):
-            try:
-                runs = workflow_runs(workflow, f"status={status}&event=pull_request_target"
-                                               + (f"&created=>={since}" if status == "completed" else ""))
-            except (RuntimeError, subprocess.CalledProcessError):
-                continue  # Review is disabled at times; a missing workflow is not fatal
+            # Completed runs by completion (updated_at), not creation: a long build created before
+            # `since` may finish after it.
+            query = f"status={status}{event}" + (f"&created=>={lookback}" if status == "completed" else "")
+            runs = workflow_runs(workflow, query)
             for r in runs:
                 if status == "completed" and r["updated_at"] < since:
                     continue
@@ -129,29 +133,27 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     heads = open_heads()
-    by_update = updated_prs(args.since)
+    by_update, opened = updated_prs(args.since)
     by_runs, running = touched_by_runs(args.since, heads)
     ordered = list(dict.fromkeys(args.pr + by_update + sorted(by_runs)))
-    if len(ordered) > MAX_PRS:
-        log(f"{len(ordered)} PRs touched since {args.since}; reconciling the newest {MAX_PRS}, "
-            "leaving the rest to the hourly sweep")
-        ordered = ordered[:MAX_PRS]
     log(f"since {args.since}: {len(ordered)} PRs to reconcile "
         f"({len(by_update)} updated, {len(by_runs)} with build or review runs, {len(args.pr)} named)")
 
     if args.dry_run:
+        log(f"opened in the window: {sorted(opened)}")
         for number in ordered:
             log(f"would reconcile #{number}" + (" (CI running)" if sha_of_running(heads, running, number) else ""))
         return 0
 
-    z = None
     email = (os.environ.get("ZULIP_EMAIL") or "").strip()
     api_key = (os.environ.get("ZULIP_API_KEY") or "").strip()
-    if email and api_key:
-        z = zulip.Zulip(email, api_key, (os.environ.get("ZULIP_SITE") or "https://leanprover.zulipchat.com").strip())
+    if not (email and api_key):
+        return zulip.fail_config("ZULIP_EMAIL / ZULIP_API_KEY not set (no bot configured)")
+    z = zulip.Zulip(email, api_key, (os.environ.get("ZULIP_SITE") or "https://leanprover.zulipchat.com").strip())
+    try:
         bot_id = z.my_user_id()
-    else:
-        log("::warning::ZULIP_EMAIL / ZULIP_API_KEY not set; reconciling labels only")
+    except zulip.ConfigError as exc:
+        return zulip.fail_config(str(exc))
 
     sha_of = {n: s for s, n in heads.items()}
     label_failures, zulip_failures = [], []
@@ -164,17 +166,23 @@ def main(argv=None):
         except Exception as exc:  # one PR's failure must not starve the rest
             label_failures.append(number)
             log(f"PR #{number}: label reconciliation failed: {exc}")
-        if z is not None:
-            ci = "running" if sha_of.get(number) in running else None
-            try:
-                zulip.reconcile(z, str(number), False, ci, bot_id=bot_id, create_if_open=True)
-            except zulip.ConfigError as exc:
-                return zulip.fail_config(str(exc))
-            except Exception as exc:  # cosmetic, as in zulip.py's own reconcile
-                zulip_failures.append(number)
-                log(f"PR #{number}: Zulip reconciliation failed (non-fatal): {exc}")
+        ci = "running" if sha_of.get(number) in running else None
+        try:
+            # A PR opened in this window gets its post unconditionally, as the `opened` event did;
+            # any other gets one only while open, so churn on a closed PR never creates a late post.
+            zulip.reconcile(z, str(number), number in opened, ci, bot_id=bot_id, create_if_open=True)
+        except zulip.ConfigError as exc:
+            return zulip.fail_config(str(exc))
+        except core.RateLimited as exc:
+            log(f"stopping: {exc}")
+            return 1
+        except Exception as exc:
+            zulip_failures.append(number)
+            log(f"PR #{number}: Zulip reconciliation failed: {exc}")
     log(f"done: {len(ordered)} PRs; label failures {label_failures}; Zulip failures {zulip_failures}")
-    return 1 if label_failures else 0
+    # Any failure fails the run, so it does not become the next run's watermark and its window is
+    # covered again.
+    return 1 if label_failures or zulip_failures else 0
 
 
 if __name__ == "__main__":

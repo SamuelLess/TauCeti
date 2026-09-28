@@ -21,7 +21,7 @@ packagesDir = "../.lake/packages"
 [[require]]
 name = "doc-gen4"
 git = "https://github.com/kim-em/doc-gen4"
-rev = "8723a6ea67855a485fca150f3fa94da0757f3074"
+rev = "d25c28427ff9693ea711584a7037da22cdeee1c8"
 
 [[require]]
 name = "TauCeti"

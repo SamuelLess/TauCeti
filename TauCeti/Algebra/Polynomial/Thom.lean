@@ -229,11 +229,6 @@ theorem ordConnected_preimage_thomEncoding (p : R[X]) (hrolle : PolynomialRolle 
   rw [derivativeSign_iterate_derivative, derivativeSign_iterate_derivative]
   exact (thomEncoding_eq_iff p a b).mp (ha.trans hb.symm) (j + k) (by omega)
 
-private theorem eq_zero_of_sign (p : R[X]) {a b : R} (hab : a < b)
-    (h : ∀ x ∈ Ioo a b, sign (p.eval x) = 0) : p = 0 :=
-  p.eq_zero_of_infinite_isRoot
-    ((Ioo_infinite hab).mono fun x hx => sign_eq_zero_iff.mp (h x hx))
-
 /-- Roots with equal signs of every positive-order derivative are equal.
 The polynomial need not be squarefree. -/
 theorem eq_of_derivativeSign_eq (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0) {a b : R}
@@ -246,8 +241,10 @@ theorem eq_of_derivativeSign_eq (p : R[X]) (hrolle : PolynomialRolle R) (hp : p 
   have no_lt {u v : R} (hu : p.eval u = 0)
       (hσ : ∀ k, derivativeSign p u k = derivativeSign p v k) (huv : u < v) : False := by
     apply hp
-    apply eq_zero_of_sign p huv
+    apply p.eq_zero_of_infinite_isRoot
+    apply (Ioo_infinite huv).mono
     intro x hx
+    apply sign_eq_zero_iff.mp
     simpa only [hu, sign_zero] using sign_between p hrolle ⟨hx.1.le, hx.2.le⟩ hσ
   rcases lt_trichotomy a b with hab | hab | hba
   · exact (no_lt ha h hab).elim
@@ -280,8 +277,10 @@ private theorem sign_order_aux (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     exact Or.inr ⟨sign_neg hn,
       lt_of_le_of_ne (sign.monotone (hm ⟨le_rfl, hab.le⟩ ⟨hab.le, le_rfl⟩ hab).le) hne.symm⟩
   · have hp0 : p.derivative = 0 := by
-      apply eq_zero_of_sign p.derivative hab
+      apply p.derivative.eq_zero_of_infinite_isRoot
+      apply (Ioo_infinite hab).mono
       intro x hx
+      apply sign_eq_zero_iff.mp
       simpa only [hz, sign_zero] using hd x ⟨hx.1.le, hx.2.le⟩
     have hc := eq_C_of_derivative_eq_zero hp0
     exact (hne (by rw [hc]; simp)).elim

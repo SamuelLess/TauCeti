@@ -21,6 +21,10 @@ is the constant-sign result used by polynomial Rolle.
 Irreducible factors have degree at most two; quadratic factors have constant
 nonzero sign, so a sign change forces a root of a linear factor.
 
+The degree bound generalizes Mathlib's `Irreducible.natDegree_le_two` from
+`Mathlib.Analysis.Complex.Polynomial.Basic`, following its root, minimal polynomial,
+and finite-dimension proof over an arbitrary real closed field.
+
 ## References
 
 Salma Kuhlmann,
@@ -106,13 +110,17 @@ theorem _root_.Polynomial.eval_mul_pos_of_no_roots (p : R[X]) {a b : R} (hab : a
       (fun h => irreducible_quadratic_eval_mul_pos hq h a b)
     simpa only [eval_mul, mul_mul_mul_comm] using mul_pos hqpos (ih hp')
 
+/-- A nonpositive product of endpoint values gives a root on the closed interval. -/
+theorem _root_.Polynomial.exists_root_Icc_of_mul_nonpos (p : R[X]) {a b : R} (hab : a ≤ b)
+    (h : p.eval a * p.eval b ≤ 0) : ∃ c ∈ Set.Icc a b, p.eval c = 0 := by
+  by_contra! hroot
+  exact not_le_of_gt (eval_mul_pos_of_no_roots p hab hroot) h
+
 /-- Weakly opposite endpoint signs give a root on the closed interval. -/
 theorem _root_.Polynomial.exists_root_Icc (p : R[X]) {a b : R} (hab : a ≤ b)
     (ha : p.eval a ≤ 0) (hb : 0 ≤ p.eval b) :
-    ∃ c ∈ Set.Icc a b, p.eval c = 0 := by
-  by_contra! h
-  exact not_le_of_gt (eval_mul_pos_of_no_roots p hab h)
-    (mul_nonpos_of_nonpos_of_nonneg ha hb)
+    ∃ c ∈ Set.Icc a b, p.eval c = 0 :=
+  exists_root_Icc_of_mul_nonpos p hab (mul_nonpos_of_nonpos_of_nonneg ha hb)
 
 /-- Polynomial IVT over an arbitrary real closed ordered field, including
 non-Archimedean fields. -/

@@ -52,7 +52,7 @@ variable {K L : Type*} [Field K] [NeZero (2 : K)]
 
 /-- A square-closed field of characteristic different from two has no quadratic extension. -/
 theorem finrank_ne_two_of_forall_isSquare [Field L] [Algebra K L]
-    [FiniteDimensional K L] (hsq : ∀ x : K, IsSquare x) : finrank K L ≠ 2 := by
+    (hsq : ∀ x : K, IsSquare x) : finrank K L ≠ 2 := by
   intro htwo
   have : Algebra.IsQuadraticExtension K L := ⟨htwo⟩
   obtain ⟨a, b, ⟨e⟩⟩ :=

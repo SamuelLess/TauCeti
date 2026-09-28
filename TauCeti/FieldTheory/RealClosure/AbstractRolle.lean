@@ -115,6 +115,11 @@ theorem rolle_realClosed : Rolle R := by
     (by simp) (by simp [heq])
   exact ⟨c, hc, by simpa using hd⟩
 
+/-- Equal endpoint values give an interior derivative root over a real closed field. -/
+theorem _root_.Polynomial.exists_derivative_root_of_eval_eq (p : R[X]) {a b : R}
+    (hab : a < b) (h : p.eval a = p.eval b) : ∃ c ∈ Ioo a b, p.derivative.eval c = 0 :=
+  rolle_realClosed.exists_deriv_eq_zero p hab h
+
 /-- Polynomial mean value over an ordered real closed field. -/
 theorem _root_.Polynomial.exists_eval_sub_eq_derivative_eval_mul (p : R[X]) {a b : R}
     (hab : a < b) :

@@ -11,7 +11,8 @@ public import TauCeti.Data.List.SignVariations
 /-! # Sign bookkeeping for abstract Sturm chains
 
 Zero-skipping variations are unchanged when an interior zero has neighbors of
-opposite signs. The arguments apply to arbitrary ordered fields.
+opposite signs. This bookkeeping works over a strictly ordered ring. The closing
+constancy lemma uses the intermediate value property of a real closed field.
 -/
 
 public section
@@ -138,7 +139,7 @@ private structure EvalSigns (a r : R) (cs : List (Polynomial R)) : Prop where
   last : ∀ q, cs.getLast? = some q → q.eval r ≠ 0
   alternate : ∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 →
     cs[i + 1]? = some q1 → cs[i + 2]? = some q2 → q1.eval r = 0 →
-    q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0
+    q0.eval r * q2.eval r < 0
   same : ∀ q ∈ cs, q.eval r ≠ 0 → SignType.sign (q.eval a) = SignType.sign (q.eval r)
 
 omit [IsStrictOrderedRing R] in
@@ -170,7 +171,9 @@ private theorem signRelation_eval (a r : R) :
       · cases rest with
         | nil => exact absurd hq1 (h.last q1 (by simp))
         | cons q2 rest' =>
-            obtain ⟨hn0, hn2, hoppR⟩ := h.alternate 0 q0 q1 q2 rfl rfl rfl hq1
+            have hoppR := h.alternate 0 q0 q1 q2 rfl rfl rfl hq1
+            have hn0 := left_ne_zero_of_mul hoppR.ne
+            have hn2 := right_ne_zero_of_mul hoppR.ne
             have hsx := h.same q0 (by simp) hn0
             have hsy := h.same q2 (by simp) hn2
             have hoppA : SignType.sign (q0.eval a) * SignType.sign (q2.eval a) = -1 := by
@@ -201,7 +204,7 @@ theorem signVariationsAt_eq_of_alternate (cs : List (Polynomial R)) (a r : R)
     (hlast : ∀ q, cs.getLast? = some q → q.eval r ≠ 0)
     (halt : ∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 →
       cs[i + 1]? = some q1 → cs[i + 2]? = some q2 → q1.eval r = 0 →
-      q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0)
+      q0.eval r * q2.eval r < 0)
     (hsame : ∀ q ∈ cs, q.eval r ≠ 0 →
       SignType.sign (q.eval a) = SignType.sign (q.eval r)) :
     signVariationsAt cs a = signVariationsAt cs r :=

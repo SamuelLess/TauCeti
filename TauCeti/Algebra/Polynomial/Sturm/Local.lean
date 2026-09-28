@@ -36,7 +36,7 @@ structure IsAlternating (cs : List (Polynomial R)) : Prop where
   /-- At an interior zero the adjacent values are nonzero and have opposite signs. -/
   alternate : ∀ (i : ℕ) (q0 q1 q2 : Polynomial R), cs[i]? = some q0 →
     cs[i + 1]? = some q1 → cs[i + 2]? = some q2 → ∀ r, q1.eval r = 0 →
-    q0.eval r ≠ 0 ∧ q2.eval r ≠ 0 ∧ q0.eval r * q2.eval r < 0
+    q0.eval r * q2.eval r < 0
 
 namespace IsAlternating
 
@@ -71,7 +71,7 @@ theorem second_eval_ne_zero {p q : Polynomial R} {cs : List (Polynomial R)}
   | nil => exact h.last q (by simp) r
   | cons s cs =>
     intro hq
-    exact (h.alternate 0 p q s rfl rfl rfl r hq).1 hr
+    exact left_ne_zero_of_mul (h.alternate 0 p q s rfl rfl rfl r hq).ne hr
 
 end IsAlternating
 

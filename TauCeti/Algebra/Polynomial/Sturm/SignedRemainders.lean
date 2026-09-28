@@ -68,15 +68,10 @@ theorem dvd {p q r d : Polynomial R} (h : IsRemainder p q r) (hq : d ∣ q) (hr 
 provided the right neighbor does not vanish. -/
 theorem alternate {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
     (hq : q.eval x = 0) (hr : r.eval x ≠ 0) :
-    p.eval x ≠ 0 ∧ r.eval x ≠ 0 ∧ p.eval x * r.eval x < 0 := by
+    p.eval x * r.eval x < 0 := by
   obtain ⟨a, b, u, ha, hb, heq⟩ := h.exists_identity
   have he := congrArg (Polynomial.eval x) heq
   simp only [eval_mul, eval_C, eval_sub, hq, mul_zero, zero_sub] at he
-  have hp : p.eval x ≠ 0 := by
-    intro hp
-    rw [hp, mul_zero, eq_neg_iff_add_eq_zero, zero_add] at he
-    exact (mul_ne_zero hb.ne' hr) he
-  refine ⟨hp, hr, ?_⟩
   rcases lt_or_gt_of_ne hr with hr | hr
   · have hp' : 0 < p.eval x := (mul_pos_iff_of_pos_left ha).mp (by
       rw [he]; exact neg_pos.mpr (mul_neg_of_pos_of_neg hb hr))

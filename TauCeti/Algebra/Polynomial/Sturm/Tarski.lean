@@ -265,7 +265,8 @@ theorem sum_sign_sturmSeq (p f : R[X])
   rw [sturmSeq_cons hp] at hsigned hseed ⊢
   exact sum_sign hsigned hseed hsimple hab ha hb
 
-/-- Classical Sturm root counting for a polynomial with simple roots. -/
+/-- Classical Sturm counting of distinct roots in `(a, b)`. Only roots inside
+that interval must be simple; neither endpoint may be a root. -/
 theorem card_roots (p : R[X])
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
     (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :

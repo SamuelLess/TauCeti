@@ -427,53 +427,43 @@ This is exposed because it appears in the *types* of the numbered data attached 
   | .G2 _ | .reeG2 _ => .G2
   | .suzuki _ => .B 2
 
-@[simp] theorem dynkinType_A (n : ℕ) (q : PrimePower) : (A n q).dynkinType = .A n :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_A (n : ℕ) (q : PrimePower) : (A n q).dynkinType = .A n := rfl
 
 @[simp] theorem dynkinType_twistedA (n : ℕ) (q : PrimePower) :
-    (twistedA n q).dynkinType = .A n := by simp only [dynkinType]
+    (twistedA n q).dynkinType = .A n := rfl
 
-@[simp] theorem dynkinType_B (n : ℕ) (q : PrimePower) : (B n q).dynkinType = .B n :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_B (n : ℕ) (q : PrimePower) : (B n q).dynkinType = .B n := rfl
 
-@[simp] theorem dynkinType_C (n : ℕ) (q : PrimePower) : (C n q).dynkinType = .C n :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_C (n : ℕ) (q : PrimePower) : (C n q).dynkinType = .C n := rfl
 
-@[simp] theorem dynkinType_D (n : ℕ) (q : PrimePower) : (D n q).dynkinType = .D n :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_D (n : ℕ) (q : PrimePower) : (D n q).dynkinType = .D n := rfl
 
 @[simp] theorem dynkinType_twistedD (n : ℕ) (q : PrimePower) :
-    (twistedD n q).dynkinType = .D n := by simp only [dynkinType]
+    (twistedD n q).dynkinType = .D n := rfl
 
 @[simp] theorem dynkinType_trialityD4 (q : PrimePower) :
-    (trialityD4 q).dynkinType = .D 4 := by simp only [dynkinType]
+    (trialityD4 q).dynkinType = .D 4 := rfl
 
-@[simp] theorem dynkinType_E6 (q : PrimePower) : (E6 q).dynkinType = .E6 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_E6 (q : PrimePower) : (E6 q).dynkinType = .E6 := rfl
 
 @[simp] theorem dynkinType_twistedE6 (q : PrimePower) :
-    (twistedE6 q).dynkinType = .E6 := by simp only [dynkinType]
+    (twistedE6 q).dynkinType = .E6 := rfl
 
-@[simp] theorem dynkinType_E7 (q : PrimePower) : (E7 q).dynkinType = .E7 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_E7 (q : PrimePower) : (E7 q).dynkinType = .E7 := rfl
 
-@[simp] theorem dynkinType_E8 (q : PrimePower) : (E8 q).dynkinType = .E8 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_E8 (q : PrimePower) : (E8 q).dynkinType = .E8 := rfl
 
-@[simp] theorem dynkinType_F4 (q : PrimePower) : (F4 q).dynkinType = .F4 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_F4 (q : PrimePower) : (F4 q).dynkinType = .F4 := rfl
 
-@[simp] theorem dynkinType_reeF4 (m : ℕ) : (reeF4 m).dynkinType = .F4 := by simp only [dynkinType]
+@[simp] theorem dynkinType_reeF4 (m : ℕ) : (reeF4 m).dynkinType = .F4 := rfl
 
-@[simp] theorem dynkinType_tits : tits.dynkinType = .F4 := by simp only [dynkinType]
+@[simp] theorem dynkinType_tits : tits.dynkinType = .F4 := rfl
 
-@[simp] theorem dynkinType_G2 (q : PrimePower) : (G2 q).dynkinType = .G2 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_G2 (q : PrimePower) : (G2 q).dynkinType = .G2 := rfl
 
-@[simp] theorem dynkinType_reeG2 (m : ℕ) : (reeG2 m).dynkinType = .G2 := by simp only [dynkinType]
+@[simp] theorem dynkinType_reeG2 (m : ℕ) : (reeG2 m).dynkinType = .G2 := rfl
 
-@[simp] theorem dynkinType_suzuki (m : ℕ) : (suzuki m).dynkinType = .B 2 :=
-  by simp only [dynkinType]
+@[simp] theorem dynkinType_suzuki (m : ℕ) : (suzuki m).dynkinType = .B 2 := rfl
 
 /-- The Lie-type families whose underlying Dynkin diagram has unimodular Cartan matrix, namely
 `E₈`, `F₄` and `G₂`.

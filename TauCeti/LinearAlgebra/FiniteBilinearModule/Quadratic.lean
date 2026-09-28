@@ -7,9 +7,7 @@ module
 
 public import TauCeti.LinearAlgebra.FiniteBilinearModule.Orthogonal.Quotient
 public import Mathlib.Algebra.Group.Subgroup.Map
-public import Mathlib.LinearAlgebra.Isomorphisms
 public import TauCeti.LinearAlgebra.QuadraticForm.Radical
-public import Mathlib.LinearAlgebra.QuadraticForm.Prod
 
 /-!
 # Finite quadratic modules

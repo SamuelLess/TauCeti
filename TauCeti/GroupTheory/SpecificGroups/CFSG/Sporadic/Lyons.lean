@@ -27,7 +27,7 @@ fifty-three-relator presentation on `a`, `b`, `c`, `d`, `e`, `z` that Section 14
 describes and enumerates.
 
 The source writes `x^y` for `y⁻¹xy`, which is `TauCeti.Relator.conj`, and `(x, y)` for
-`x⁻¹y⁻¹xy`, transcribed as `TauCeti.Relator.comm (.inv x) (.inv y)`; a displayed equation `r = s`
+`x⁻¹y⁻¹xy`, which is `TauCeti.Relator.sourceCommutator`; a displayed equation `r = s`
 is compiled as the relator `r s⁻¹`, which is `TauCeti.Relator.div`. Each auxiliary word is a
 named abbreviation, so that every relator is displayed in the source's own shape.
 
@@ -105,9 +105,6 @@ private abbrev genE : Relator (Fin 6) := .gen 4
 /-- The source's generator `z`, the element outside the subgroup `G₂(5)`. -/
 private abbrev genZ : Relator (Fin 6) := .gen 5
 
-/-- The source's commutator `(r, s) = r⁻¹ s⁻¹ r s`. -/
-abbrev sourceCommutator {α : Type*} (r s : Relator α) : Relator α := .comm (.inv r) (.inv s)
-
 @[inherit_doc Relator.mul]
 local infixl:70 " ⬝ " => Relator.mul
 
@@ -129,7 +126,7 @@ private def cFour : Relator (Fin 6) :=
 
 /-- The source's `c₅ = (c₁, c₂)` (14.10). -/
 private def cFive : Relator (Fin 6) :=
-  sourceCommutator cOne cTwo
+  Relator.sourceCommutator cOne cTwo
 
 /-- The source's `a₁ = a` (14.45). -/
 private def aOne : Relator (Fin 6) :=
@@ -264,8 +261,8 @@ private def relatorsOne : List (Relator (Fin 6)) :=
   [ .pow genA 8,
     .pow genB 5,
     .pow (genA ⬝ genB) 4,
-    sourceCommutator (.pow genA 2) genB,
-    .pow (sourceCommutator genA genB) 3 ]
+    Relator.sourceCommutator (.pow genA 2) genB,
+    .pow (Relator.sourceCommutator genA genB) 3 ]
 
 /-- The source's relators (14.11) to (14.28), the relations among `c₁`, ..., `c₅` and their
 conjugates by `a` and `b`. Together with (14.1) to (14.5) they present `5^(1+4) : GL₂(5)` on `a`,
@@ -273,15 +270,15 @@ conjugates by `a` and `b`. Together with (14.1) to (14.5) they present `5^(1+4) 
 private def relatorsTwo : List (Relator (Fin 6)) :=
   [ .pow cOne 5,
     .pow cFive 5,
-    sourceCommutator cOne cFive,
-    sourceCommutator cTwo cFive,
-    sourceCommutator cThree cFive,
-    sourceCommutator cFour cFive,
-    Relator.div (sourceCommutator cOne cThree) (.pow (.inv cFive) 2),
-    Relator.div (sourceCommutator cOne cFour) (.pow cFive 2),
-    Relator.div (sourceCommutator cTwo cThree) (.inv cFive),
-    sourceCommutator cTwo cFour,
-    Relator.div (sourceCommutator cThree cFour) (.inv cFive),
+    Relator.sourceCommutator cOne cFive,
+    Relator.sourceCommutator cTwo cFive,
+    Relator.sourceCommutator cThree cFive,
+    Relator.sourceCommutator cFour cFive,
+    Relator.div (Relator.sourceCommutator cOne cThree) (.pow (.inv cFive) 2),
+    Relator.div (Relator.sourceCommutator cOne cFour) (.pow cFive 2),
+    Relator.div (Relator.sourceCommutator cTwo cThree) (.inv cFive),
+    Relator.sourceCommutator cTwo cFour,
+    Relator.div (Relator.sourceCommutator cThree cFour) (.inv cFive),
     Relator.div (Relator.conj cTwo genA) (.pow (.inv cOne) 2),
     Relator.div (Relator.conj cThree genA) (.pow (.inv cThree) 2 ⬝ cOne ⬝ cFour),
     Relator.div (Relator.conj cFour genA) (cOne ⬝ .inv cTwo ⬝ .inv cThree ⬝ cFour ⬝ cOne ⬝
@@ -294,8 +291,8 @@ private def relatorsTwo : List (Relator (Fin 6)) :=
 /-- The source's relators (14.29) to (14.44), defining `e` and `d`. Together with (14.1) to (14.28)
 they present `G₂(5)` on `a`, `b`, `c`, `d`, `e`. -/
 private def relatorsThree : List (Relator (Fin 6)) :=
-  [ Relator.div genE (.pow (.inv genB) 2 ⬝ sourceCommutator genA cOne ⬝ .inv genA ⬝ cOne ⬝ genA ⬝
-    genD ⬝ cOne ⬝ genB ⬝ genA ⬝ .inv genB ⬝ genD ⬝ cOne ⬝ genD),
+  [ Relator.div genE (.pow (.inv genB) 2 ⬝ Relator.sourceCommutator genA cOne ⬝ .inv genA ⬝ cOne ⬝
+    genA ⬝ genD ⬝ cOne ⬝ genB ⬝ genA ⬝ .inv genB ⬝ genD ⬝ cOne ⬝ genD),
     .pow genE 2,
     Relator.div (Relator.conj cOne genE) (genB ⬝ cThree ⬝ genB ⬝ .inv cOne),
     Relator.div (Relator.conj cThree genE) (.pow genB 2 ⬝ genA ⬝ cTwo ⬝ .inv cOne ⬝ .inv cFour ⬝
@@ -311,7 +308,7 @@ private def relatorsThree : List (Relator (Fin 6)) :=
     Relator.div genD (genA ⬝ .pow genB 2 ⬝ .inv genA ⬝ .inv genB ⬝ .inv cOne ⬝ .inv cFour ⬝
     .inv cFive ⬝ genA ⬝ genE ⬝ genA ⬝ genE ⬝ genA ⬝ .inv cTwo ⬝ genB ⬝ genE),
     Relator.div (.pow genD 2) (.pow genA 4),
-    sourceCommutator genB genD,
+    Relator.sourceCommutator genB genD,
     Relator.div (Relator.conj genA genD) (.pow genA 3),
     .pow (genD ⬝ cFive) 5,
     genD ⬝ cFive ⬝ genD ⬝ .inv cFive ⬝ genD ⬝ cFive ⬝ .pow (.inv genA) 2 ]
@@ -455,7 +452,7 @@ theorem presentation_transcribed :
       let cTwo := Relator.conj c a
       let cThree := Relator.conj c b
       let cFour := Relator.conj c (.inv b)
-      let cFive := sourceCommutator cOne cTwo
+      let cFive := Relator.sourceCommutator cOne cTwo
       let aOne := a
       let aTwo := Relator.conj a (.inv b)
       let aThree := Relator.conj a (.pow (.inv b) 2)
@@ -507,19 +504,19 @@ theorem presentation_transcribed :
       [ .pow a 8,
         .pow b 5,
         .pow (a ⬝ b) 4,
-        sourceCommutator (.pow a 2) b,
-        .pow (sourceCommutator a b) 3,
+        Relator.sourceCommutator (.pow a 2) b,
+        .pow (Relator.sourceCommutator a b) 3,
         .pow cOne 5,
         .pow cFive 5,
-        sourceCommutator cOne cFive,
-        sourceCommutator cTwo cFive,
-        sourceCommutator cThree cFive,
-        sourceCommutator cFour cFive,
-        Relator.div (sourceCommutator cOne cThree) (.pow (.inv cFive) 2),
-        Relator.div (sourceCommutator cOne cFour) (.pow cFive 2),
-        Relator.div (sourceCommutator cTwo cThree) (.inv cFive),
-        sourceCommutator cTwo cFour,
-        Relator.div (sourceCommutator cThree cFour) (.inv cFive),
+        Relator.sourceCommutator cOne cFive,
+        Relator.sourceCommutator cTwo cFive,
+        Relator.sourceCommutator cThree cFive,
+        Relator.sourceCommutator cFour cFive,
+        Relator.div (Relator.sourceCommutator cOne cThree) (.pow (.inv cFive) 2),
+        Relator.div (Relator.sourceCommutator cOne cFour) (.pow cFive 2),
+        Relator.div (Relator.sourceCommutator cTwo cThree) (.inv cFive),
+        Relator.sourceCommutator cTwo cFour,
+        Relator.div (Relator.sourceCommutator cThree cFour) (.inv cFive),
         Relator.div (Relator.conj cTwo a) (.pow (.inv cOne) 2),
         Relator.div (Relator.conj cThree a) (.pow (.inv cThree) 2 ⬝ cOne ⬝ cFour),
         Relator.div (Relator.conj cFour a) (cOne ⬝ .inv cTwo ⬝ .inv cThree ⬝ cFour ⬝ cOne ⬝
@@ -528,8 +525,8 @@ theorem presentation_transcribed :
         Relator.div (Relator.conj cTwo b) (cTwo ⬝ cThree ⬝ .inv cFour ⬝ .inv cOne ⬝ .inv cFour),
         Relator.div (Relator.conj cThree b) (.pow cOne 2 ⬝ cFour ⬝ .pow (.inv cThree) 2),
         Relator.div (Relator.conj cFive b) cFive,
-        Relator.div e (.pow (.inv b) 2 ⬝ sourceCommutator a cOne ⬝ .inv a ⬝ cOne ⬝ a ⬝ d ⬝ cOne ⬝
-        b ⬝ a ⬝ .inv b ⬝ d ⬝ cOne ⬝ d),
+        Relator.div e (.pow (.inv b) 2 ⬝ Relator.sourceCommutator a cOne ⬝ .inv a ⬝ cOne ⬝ a ⬝ d ⬝
+        cOne ⬝ b ⬝ a ⬝ .inv b ⬝ d ⬝ cOne ⬝ d),
         .pow e 2,
         Relator.div (Relator.conj cOne e) (b ⬝ cThree ⬝ b ⬝ .inv cOne),
         Relator.div (Relator.conj cThree e) (.pow b 2 ⬝ a ⬝ cTwo ⬝ .inv cOne ⬝ .inv cFour ⬝
@@ -545,7 +542,7 @@ theorem presentation_transcribed :
         Relator.div d (a ⬝ .pow b 2 ⬝ .inv a ⬝ .inv b ⬝ .inv cOne ⬝ .inv cFour ⬝ .inv cFive ⬝ a ⬝
         e ⬝ a ⬝ e ⬝ a ⬝ .inv cTwo ⬝ b ⬝ e),
         Relator.div (.pow d 2) (.pow a 4),
-        sourceCommutator b d,
+        Relator.sourceCommutator b d,
         Relator.div (Relator.conj a d) (.pow a 3),
         .pow (d ⬝ cFive) 5,
         d ⬝ cFive ⬝ d ⬝ .inv cFive ⬝ d ⬝ cFive ⬝ .pow (.inv a) 2,
@@ -576,7 +573,7 @@ theorem map_length_relators_presentation :
         5, 40, 18, 22, 22, 22, 24, 24, 20, 12, 20, 7, 15, 19, 26, 18, 16, 18,
         18, 2, 9, 16, 13, 18, 22, 13, 22, 22, 28, 6, 4, 6, 45, 29,
         13, 13, 12, 12, 21, 6, 10, 14, 4, 20, 50, 46, 83, 43] := by
-  simp only [GroupPresentation.relators_def, presentation_transcribed, sourceCommutator,
+  simp only [GroupPresentation.relators_def, presentation_transcribed, Relator.sourceCommutator,
     Relator.conj, Relator.div, List.map_cons, List.map_nil, Relator.toWord_gen, Relator.toWord_inv,
     Relator.toWord_mul, Relator.toWord_pow, Relator.toWord_comm]
   decide
@@ -594,7 +591,7 @@ theorem map_length_reduce_relators_presentation :
         5, 40, 16, 20, 22, 22, 24, 24, 20, 12, 20, 7, 13, 19, 24, 18, 12, 18,
         18, 2, 7, 14, 11, 18, 18, 11, 18, 22, 26, 6, 4, 6, 45, 27,
         13, 13, 12, 12, 21, 6, 10, 14, 4, 20, 50, 46, 83, 43] := by
-  simp only [GroupPresentation.relators_def, presentation_transcribed, sourceCommutator,
+  simp only [GroupPresentation.relators_def, presentation_transcribed, Relator.sourceCommutator,
     Relator.conj, Relator.div, List.map_cons, List.map_nil, Relator.toWord_gen, Relator.toWord_inv,
     Relator.toWord_mul, Relator.toWord_pow, Relator.toWord_comm]
   decide

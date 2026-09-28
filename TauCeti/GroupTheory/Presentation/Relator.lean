@@ -286,6 +286,11 @@ theorem toWord_div {α : Type*} (r s : Relator α) :
     (r.div s).toWord = r.toWord ++ FreeGroup.invRev s.toWord := by
   rw [div, toWord_mul, toWord_inv]
 
+/-- The commutator `(r, s) = r⁻¹ s⁻¹ r s` of the presentation literature: Mathlib's bracket
+`⁅r, s⁆ = r s r⁻¹ s⁻¹`, carried by `Relator.comm`, applied to the two inverses.
+`TauCeti.Relator.toFreeGroup_comm_inv_inv` computes what it denotes in the free group. -/
+abbrev sourceCommutator {α : Type*} (r s : Relator α) : Relator α := .comm (.inv r) (.inv s)
+
 /-- **The commutator convention of the presentation literature.** Sources that write
 `[r, s] = r⁻¹ s⁻¹ r s`, rather than Mathlib's `⁅r, s⁆ = r s r⁻¹ s⁻¹` carried by `Relator.comm`, are
 transcribed by applying `Relator.comm` to the two inverses; this computes what that denotes.

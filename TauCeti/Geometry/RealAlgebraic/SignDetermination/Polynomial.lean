@@ -17,8 +17,9 @@ the sign sum of a product as a moment of these counts. `fullInverse_mulVec_signS
 the full moment system over the rationals.
 
 For injective columns covering every point of the finite set, `mulVec_signCount`
-is the restricted moment identity, `eq_signCount` recovers counts using a left
-inverse, and `signCount_solution_pos_iff` characterizes realizability by positivity.
+is the restricted moment identity. Given a left inverse of that matrix,
+`eq_signCount` recovers the counts and `signCount_solution_pos_iff` characterizes
+realizability by positivity.
 
 The multiplicative moment identities use a compatibly ordered commutative ring.
 For root sign determination,
@@ -106,8 +107,9 @@ theorem eq_signCount {K : Type*} [CommRing K] {J C I : Type*}
       (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j)
       A hA proposed hsolve
 
-/-- For injective candidate columns covering every sample point, positive entries
-of a solved polynomial moment system are exactly its realizable sign conditions. -/
+/-- Given a left inverse of the moment matrix and injective candidate columns
+covering every sample point, positive entries of a solved polynomial moment system
+are exactly its realizable sign conditions. -/
 theorem signCount_solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
     [IsOrderedRing K] [Nontrivial K] {J C I : Type*}
     [Fintype J] [Fintype C] [DecidableEq C] [Fintype I]

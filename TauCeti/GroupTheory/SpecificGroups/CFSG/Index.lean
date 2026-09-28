@@ -1007,14 +1007,14 @@ namespace TypeCLieIndex
 open LieTypeIndex (inStandardRange_iff valid_iff)
 
 /-- Introduce a valid type-`C` index. -/
-abbrev ofC (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.C rank q).Valid) :
+abbrev of (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.C rank q).Valid) :
     TypeCLieIndex :=
   ⟨⟨.C rank q, hvalid⟩, trivial⟩
 
-/-- Every type-C index is an introduction form `ofC rank q hvalid`. -/
-theorem exists_eq_ofC (d : TypeCLieIndex) :
+/-- Every type-C index is an introduction form `of rank q hvalid`. -/
+theorem exists_eq_of (d : TypeCLieIndex) :
     ∃ (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.C rank q).Valid),
-      d = ofC rank q hvalid := by
+      d = of rank q hvalid := by
   obtain ⟨⟨d, hvalid⟩, hC⟩ := d
   revert hvalid hC
   cases d
@@ -1023,23 +1023,23 @@ theorem exists_eq_ofC (d : TypeCLieIndex) :
 
 /-- **The Cartan matrix of the diagram a validated type-`C` index names**, entry by entry: it is
 the type-`C` Cartan matrix at the index's rank. This is the projection of the introduction form
-`TauCeti.TypeCLieIndex.ofC` through `TauCeti.DynkinType.cartanMatrix_C`, stated on entries rather
+`TauCeti.TypeCLieIndex.of` through `TauCeti.DynkinType.cartanMatrix_C`, stated on entries rather
 than on matrices because the rank occurs in the index types of the two nodes. -/
 theorem dynkinType_cartanMatrix_apply (d : TypeCLieIndex) (i j : Fin d.1.rank) :
     d.1.dynkinType.cartanMatrix i j = CartanMatrix.C d.1.rank i j := by
-  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_ofC
+  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_of
   exact congrFun₂ (DynkinType.cartanMatrix_C rank) i j
 
 /-- The rank of a validated type-`C` index is at least three. -/
 theorem three_le_rank (d : TypeCLieIndex) : 3 ≤ d.1.rank := by
-  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_ofC
+  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_of
   simpa only [ValidLieTypeIndex.rank, ValidLieTypeIndex.dynkinType,
     LieTypeIndex.dynkinType_C, DynkinType.rank_C] using
       ((inStandardRange_iff _).mp ((valid_iff _).mp hvalid).1).1
 
 /-- A validated type-`C` index has characteristic different from two. -/
 theorem characteristic_ne_two (d : TypeCLieIndex) : d.1.characteristic ≠ 2 := by
-  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_ofC
+  obtain ⟨rank, q, hvalid, rfl⟩ := d.exists_eq_of
   simpa only [ValidLieTypeIndex.characteristic, LieTypeIndex.characteristic_C] using
     ((inStandardRange_iff _).mp ((valid_iff _).mp hvalid).1).2
 
@@ -1270,16 +1270,16 @@ end TypeDDiagramLieIndex
 namespace TypeDLieIndex
 
 /-- Introduce a valid untwisted type-`D` index. -/
-abbrev ofD (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.D rank q).Valid) :
+abbrev of (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.D rank q).Valid) :
     TypeDLieIndex :=
   ⟨⟨.D rank q, hvalid⟩, (LieTypeIndex.isTypeD_iff _).mpr trivial⟩
 
-/-- Every untwisted type-`D` index is an introduction form `ofD rank q hvalid`. This is the
-eliminator matching `ofD`, so a consumer never repeats the case split over the other
+/-- Every untwisted type-`D` index is an introduction form `of rank q hvalid`. This is the
+eliminator matching `of`, so a consumer never repeats the case split over the other
 constructors. -/
-theorem exists_eq_ofD (d : TypeDLieIndex) :
+theorem exists_eq_of (d : TypeDLieIndex) :
     ∃ (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.D rank q).Valid),
-      d = ofD rank q hvalid := by
+      d = of rank q hvalid := by
   obtain ⟨⟨d, hvalid⟩, hd⟩ := d
   revert hvalid hd
   cases d
@@ -1295,14 +1295,14 @@ end TypeDLieIndex
 namespace TypeTwistedDLieIndex
 
 /-- Introduce a valid graph-twisted type-`D` index. -/
-abbrev ofTwistedD (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.twistedD rank q).Valid) :
+abbrev of (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.twistedD rank q).Valid) :
     TypeTwistedDLieIndex :=
   ⟨⟨.twistedD rank q, hvalid⟩, (LieTypeIndex.isTypeTwistedD_iff _).mpr trivial⟩
 
-/-- Every graph-twisted type-`D` index is an introduction form `ofTwistedD rank q hvalid`. -/
-theorem exists_eq_ofTwistedD (d : TypeTwistedDLieIndex) :
+/-- Every graph-twisted type-`D` index is an introduction form `of rank q hvalid`. -/
+theorem exists_eq_of (d : TypeTwistedDLieIndex) :
     ∃ (rank : ℕ) (q : PrimePower) (hvalid : (LieTypeIndex.twistedD rank q).Valid),
-      d = ofTwistedD rank q hvalid := by
+      d = of rank q hvalid := by
   obtain ⟨⟨d, hvalid⟩, hd⟩ := d
   revert hvalid hd
   cases d

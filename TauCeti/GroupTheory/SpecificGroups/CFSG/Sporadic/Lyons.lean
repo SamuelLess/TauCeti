@@ -86,22 +86,22 @@ public section
 namespace TauCeti.Sporadic.Lyons
 
 /-- The source's generator `a`, of order eight. -/
-abbrev genA : Relator (Fin 6) := .gen 0
+private abbrev genA : Relator (Fin 6) := .gen 0
 
 /-- The source's generator `b`, of order five. -/
-abbrev genB : Relator (Fin 6) := .gen 1
+private abbrev genB : Relator (Fin 6) := .gen 1
 
 /-- The source's generator `c`, of order five. -/
-abbrev genC : Relator (Fin 6) := .gen 2
+private abbrev genC : Relator (Fin 6) := .gen 2
 
 /-- The source's generator `d`. -/
-abbrev genD : Relator (Fin 6) := .gen 3
+private abbrev genD : Relator (Fin 6) := .gen 3
 
 /-- The source's generator `e`, an involution defined by relation (14.29). -/
-abbrev genE : Relator (Fin 6) := .gen 4
+private abbrev genE : Relator (Fin 6) := .gen 4
 
 /-- The source's generator `z`, the element outside the subgroup `G₂(5)`. -/
-abbrev genZ : Relator (Fin 6) := .gen 5
+private abbrev genZ : Relator (Fin 6) := .gen 5
 
 /-- The source's commutator `(r, s) = r⁻¹ s⁻¹ r s`. -/
 abbrev sourceCommutator {α : Type*} (r s : Relator α) : Relator α := .comm (.inv r) (.inv s)

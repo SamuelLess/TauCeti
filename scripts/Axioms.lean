@@ -109,15 +109,16 @@ violation messages, **already rendered to `String`**.
 The strings must be materialized here, inside the environment callback: declaration and
 axiom `Name`s loaded from `.olean`s live in a memory-mapped region that is unmapped once
 `withImportModules` returns, so formatting them afterwards is a use-after-free. -/
-def audit : CoreM (Nat × Array String) := do
+def audit (only : Option (Std.HashSet Name)) : CoreM (Nat × Array String) := do
   let env ← getEnv
   let modNames := env.allImportedModuleNames
-  -- Candidate declarations: those defined in a `TauCeti` module.
+  let wanted (m : Name) : Bool := inAuditedLib m && (only.map (·.contains m)).getD true
+  -- Candidate declarations: those defined in a `TauCeti` module (in the scope, if one is given).
   let candidates : Array Name := env.constants.fold (init := #[]) fun acc declName _ =>
     match env.getModuleIdxFor? declName with
     | some idx =>
       match modNames[idx.toNat]? with
-      | some m => if inAuditedLib m then acc.push declName else acc
+      | some m => if wanted m then acc.push declName else acc
       | none => acc
     | none => acc
   -- One shared-cache pass over all candidates: near-linear in the reachable closure, vs the old
@@ -135,10 +136,29 @@ def audit : CoreM (Nat × Array String) := do
 
 -- Return the exit code (rather than `IO.Process.exit`) so the Lean runtime tears the
 -- imported environment down in order; an abrupt `exit()` can segfault during teardown.
+/-- The optional audit scope: `AXIOMS_ONLY_MODULES` names a file listing module names, one per line
+(pr-build.yml passes the changed modules of an ordinary PR). Unset or empty means the whole library.
+
+Auditing only a PR's changed modules is sound because the library on `main` passed the full audit
+(every push to `main` and every merge-queue build runs it unscoped): a declaration's axioms can only
+change if it, or something it depends on, changed, and a disallowed axiom introduced by the change
+is reached from a declaration in a changed module. Lake-pin bumps, which change what everything
+depends on, and any change the module list cannot name are audited in full by the caller. -/
+def scope : IO (Option (Std.HashSet Name)) := do
+  match (← IO.getEnv "AXIOMS_ONLY_MODULES") with
+  | none | some "" => return none
+  | some path =>
+    let text ← IO.FS.readFile path
+    return some (Std.HashSet.ofList (((text.splitOn "\n").map (·.trimAscii.toString)).filter (· ≠ "")
+      |>.map String.toName))
+
 def main : IO UInt32 := do
   let modules ← auditedModules
-  let (audited, messages) ← withImportedEnv modules audit
-  if audited == 0 then
+  let only ← scope
+  if let some s := only then
+    IO.println s!"axioms: auditing the {s.size} changed module(s) only (AXIOMS_ONLY_MODULES)"
+  let (audited, messages) ← withImportedEnv modules (audit only)
+  if audited == 0 && only.isNone then
     -- Governance tooling must fail loudly if it audited nothing (e.g. miswired import).
     IO.eprintln s!"axioms: audited 0 declarations in {auditedRoot}: the audit is miswired."
     return 1

@@ -40,7 +40,7 @@ public section
 open Polynomial SignType
 open scoped Matrix
 
-open Function (occCount occCount_def occCount_eq_card_filter occCount_pos)
+open Function (occCount occCount_eq_card_filter)
 
 namespace Finset
 
@@ -74,9 +74,8 @@ theorem signCount_empty {J : Type*}
     (Q : J → R[X]) (σ : J → SignType) : signCount ∅ Q σ = 0 := by
   simp [signCount_eq_card_filter]
 
-open scoped Classical in
 /-- The sign conditions partition the original finite set of points. -/
-theorem sum_signCount {J : Type*} [Fintype J]
+theorem sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) : ∑ σ, signCount Z Q σ = Z.card := by
   classical
   simpa only [signCount_eq_occCount, Nat.card_eq_fintype_card, Fintype.card_coe] using
@@ -218,9 +217,8 @@ theorem signCount_solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
   rw [eq_signCount Z Q columns rows hinj cover A hA proposed hsolve]
   simp only [Nat.cast_pos, signCount_pos]
 
-open scoped Classical in
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
-theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J]
+theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
@@ -228,9 +226,8 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J]
   simpa only [signCount_eq_occCount] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
-open scoped Classical in
 /-- The integer BKR moment identity on a finite set of sample points. -/
-theorem signSum_eq_sum_signCount {J : Type*} [Fintype J]
+theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
     signSum Z (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
@@ -239,9 +236,8 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J]
     Function.injective_id (fun x _ => ⟨_, rfl⟩)) ()
   simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
 
-open scoped Classical in
 /-- The recovered sign pattern is positive exactly when it is realized. -/
-theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J]
+theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
       ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by

@@ -13,7 +13,8 @@ import Mathlib.Data.Nat.Cast.Order.Ring
 
 For a finite family of observations, injective candidate columns which cover
 all observations satisfy the weighted moment equations. A left inverse then
-recovers the exact occurrence counts. Coverage is an independent hypothesis.
+recovers the occurrence counts cast into the coefficient semiring.
+Coverage is an independent hypothesis.
 -/
 
 public section

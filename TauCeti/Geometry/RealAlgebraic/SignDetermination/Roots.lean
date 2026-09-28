@@ -14,7 +14,8 @@ public import Mathlib.Algebra.Polynomial.Roots
 For nonzero `p`, these are precisely its zeros in the coefficient ring.
 For `p = 0`, the query is defined to be zero; it does not describe the infinite zero set.
 `tarskiQuery_eq_sum_signCount` is the BKR matrix identity at polynomial roots;
-`fullInverse_mulVec_tarskiQuery` recovers every root sign multiplicity from these queries.
+`fullInverse_mulVec_tarskiQuery` recovers the number of distinct roots
+realizing each sign condition.
 The zero and unit laws reduce queries to zero or a distinct-root count, while
 `tarskiQuery_eq_card_sub_card` expresses a query as a difference of sign counts.
 The proofs use finite sign determination without Sturm theory.
@@ -24,8 +25,6 @@ public section
 
 open SignType Finset TauCeti.SignDetermination
 open scoped Matrix
-
-open Function (occCount occCount_def occCount_eq_card_filter occCount_pos)
 
 namespace Polynomial
 
@@ -61,18 +60,16 @@ theorem tarskiQuery_one (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
 
-open scoped Classical in
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
-theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J]
+theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     (p : R[X]) (Q : J → R[X]) (e : J → ℕ) :
     tarskiQuery p (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) *
         (signCount p.roots.toFinset Q σ : ℤ) := by
   rw [tarskiQuery_eq_signSum, signSum_eq_sum_signCount]
 
-open scoped Classical in
-/-- Inverting the full matrix of Tarski queries recovers the root sign multiplicities. -/
-theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J]
+/-- Inverting the full matrix of Tarski queries counts distinct roots for each sign condition. -/
+theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]
     (p : R[X]) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (tarskiQuery p (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount p.roots.toFinset Q σ : ℚ) := by

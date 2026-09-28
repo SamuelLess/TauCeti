@@ -20,8 +20,10 @@ the two agree. In particular, when `A ⊔ B = ⊤` the trace of `f` is the trace
 
 This is the linear algebra behind the trace reduction in Popa and Zagier's proof of the
 Eichler–Selberg trace formula: their modified Hecke operator exchanges `A = ker(1 + S)` and
-`B = ker(1 + U + U²)` in the space `V_w` of homogeneous polynomials of degree `w`, with
-`A + B = V_w`, so its trace on the period polynomials `W_w = A ∩ B` is its trace on `V_w`.
+`B = ker(1 + U + U²)` in the space `V_w` of homogeneous polynomials of degree `w`, and for `w > 0`
+`A + B = V_w`, so its trace on the period polynomials `W_w = A ∩ B` is its trace on `V_w`. This
+application is
+`TauCeti.TraceFormulaMatrixModule.ExchangeRelations.trace_periodActionRestrict_eq_trace`.
 
 ## Main results
 

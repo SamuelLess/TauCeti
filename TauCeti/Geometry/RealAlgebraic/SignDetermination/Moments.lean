@@ -71,7 +71,7 @@ namespace TauCeti.SignDetermination
 open SignType
 
 variable {X : Type*} [Fintype X]
-variable (J : Type*) [Fintype J] [DecidableEq J]
+variable (J : Type*) [Fintype J]
 
 /-- The full ternary moment matrix has one row per exponent word and one
 column per sign word. An empty coordinate set gives the one-by-one matrix. -/
@@ -82,16 +82,15 @@ def fullMatrix : Matrix (J → Fin 3) (J → SignType) ℚ :=
 def fullInverse : Matrix (J → SignType) (J → Fin 3) ℚ :=
   Matrix.of fun σ e => ∏ j, inverseCoeff (σ j) (e j)
 
-omit [DecidableEq J] in
 @[simp, grind =]
 theorem fullMatrix_apply (e : J → Fin 3) (σ : J → SignType) :
     fullMatrix J e σ = ∏ j, (σ j : ℚ) ^ (e j).val := (rfl)
 
-omit [DecidableEq J] in
 @[simp, grind =]
 theorem fullInverse_apply (σ : J → SignType) (e : J → Fin 3) :
     fullInverse J σ e = ∏ j, inverseCoeff (σ j) (e j) := (rfl)
 
+open scoped Classical in
 /-- The tensor inverse works for every finite number of sign queries,
 including zero. This is the uniqueness fact a full-table solver needs. -/
 @[simp, grind =]
@@ -110,6 +109,7 @@ theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
     rw [ite_eq_right heq]
     exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
 
+open scoped Classical in
 /-- The tensor inverse is also a right inverse of the full ternary moment matrix. -/
 @[simp, grind =]
 theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
@@ -121,6 +121,7 @@ theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
   have hs : Fintype.card SignType = Fintype.card (Fin 3) := by decide
   rw [hs]
 
+open scoped Classical in
 /-- The full sign matrix maps the actual multiplicities to the sign moments. -/
 theorem fullMatrix_mulVec_occCount (obs : X → (J → SignType)) :
     fullMatrix J *ᵥ (fun σ => (occCount obs σ : ℚ)) =
@@ -129,6 +130,7 @@ theorem fullMatrix_mulVec_occCount (obs : X → (J → SignType)) :
     Function.mulVec_occCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
       (fun (e : J → Fin 3) σ => ∏ j, (σ j : ℚ) ^ (e j).val)
 
+open scoped Classical in
 /-- Explicit inversion of all ternary moments recovers each actual sign count. -/
 theorem fullInverse_mulVec (obs : X → (J → SignType)) :
     fullInverse J *ᵥ (fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val) =

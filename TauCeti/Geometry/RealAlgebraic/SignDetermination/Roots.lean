@@ -70,8 +70,9 @@ theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J]
         (signCount p.roots.toFinset Q σ : ℤ) := by
   rw [tarskiQuery_eq_signSum, signSum_eq_sum_signCount]
 
+open scoped Classical in
 /-- Inverting the full matrix of Tarski queries recovers the root sign multiplicities. -/
-theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]
+theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J]
     (p : R[X]) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (tarskiQuery p (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount p.roots.toFinset Q σ : ℚ) := by

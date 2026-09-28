@@ -218,8 +218,9 @@ theorem signCount_solution_pos_iff {K : Type*} [CommRing K] [PartialOrder K]
   rw [eq_signCount Z Q columns rows hinj cover A hA proposed hsolve]
   simp only [Nat.cast_pos, signCount_pos]
 
+open scoped Classical in
 /-- All ternary moments determine the exact multiplicity of every sign pattern. -/
-theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
+theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
@@ -238,8 +239,9 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J]
     Function.injective_id (fun x _ => ⟨_, rfl⟩)) ()
   simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
 
+open scoped Classical in
 /-- The recovered sign pattern is positive exactly when it is realized. -/
-theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
+theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
     0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
       ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by

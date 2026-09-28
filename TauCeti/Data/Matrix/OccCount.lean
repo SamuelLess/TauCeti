@@ -58,7 +58,8 @@ theorem eq_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
 
 /-- With a left inverse and complete columns, a solved entry is positive exactly
 when its candidate condition occurs among the observations. -/
-theorem solution_pos_iff {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing K] [Nontrivial K]
+theorem occCount_solution_pos_iff {K : Type*} [Semiring K] [PartialOrder K]
+    [IsOrderedRing K] [Nontrivial K]
     (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)

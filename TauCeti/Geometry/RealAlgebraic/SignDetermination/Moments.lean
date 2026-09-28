@@ -5,8 +5,7 @@ Authors: Kim Morrison
 -/
 module
 
-public import TauCeti.Data.Fintype.Fiber
-public import Mathlib.Data.Matrix.Mul
+public import TauCeti.Data.Matrix.OccCount
 import Mathlib.LinearAlgebra.Matrix.SemiringInverse
 import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Basic.Sign.Basic
@@ -16,12 +15,11 @@ import Mathlib.Tactic.NormNum
 /-! # Finite sign determination
 
 Counts refer to an actual finite family of observations, independently of a
-proposed solution of a moment system. `eq_occCount` recovers multiplicities on
+proposed solution of a moment system. `Function.eq_occCount` recovers multiplicities on
 candidate columns only when they cover every observation. `fullInverse_mulVec` gives
 an explicit inverse for all ternary sign conditions.
 
-Here `X` indexes observations, `S` is the space of sign conditions, `C` indexes
-candidate columns, and `I` indexes moment rows.
+Here `X` indexes observations and `J` indexes the sign queries.
 
 ## References
 
@@ -39,55 +37,7 @@ open scoped Matrix
 
 open Function (occCount occCount_def occCount_eq_card_filter occCount_pos)
 
-namespace TauCeti.SignDetermination
-
-variable {X S C I : Type*} [Fintype X] [Fintype C] [Fintype I]
-    [DecidableEq C]
-
-omit [Fintype I] [DecidableEq C] in
-/-- Complete candidate columns satisfy the moment equations. -/
-theorem mulVec_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
-    (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
-    (weight : I → S → K) :
-    (Matrix.of fun i c => weight i (columns c)) *ᵥ (fun c => (occCount obs (columns c) : K)) =
-      fun i => ∑ x, weight i (obs x) := by
-  classical
-  funext i
-  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply]
-  have h := Function.sum_occCount_nsmul obs (T := Finset.univ.image columns)
-    (fun x => by
-      obtain ⟨c, hc⟩ := cover x
-      exact Finset.mem_image.mpr ⟨c, Finset.mem_univ _, hc⟩) (weight i)
-  rw [Finset.sum_image hinj.injOn] at h
-  simpa only [nsmul_eq_mul, Nat.cast_comm] using h
-
-/-- An independently checked left inverse gives uniqueness on the candidate
-columns. Coverage is an essential separate premise, not a consequence of this
-matrix identity. -/
-theorem eq_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
-    (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
-    (weight : I → S → K) (A : Matrix C I K)
-    (hA : (A * (Matrix.of fun i c => weight i (columns c)) : Matrix C C K) = 1) (proposed : C → K)
-    (hsolve : (Matrix.of fun i c => weight i (columns c)) *ᵥ proposed =
-      fun i => ∑ x, weight i (obs x)) :
-    proposed = fun c => (occCount obs (columns c) : K) := by
-  have hm := mulVec_occCount obs columns hinj cover weight
-  have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
-  simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
-
-/-- With a left inverse and complete columns, a solved entry is positive exactly
-when its candidate condition occurs among the observations. -/
-theorem solution_pos_iff {K : Type*} [Semiring K] [PartialOrder K] [IsOrderedRing K] [Nontrivial K]
-    (obs : X → S) (columns : C → S)
-    (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
-    (weight : I → S → K) (A : Matrix C I K)
-    (hA : (A * (Matrix.of fun i c => weight i (columns c)) : Matrix C C K) = 1) (proposed : C → K)
-    (hsolve : (Matrix.of fun i c => weight i (columns c)) *ᵥ proposed =
-      fun i => ∑ x, weight i (obs x)) (c : C) :
-    0 < proposed c ↔ ∃ x, obs x = columns c := by
-  classical
-  rw [eq_occCount obs columns hinj cover weight A hA proposed hsolve]
-  simpa only [Nat.cast_pos] using occCount_pos obs (columns c)
+namespace SignType
 
 /-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/
 def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
@@ -109,10 +59,18 @@ theorem inverseCoeff_one (e : Fin 3) :
     inverseCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
 /-- The one-coordinate moment matrix has an explicit rational left inverse. -/
+@[simp]
 theorem sum_inverseCoeff_mul_pow (s t : SignType) :
     ∑ e : Fin 3, inverseCoeff s e * (t : ℚ) ^ e.val = if s = t then 1 else 0 := by
   cases s <;> cases t <;> norm_num [Fin.sum_univ_three, inverseCoeff]
 
+end SignType
+
+namespace TauCeti.SignDetermination
+
+open SignType
+
+variable {X : Type*} [Fintype X]
 variable (J : Type*) [Fintype J] [DecidableEq J]
 
 /-- The full ternary moment matrix has one row per exponent word and one
@@ -168,7 +126,7 @@ theorem fullMatrix_mulVec_occCount (obs : X → (J → SignType)) :
     fullMatrix J *ᵥ (fun σ => (occCount obs σ : ℚ)) =
       fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val := by
   simpa only [fullMatrix, id_eq] using
-    mulVec_occCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
+    Function.mulVec_occCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
       (fun (e : J → Fin 3) σ => ∏ j, (σ j : ℚ) ^ (e j).val)
 
 /-- Explicit inversion of all ternary moments recovers each actual sign count. -/

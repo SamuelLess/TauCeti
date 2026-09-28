@@ -22,12 +22,12 @@ The proofs use finite sign determination without Sturm theory.
 
 public section
 
-open Polynomial SignType
+open SignType Finset TauCeti.SignDetermination
 open scoped Matrix
 
 open Function (occCount occCount_def occCount_eq_card_filter occCount_pos)
 
-namespace TauCeti.SignDetermination
+namespace Polynomial
 
 variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 
@@ -61,8 +61,9 @@ theorem tarskiQuery_one (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
 
+open scoped Classical in
 /-- The sign-matrix identity for Tarski queries at distinct polynomial roots. -/
-theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
+theorem tarskiQuery_eq_sum_signCount {J : Type*} [Fintype J]
     (p : R[X]) (Q : J → R[X]) (e : J → ℕ) :
     tarskiQuery p (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) *
@@ -84,4 +85,4 @@ theorem signCount_roots_pos {J : Type*}
   classical
   simp only [signCount_pos, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
 
-end TauCeti.SignDetermination
+end Polynomial

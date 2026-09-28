@@ -42,6 +42,59 @@ open scoped Matrix
 
 open Function (occCount occCount_def occCount_eq_card_filter occCount_pos)
 
+namespace Finset
+
+section SignCount
+
+variable {R : Type*} [Semiring R] [LinearOrder R]
+
+/-- The number of points realizing a specified polynomial sign condition. -/
+noncomputable def signCount {J : Type*}
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) : ℕ :=
+  occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ
+
+/-- Polynomial sign counts are multiplicities in the finite family of pointwise signs. -/
+theorem signCount_eq_occCount {J : Type*}
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
+    signCount Z Q σ = occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
+
+open scoped Classical in
+/-- Sign counts are cardinalities of the realizing subset of the original finite set. -/
+theorem signCount_eq_card_filter {J : Type*}
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
+    signCount Z Q σ = (Z.filter fun x => ∀ j, sign ((Q j).eval x) = σ j).card := by
+  classical
+  simp only [signCount_eq_occCount, occCount_eq_card_filter, Finset.card_filter,
+    funext_iff]
+  exact Finset.sum_coe_sort Z
+    (fun x : R => if ∀ j, sign ((Q j).eval x) = σ j then (1 : ℕ) else 0)
+
+@[simp, grind =]
+theorem signCount_empty {J : Type*}
+    (Q : J → R[X]) (σ : J → SignType) : signCount ∅ Q σ = 0 := by
+  simp [signCount_eq_card_filter]
+
+open scoped Classical in
+/-- The sign conditions partition the original finite set of points. -/
+theorem sum_signCount {J : Type*} [Fintype J]
+    (Z : Finset R) (Q : J → R[X]) : ∑ σ, signCount Z Q σ = Z.card := by
+  classical
+  simpa only [signCount_eq_occCount, Nat.card_eq_fintype_card, Fintype.card_coe] using
+    Function.sum_occCount_eq_card (fun x : Z => fun j => sign ((Q j).eval x.val))
+      (fun _ => Finset.mem_univ _)
+
+/-- A positive sign count is equivalent to realization at a point of the finite set. -/
+@[simp, grind =]
+theorem signCount_pos {J : Type*}
+    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
+    0 < signCount Z Q σ ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
+  classical
+  simp [signCount_eq_card_filter, Finset.card_pos, Finset.Nonempty]
+
+end SignCount
+
+end Finset
+
 namespace TauCeti.SignDetermination
 
 variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
@@ -54,6 +107,14 @@ noncomputable def signEval {K : Type*} [MulZeroOneClass K] [HasDistribNeg K] (x 
 theorem signEval_apply {K : Type*} [MulZeroOneClass K] [HasDistribNeg K]
     (x : R) (p : R[X]) :
     signEval x p = (sign (p.eval x) : K) := (rfl)
+
+end TauCeti.SignDetermination
+
+namespace Finset
+
+open TauCeti.SignDetermination
+
+variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- The integer sum of signs at a specified finite set of points. -/
 noncomputable def signSum (Z : Finset R) (p : R[X]) : ℤ := ∑ x : Z, signEval x.val p
@@ -94,54 +155,6 @@ theorem signSum_eq_card_sub_card (Z : Finset R) (p : R[X]) :
     simp [hpos, hneg]
   · by_cases hneg : p.eval x < 0 <;> simp [sign_apply, hpos, hneg]
 
-omit [IsStrictOrderedRing R] in
-/-- The number of points realizing a specified polynomial sign condition. -/
-noncomputable def signCount {J : Type*}
-    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) : ℕ :=
-  occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ
-
-omit [IsStrictOrderedRing R] in
-/-- Polynomial sign counts are multiplicities in the finite family of pointwise signs. -/
-theorem signCount_eq_occCount {J : Type*}
-    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    signCount Z Q σ = occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) σ := (rfl)
-
-omit [IsStrictOrderedRing R] in
-open scoped Classical in
-/-- Sign counts are cardinalities of the realizing subset of the original finite set. -/
-theorem signCount_eq_card_filter {J : Type*}
-    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    signCount Z Q σ = (Z.filter fun x => ∀ j, sign ((Q j).eval x) = σ j).card := by
-  classical
-  simp only [signCount_eq_occCount, occCount_eq_card_filter, Finset.card_filter,
-    funext_iff]
-  exact Finset.sum_coe_sort Z
-    (fun x : R => if ∀ j, sign ((Q j).eval x) = σ j then (1 : ℕ) else 0)
-
-omit [IsStrictOrderedRing R] in
-@[simp, grind =]
-theorem signCount_empty {J : Type*}
-    (Q : J → R[X]) (σ : J → SignType) : signCount ∅ Q σ = 0 := by
-  simp [signCount_eq_card_filter]
-
-omit [IsStrictOrderedRing R] in
-/-- The sign conditions partition the original finite set of points. -/
-theorem sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
-    (Z : Finset R) (Q : J → R[X]) : ∑ σ, signCount Z Q σ = Z.card := by
-  classical
-  simpa only [signCount_eq_occCount, Nat.card_eq_fintype_card, Fintype.card_coe] using
-    Function.sum_occCount_eq_card (fun x : Z => fun j => sign ((Q j).eval x.val))
-      (fun _ => Finset.mem_univ _)
-
-omit [IsStrictOrderedRing R] in
-/-- A positive sign count is equivalent to realization at a point of the finite set. -/
-@[simp, grind =]
-theorem signCount_pos {J : Type*}
-    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    0 < signCount Z Q σ ↔ ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
-  classical
-  simp [signCount_eq_card_filter, Finset.card_pos, Finset.Nonempty]
-
 /-- The sign sum of a product is the sum of the products of its pointwise signs. -/
 private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
@@ -168,7 +181,7 @@ theorem mulVec_signCount {K : Type*} [CommRing K] {J C I : Type*} [Fintype J]
   classical
   simp_rw [signSum_prod_pow]
   simpa only [signCount_eq_occCount] using
-    mulVec_occCount _ columns hinj (fun x : Z => cover x.val x.property)
+    Function.mulVec_occCount _ columns hinj (fun x : Z => cover x.val x.property)
       (fun i σ => ∏ j, (σ j : K) ^ rows i j)
 
 /-- A left inverse recovers polynomial sign counts on complete candidate columns.
@@ -214,8 +227,9 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
   simpa only [signCount_eq_occCount] using
     fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
+open scoped Classical in
 /-- The integer BKR moment identity on a finite set of sample points. -/
-theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
+theorem signSum_eq_sum_signCount {J : Type*} [Fintype J]
     (Z : Finset R) (Q : J → R[X]) (e : J → ℕ) :
     signSum Z (∏ j, Q j ^ e j) =
       ∑ σ : J → SignType, (∏ j, (σ j : ℤ) ^ e j) * (signCount Z Q σ : ℤ) := by
@@ -232,4 +246,4 @@ theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
   rw [fullInverse_mulVec_signSum]
   simp only [Nat.cast_pos, signCount_pos]
 
-end TauCeti.SignDetermination
+end Finset

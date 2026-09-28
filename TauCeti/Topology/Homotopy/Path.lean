@@ -224,13 +224,6 @@ theorem exists_partition_with_property {x y : X} (γ : Path x y) (P : Set X → 
 end Path
 
 -- Ported from https://github.com/leanprover-community/mathlib4/pull/44183.
-/-- Two points of a path-connected set are joined by a path with range in that set. -/
-theorem IsPathConnected.exists_path {X : Type*} [TopologicalSpace X] {a b : X} {U : Set X}
-    (hU : IsPathConnected U) (ha : a ∈ U) (hb : b ∈ U) : ∃ p : Path a b, range p ⊆ U :=
-  let hab : JoinedIn U a b := hU.joinedIn _ ha _ hb
-  ⟨hab.somePath, range_subset_iff.mpr hab.somePath_mem⟩
-
--- Ported from https://github.com/leanprover-community/mathlib4/pull/44183.
 /-- Given open sets `U i` into which `f` maps the consecutive segments `[t i, t (i + 1)]` of a
 monotone sequence in the unit interval, the path components of `f (t j)` in the intersections of
 the adjacent `U i` are open, path-connected vertex sets, each contained in its adjacent `U i`. -/

@@ -146,8 +146,8 @@ public theorem Path.exists_isInTube [LocallyPathConnectedSpace X] {x y : X} (γ 
 private theorem Path.IsInTube.exists_rungs {x y x' y' : X} {γ : Path x y} {γ' : Path x' y'}
     (hγ : Path.IsInTube γ part T) (hγ' : Path.IsInTube γ' part T) :
     ∃ α : (j : Fin (n + 1)) → Path (γ (part.t j)) (γ' (part.t j)), ∀ j, range (α j) ⊆ T.V j := by
-  choose α hα using fun j ↦ (T.isPathConnected_V j).exists_path (hγ.mem_V j) (hγ'.mem_V j)
-  exact ⟨α, hα⟩
+  have h j := (T.isPathConnected_V j).joinedIn _ (hγ.mem_V j) _ (hγ'.mem_V j)
+  exact ⟨fun j ↦ (h j).somePath, fun j ↦ range_subset_iff.mpr (h j).somePath_mem⟩
 
 /-- Two paths with the same source in a common tube are homotopic after appending to the first
 a path in the last vertex set of the tube. -/

@@ -40,8 +40,8 @@ def failuresGraph : Html := dailyChart "ci-failures.svg"
   "Failed PR builds per day by cause, and the failure rate"
   "Failed PR builds by cause; the dashed line is the share of PR builds that failed."
 def minutesGraph : Html := dailyChart "ci-runner-minutes.svg"
-  "Runner-minutes per day on Namespace and on GitHub-hosted runners"
-  "Runner-minutes per day."
+  "Build minutes per day on Namespace and on GitHub-hosted runners, and cancelled PR builds"
+  "Build minutes per day."
 def queueGraph : Html := dailyChart "ci-merge-queue.svg"
   "Merge-queue builds per day by outcome, and PRs landed"
   "Merge-queue builds by outcome; the dashed line is PRs landed on main."
@@ -77,9 +77,9 @@ when bins are longer), for builds and for other jobs separately.
 The charts below give one point per complete UTC day, for up to the last ninety days.
 
 How long does a build take, and how long does it wait before starting? A pull-request build
-compiles only what the pull request changed, restoring everything else from the artifact cache, then
-runs the audits and lints over the whole library. Namespace machines have eight cores where
-GitHub-hosted runners have four, so the same build is faster there.
+restores what it can from the artifact cache and compiles the rest, then runs the audits and lints.
+Builds on Namespace run on eight-core machines and those on GitHub-hosted runners on four, so the two
+lines are different machines doing broadly similar work, not the same builds timed twice.
 
 :::blob durationGraph
 :::
@@ -87,24 +87,24 @@ GitHub-hosted runners have four, so the same build is faster there.
 :::blob waitGraph
 :::
 
-Where does a build's time go? The build, the audits and the two lints run in one sandboxed step;
-since the build began recording its own phases, that step is split into them. Before then it
-appears as one block.
+Where does a build's time go? The build, the audits and the two lints run in one sandboxed step.
+Where a build recorded its own phases, that step is split into them, with any time the phases do
+not cover shown as unattributed; otherwise it appears as one block.
 
 :::blob phasesGraph
 :::
 
 Why do builds fail? Each failed pull-request build is classified by the step that failed and the
 error lines it printed: a Lean error, one of the lints, one of the audits, a policy check (scope,
-size, pins), or an infrastructure fault such as a cache download. Infrastructure faults are the
-ones a re-run fixes.
+size, pins), a timeout, or an infrastructure fault such as a cache download. The classification is
+by pattern, so it is a guide rather than a verdict.
 
 :::blob failuresGraph
 :::
 
 What does it cost? Namespace bills every minute; GitHub-hosted minutes cost nothing for a public
-repository. A cancelled build is one a newer push to the same pull request replaced before it
-finished, so its minutes bought nothing.
+repository. The chart counts the minutes of build jobs. A cancelled PR build is usually one that a
+newer push to the same pull request replaced before it finished, whose minutes bought nothing.
 
 :::blob minutesGraph
 :::
@@ -113,8 +113,9 @@ finished, so its minutes bought nothing.
 :::
 
 How is the merge queue doing? The queue builds each pull request together with those ahead of it,
-and lands them only if that combined build passes. A failed merge-queue build sends its pull request
-back, and the ones behind it are rebuilt.
+and lands them only if that combined build passes. When one fails, its pull request leaves the queue
+and the entries behind it, whose builds included it, are built again. The bars count build jobs,
+including retries.
 
 :::blob queueGraph
 :::

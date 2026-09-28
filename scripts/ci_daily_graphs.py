@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import datetime as dt
 import html
+import json
+import math
 import sqlite3
 from collections import defaultdict
 
@@ -44,7 +46,7 @@ TELEMETRY_PHASES = {"build": "build", "stage-cache": "build",
                     "audit-duplicates": "audits", "audit-axioms": "audits", "audit-module-system": "audits",
                     "lint-env": "lints", "lint-style": "lints"}
 PHASE_ORDER = ["setup and checks", "Mathlib cache", "Lake cache", "lint preparation",
-               "build", "audits", "lints", "build, audits, lints", "reporting"]
+               "build", "audits", "lints", "sandbox, unattributed", "build, audits, lints", "reporting"]
 
 FAILURE_ORDER = ["lean-error", "lint-env", "lint-style", "dot-notation", "audit-axioms",
                  "audit-duplicates", "audit-module-system", "policy", "toolchain-incompat",
@@ -57,10 +59,11 @@ def ts(s: str) -> float:
 
 
 def quantile(values: list[float], q: float) -> float | None:
+    """Nearest-rank quantile: the smallest value with at least q of the values at or below it."""
     if not values:
         return None
     v = sorted(values)
-    return v[min(len(v) - 1, int(q * len(v)))]
+    return v[max(0, math.ceil(q * len(v)) - 1)]
 
 
 def step_phase(name: str) -> str:
@@ -82,12 +85,15 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
     """Per-day series for every daily chart, over complete UTC days first..last."""
     days = days_between(first, last)
     lo, hi = f"{first}T00:00:00Z", f"{last}T23:59:59Z"
+    # Every attempt's build job (jobs keeps all attempts; runs only the latest), PR and merge-queue
+    # builds only: manual dispatches are neither.
     builds = db.execute(f"""
         SELECT substr(j.created_at, 1, 10), r.trigger, j.runner_kind, j.conclusion, j.wait_s, j.run_s,
                j.failure_class, j.job_id, r.run_id
         FROM jobs j JOIN runs r USING (repo, run_id)
-        WHERE r.workflow = '{PR_BUILD}' AND j.name = '{BUILD}' AND j.created_at BETWEEN ? AND ?""",
-                        (lo, hi)).fetchall()
+        WHERE r.repo = 'TauCeti' AND r.workflow = '{PR_BUILD}' AND j.name = '{BUILD}'
+          AND r.trigger IN ('pr', 'merge_queue') AND j.runner_kind IN ('github', 'namespace')
+          AND j.created_at BETWEEN ? AND ?""", (lo, hi)).fetchall()
 
     def where(trigger, kind):
         return "merge queue" if trigger == "merge_queue" else f"PR, {'GitHub' if kind == 'github' else 'Namespace'}"
@@ -104,12 +110,12 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
             dur[(day, w)].append(run_s / 60)
         if wait_s is not None:
             wait[(day, w)].append(wait_s / 60)
-        if trigger == "pr" and concl in ("success", "failure"):
+        if trigger == "pr" and concl in ("success", "failure", "timed_out"):
             pr_total[day] += 1
-            if concl == "failure":
-                fails[day][fclass or "build-unknown"] += 1
+            if concl != "success":
+                fails[day][fclass or ("timeout" if concl == "timed_out" else "build-unknown")] += 1
         if trigger == "pr":
-            picker[day][0 if kind == "github" else 1] += 1
+            picker[day][0 if kind == "github" else 1] += 1  # runner_kind is github or namespace here
         if trigger == "pr" and concl == "success":
             job_ids.append(job_id)
 
@@ -130,7 +136,6 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
             telemetry[run_id] = phases_json
     except sqlite3.OperationalError:
         pass
-    import json
     run_of_job = {job_id: run_id for (_, _, _, _, _, _, _, job_id, run_id) in builds}
     day_of_job = {job_id: day for (day, _, _, _, _, _, _, job_id, _) in builds}
     chunk = 500
@@ -154,32 +159,37 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
             for name, secs in steps:
                 phase = step_phase(name)
                 if phase == "build, audits, lints" and split and sum(split.values()) > 0:
-                    # Scale the sandbox's phases to the step's own (trusted) duration.
+                    # The sandbox's own timings, as recorded. What they do not cover of the step's
+                    # (trusted) duration stays unattributed rather than being spread over the phases;
+                    # only if they exceed it (clock skew) are they scaled down to fit.
                     total = sum(split.values())
+                    factor = min(1.0, secs / total)
                     for k, v in split.items():
-                        phase_minutes[day][k] += secs * v / total / 60
+                        phase_minutes[day][k] += v * factor / 60
+                    phase_minutes[day]["sandbox, unattributed"] += max(0.0, secs - total) / 60
                 else:
                     phase_minutes[day][phase] += secs / 60
 
+    # Build minutes (the build jobs of the build workflows, all recorded in full), by the day the
+    # job started.
     minutes = defaultdict(lambda: defaultdict(float))
-    for day, kind, trigger, workflow, name, concl, run_s in db.execute("""
-            SELECT substr(j.created_at, 1, 10), j.runner_kind, r.trigger, r.workflow, j.name,
-                   j.conclusion, j.run_s
+    for day, kind, trigger, concl, run_s in db.execute("""
+            SELECT substr(j.started_at, 1, 10), j.runner_kind, r.trigger, j.conclusion, j.run_s
             FROM jobs j JOIN runs r USING (repo, run_id)
-            WHERE j.run_s IS NOT NULL AND j.created_at BETWEEN ? AND ?""", (lo, hi)):
+            WHERE r.repo = 'TauCeti' AND j.name IN ('sandboxed-build', 'verify', 'build', 'performance-gate')
+              AND j.run_s IS NOT NULL AND j.started_at BETWEEN ? AND ?""", (lo, hi)):
         if kind == "namespace":
             minutes[day]["Namespace"] += run_s / 60
-        elif kind == "github" and name in (BUILD, "verify", "build"):
-            minutes[day]["GitHub, builds"] += run_s / 60
-        if name == BUILD and concl == "cancelled":
-            minutes[day]["cancelled builds"] += run_s / 60
+        elif kind == "github":
+            minutes[day]["GitHub-hosted"] += run_s / 60
+        if trigger == "pr" and concl == "cancelled":
+            minutes[day]["cancelled PR builds"] += run_s / 60
 
+    # Merge-queue build jobs, every attempt.
     mq = defaultdict(lambda: defaultdict(int))
-    for day, concl, landed in db.execute(f"""
-            SELECT substr(created_at, 1, 10), conclusion, landed FROM runs
-            WHERE workflow = '{PR_BUILD}' AND trigger = 'merge_queue' AND created_at BETWEEN ? AND ?""",
-                                         (lo, hi)):
-        mq[day][concl or "unknown"] += 1
+    for day, trigger, kind, concl, *_ in builds:
+        if trigger == "merge_queue":
+            mq[day][concl if concl in ("success", "failure", "cancelled") else "other"] += 1
     landed = defaultdict(int)
     for day, n in db.execute("""SELECT substr(committed_at, 1, 10), COUNT(*) FROM main_commits
                                 WHERE pr IS NOT NULL AND committed_at BETWEEN ? AND ? GROUP BY 1""", (lo, hi)):
@@ -192,8 +202,8 @@ def metrics(db: sqlite3.Connection, first: str, last: str) -> dict:
 
 # --- rendering ----------------------------------------------------------------------------------
 
-W, H = 980, 420
-L, R, TOP, BOTTOM = 64, 20, 104, 360
+W, H = 980, 440
+L, R, TOP, BOTTOM = 64, 20, 124, 380
 
 
 def frame(title: str, subtitle: str) -> list[str]:
@@ -235,9 +245,14 @@ def axes(out: list[str], days: list[str], vmax: float, ylabel: str, fmt=lambda v
     return x, y, bw
 
 
+MAX_LEGEND = 12  # three rows of four fit between the subtitle and the plot
+
+
 def legend(out: list[str], items: list[tuple[str, str]], dashed: set[str] = frozenset()):
+    if len(items) > MAX_LEGEND:
+        items = items[:MAX_LEGEND - 1] + [("… more in ci-stats.json", MUTED)]
     for idx, (label, colour) in enumerate(items):
-        lx, ly = L + (idx % 4) * 225, 72 + (idx // 4) * 16
+        lx, ly = L + (idx % 4) * 225, 72 + (idx // 4) * 14
         if label in dashed:
             out.append(f'<line x1="{lx}" x2="{lx+12}" y1="{ly+6}" y2="{ly+6}" stroke="{colour}" '
                        f'stroke-width="2" stroke-dasharray="3 2"/>')
@@ -292,10 +307,19 @@ def stacked_chart(title, subtitle, days, series, ylabel, line=None, line_fmt=lam
     if line:
         label, colour, vals, vmax = line
         yr = lambda v: BOTTOM - v / vmax * (BOTTOM - TOP)
-        pts = [(x(i), yr(v)) for i, v in enumerate(vals) if v is not None]
-        if len(pts) > 1:
-            out.append(f'<polyline fill="none" stroke="{colour}" stroke-width="{svg_unit(W, 2)}" '
-                       f'stroke-dasharray="5 3" points="' + " ".join(f"{a:.1f},{b:.1f}" for a, b in pts) + '"/>')
+        segs, pts = [], []
+        for i, v in enumerate(vals):
+            if v is None:
+                segs, pts = segs + ([pts] if pts else []), []
+            else:
+                pts.append((x(i), yr(v)))
+        segs += [pts] if pts else []
+        for seg in segs:
+            if len(seg) == 1:
+                out.append(f'<circle cx="{seg[0][0]:.1f}" cy="{seg[0][1]:.1f}" r="3" fill="{colour}"/>')
+            else:
+                out.append(f'<polyline fill="none" stroke="{colour}" stroke-width="{svg_unit(W, 2)}" '
+                           f'stroke-dasharray="5 3" points="' + " ".join(f"{a:.1f},{b:.1f}" for a, b in seg) + '"/>')
         for frac in (0, 0.5, 1):
             out.append(f'<text class="tick" x="{W-R+2}" y="{yr(vmax*frac)+4:.1f}" text-anchor="end" '
                        f'dx="-4">{line_fmt(vmax*frac)}</text>')
@@ -312,6 +336,8 @@ def charts(db: sqlite3.Connection, until: float) -> dict[str, str]:
     if not first_row:
         return {}
     first = max(dt.date.fromisoformat(first_row[:10]), last - dt.timedelta(days=89))
+    if first > last:
+        return {}
     m = metrics(db, first.isoformat(), last.isoformat())
     days = m["days"]
     span = f"UTC days {dt.date.fromisoformat(days[0]):%d %b} to {dt.date.fromisoformat(days[-1]):%d %b}"
@@ -343,6 +369,7 @@ def charts(db: sqlite3.Connection, until: float) -> dict[str, str]:
         days, series, "minutes per build")
 
     classes = [c for c in FAILURE_ORDER if any(m["fails"][d].get(c) for d in days)]
+    # (A day's bars and the rate share one denominator: finished PR builds, timeouts counted as failures.)
     classes += sorted({c for d in days for c in m["fails"][d]} - set(classes))
     series = [(c, PALETTE[i % len(PALETTE)], [m["fails"][d].get(c, 0) for d in days]) for i, c in enumerate(classes)]
     rate = [sum(m["fails"][d].values()) / m["pr_total"][d] if m["pr_total"][d] else None for d in days]
@@ -352,13 +379,13 @@ def charts(db: sqlite3.Connection, until: float) -> dict[str, str]:
         line=("failure rate", TEXT, rate, max([r for r in rate if r is not None] + [0.1])),
         line_fmt=lambda v: f"{v:.0%}")
 
-    kinds = [("Namespace", PALETTE[1]), ("GitHub, builds", PALETTE[2]), ("cancelled builds", PALETTE[3])]
+    kinds = [("Namespace", PALETTE[1]), ("GitHub-hosted", PALETTE[2]), ("cancelled PR builds", PALETTE[3])]
     series = [(k, c, [m["minutes"][d].get(k, 0) for d in days]) for k, c in kinds]
     out["ci-runner-minutes.svg"] = lines_chart(
-        "Runner-minutes per day", f"Namespace is billed, GitHub-hosted is free; cancelled = replaced by a "
-        f"newer push; {span}", days, series, "minutes")
+        "Build minutes per day", f"Build jobs by runner (Namespace is billed; GitHub-hosted is free), and "
+        f"cancelled PR builds; {span}", days, series, "minutes")
 
-    outcomes = [("success", PALETTE[5]), ("failure", PALETTE[3]), ("cancelled", MUTED)]
+    outcomes = [("success", PALETTE[5]), ("failure", PALETTE[3]), ("cancelled", MUTED), ("other", PALETTE[4])]
     series = [(o, c, [m["mq"][d].get(o, 0) for d in days]) for o, c in outcomes]
     landed = [m["landed"].get(d, 0) for d in days]
     out["ci-merge-queue.svg"] = stacked_chart(

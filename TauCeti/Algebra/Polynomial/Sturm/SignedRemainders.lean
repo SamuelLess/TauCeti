@@ -88,18 +88,22 @@ theorem alternate {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
       exact (mul_nonneg ha.le hp).not_gt hn
     exact mul_neg_of_neg_of_pos hp' hr
 
-omit [IsStrictOrderedRing R] in
-/-- If the first two entries vanish at a point, the third entry vanishes there too. -/
-theorem next_eval_eq_zero {p q r : Polynomial R} (h : IsRemainder p q r) {x : R}
-    (hp : p.eval x = 0) (hq : q.eval x = 0) : r.eval x = 0 := by
-  obtain ⟨a, b, u, _, hb, heq⟩ := h.exists_identity
-  have he := congrArg (Polynomial.eval x) heq
-  simp only [eval_mul, eval_C, eval_sub, hp, hq, mul_zero, zero_sub, zero_eq_neg] at he
-  exact (mul_eq_zero.mp he).resolve_left hb.ne'
-
 end IsRemainder
 
 namespace IsSignedRemainderSeq
+
+omit [IsStrictOrderedRing R] in
+/-- A nonzero polynomial alone forms a signed remainder sequence. -/
+theorem singleton {p : Polynomial R} (hp : p ≠ 0) : IsSignedRemainderSeq [p] where
+  nonzero := by simpa
+  relation i p0 p1 p2 h0 h1 h2 := by
+    have hi : i + 2 < 1 := by
+      simpa using (List.getElem?_eq_some_iff.mp h2).1
+    omega
+  terminal pre p0 p1 heq := by
+    have := congrArg List.length heq
+    simp only [List.length_cons, List.length_nil, List.length_append] at this
+    omega
 
 omit [IsStrictOrderedRing R] in
 /-- A two-entry chain terminates when its second polynomial divides its first. -/
@@ -186,7 +190,7 @@ theorem last_dvd {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs) {d : P
       · exact ht s hs
 
 /-- A signed remainder chain with a root-free last entry is regular. -/
-theorem alternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
+theorem isAlternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
     (hlast : ∀ q, cs.getLast? = some q → ∀ x, q.eval x ≠ 0) : IsAlternating cs := by
   induction cs with
   | nil => exact ⟨h.nonzero, hlast, by simp⟩
@@ -229,15 +233,7 @@ theorem IsSignedRemainderSeq.sturmSeq (p q : R[X]) : IsSignedRemainderSeq (sturm
     by_cases hq : q = 0
     · subst q
       rw [sturmSeq_zero_right, ite_eq_right hp]
-      refine ⟨by simpa, ?_, ?_⟩
-      · intro i p0 p1 p2 h0 h1 h2
-        have hi : i + 2 < 1 := by
-          simpa using (List.getElem?_eq_some_iff.mp h2).1
-        omega
-      · intro pre p0 p1 heq
-        have := congrArg List.length heq
-        simp only [List.length_cons, List.length_nil, List.length_append] at this
-        omega
+      exact IsSignedRemainderSeq.singleton hp
     rw [sturmSeq_cons hp, sturmSeq_cons hq]
     by_cases hr : -p % q = 0
     · rw [hr, sturmSeq_zero_left]
@@ -276,7 +272,7 @@ theorem cancel {d : Polynomial R} {cs : List (Polynomial R)} (hd : d ≠ 0)
 
 /-- Divide every entry by the terminal common factor. The resulting chain is
 regular and ends at `1`, even when the original terminal factor is nonconstant. -/
-theorem exists_alternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
+theorem exists_isAlternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq cs)
     {d : Polynomial R}
     (hd : cs.getLast? = some d) :
     ∃ ds : List (Polynomial R), cs = ds.map (d * ·) ∧
@@ -292,7 +288,7 @@ theorem exists_alternating {cs : List (Polynomial R)} (h : IsSignedRemainderSeq 
   have hlast : ds.getLast? = some 1 := by
     simp [ds, List.getLast?_map, hd, EuclideanDomain.div_self hd0]
   have hs : IsSignedRemainderSeq ds := cancel hd0 (hmap ▸ h)
-  refine ⟨ds, hmap, hlast, hs, hs.alternating ?_⟩
+  refine ⟨ds, hmap, hlast, hs, hs.isAlternating ?_⟩
   intro q hq x
   rw [hlast] at hq
   cases hq

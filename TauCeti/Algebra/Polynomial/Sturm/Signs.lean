@@ -107,7 +107,9 @@ theorem signVariationsAt_cons (cs : List (Polynomial R)) {p : Polynomial R} {x :
 
 end Basic
 
-variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+section OrderedCommRing
+
+variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- Multiplying every entry by a polynomial that does not vanish at the point
 preserves the sign variations at that point. -/
@@ -122,6 +124,12 @@ theorem signVariationsAt_map_mul (cs : List (Polynomial R)) {d : Polynomial R} {
       (fun y => by rw [sign_mul, sign_neg hd, neg_one_mul]) _
   · exact List.signVariations_map
       (fun y => by rw [sign_mul, sign_pos hd, one_mul]) _
+
+end OrderedCommRing
+
+section OrderedRing
+
+variable {R : Type*} [Ring R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-- Evaluation hypotheses that persist when entries are removed from the front.
 Nonvanishing of the first entry at `r` is supplied separately to the induction. -/
@@ -199,7 +207,9 @@ theorem signVariationsAt_eq_of_alternate (cs : List (Polynomial R)) (a r : R)
     signVariationsAt cs a = signVariationsAt cs r :=
   (signRelation_eval a r cs ⟨hne, hlast, halt, hsame⟩ hfront).signVariations_eq.1
 
-variable [IsRealClosed R]
+end OrderedRing
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [IsRealClosed R]
 
 /-- Variations are constant if no chain entry vanishes on the interval. -/
 theorem signVariationsAt_const (cs : List (Polynomial R)) {a b : R} (hab : a ≤ b)

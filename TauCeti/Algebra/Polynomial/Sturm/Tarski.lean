@@ -164,7 +164,7 @@ private theorem sum_sign_cons {p f q : Polynomial R} {cs : List (Polynomial R)}
   -- then restore roots of the common factor, whose query contributions vanish.
   obtain ⟨d, hd⟩ : ∃ d, (p :: q :: cs).getLast? = some d :=
     ⟨_, List.getLast?_eq_some_getLast (by simp)⟩
-  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_alternating hd
+  obtain ⟨ds, hmap, _, _, hreg⟩ := h.exists_isAlternating hd
   cases ds with
   | nil => simp at hmap
   | cons p0 ds =>
@@ -239,7 +239,7 @@ theorem sum_sign {p f : Polynomial R} {cs : List (Polynomial R)}
   | cons q cs => exact sum_sign_cons h hseed hsimple hab ha hb
 
 /-- Squarefreeness supplies the simple-root hypothesis in Sturm–Tarski. -/
-theorem sum_sign_squarefree {p f : Polynomial R} {cs : List (Polynomial R)}
+theorem sum_sign_of_squarefree {p f : Polynomial R} {cs : List (Polynomial R)}
     (h : IsSignedRemainderSeq (p :: cs)) (hseed : IsTarskiSeed p f (cs.head?.getD 0))
     (hp : Squarefree p)
     {a b : R} (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :

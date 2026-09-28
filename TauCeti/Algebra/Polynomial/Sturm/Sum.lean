@@ -8,7 +8,7 @@ module
 public import TauCeti.Algebra.Polynomial.Sturm.Local
 public import TauCeti.Data.Finset.Jumps
 
-/-! # IsSignedRemainderSeq root sums for regular Sturm chains
+/-! # Signed root sums for alternating Sturm chains
 
 The local jumps of a regular chain telescope to a signed sum over the roots
 of its first polynomial in an open interval. Only those roots must be simple;

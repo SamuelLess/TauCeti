@@ -46,6 +46,26 @@ noncomputable def derivativeSign (p : R[X]) (x : R) (k : ℕ) : SignType :=
 theorem derivativeSign_def (p : R[X]) (x : R) (k : ℕ) :
     derivativeSign p x k = sign ((derivative^[k] p).eval x) := (rfl)
 
+@[simp]
+theorem derivativeSign_eq_one_iff (p : R[X]) (x : R) (k : ℕ) :
+    derivativeSign p x k = 1 ↔ 0 < (derivative^[k] p).eval x := by
+  rw [derivativeSign_def, sign_eq_one_iff]
+
+@[simp]
+theorem derivativeSign_eq_neg_one_iff (p : R[X]) (x : R) (k : ℕ) :
+    derivativeSign p x k = -1 ↔ (derivative^[k] p).eval x < 0 := by
+  rw [derivativeSign_def, sign_eq_neg_one_iff]
+
+@[simp]
+theorem derivativeSign_eq_zero_iff (p : R[X]) (x : R) (k : ℕ) :
+    derivativeSign p x k = 0 ↔ (derivative^[k] p).eval x = 0 := by
+  rw [derivativeSign_def, sign_eq_zero_iff]
+
+@[simp]
+theorem derivativeSign_ne_zero (p : R[X]) (x : R) (k : ℕ) :
+    derivativeSign p x k ≠ 0 ↔ (derivative^[k] p).eval x ≠ 0 :=
+  not_congr (derivativeSign_eq_zero_iff p x k)
+
 @[simp, grind =]
 theorem derivativeSign_zero_left (x : R) (k : ℕ) : derivativeSign (0 : R[X]) x k = 0 := by
   simp [derivativeSign_def]
@@ -68,6 +88,7 @@ theorem derivativeSign_C (a x : R) (k : ℕ) :
   | succ k => simp
 
 /-- Shifting the polynomial shifts the derivative index. -/
+@[simp, grind =]
 theorem derivativeSign_iterate (p : R[X]) (x : R) (i j : ℕ) :
     derivativeSign (derivative^[i] p) x j = derivativeSign p x (j + i) := by
   simp only [derivativeSign_def, Function.iterate_add_apply]
@@ -162,6 +183,11 @@ theorem ordConnected_derivativeSign (p : R[X]) (hrolle : PolynomialRolle R) (σ 
   intro a ha b hb x hx
   exact (derivativeSign_eq p hrolle hx (ha.trans hb.symm)).trans ha
 
+private theorem eq_zero_of_sign (p : R[X]) {a b : R} (hab : a < b)
+    (h : ∀ x ∈ Ioo a b, sign (p.eval x) = 0) : p = 0 :=
+  p.eq_zero_of_infinite_isRoot
+    ((Ioo_infinite hab).mono fun x hx => sign_eq_zero_iff.mp (h x hx))
+
 /-- Roots with equal signs of every positive-order derivative are equal.
 The polynomial need not be squarefree. -/
 theorem thom_ext (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0) {a b : R}
@@ -174,12 +200,9 @@ theorem thom_ext (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0) {a b : R
   have no_lt {u v : R} (hu : p.eval u = 0)
       (hσ : ∀ k, derivativeSign p u k = derivativeSign p v k) (huv : u < v) : False := by
     apply hp
-    apply p.eq_zero_of_infinite_isRoot
-    apply (Ioo_infinite huv).mono
+    apply eq_zero_of_sign p huv
     intro x hx
-    have hx0 := sign_between p hrolle ⟨hx.1.le, hx.2.le⟩ hσ
-    rw [hu, sign_zero, sign_eq_zero_iff] at hx0
-    exact hx0
+    simpa only [hu, sign_zero] using sign_between p hrolle ⟨hx.1.le, hx.2.le⟩ hσ
   rcases lt_trichotomy a b with hab | hab | hba
   · exact (no_lt ha h hab).elim
   · exact hab
@@ -215,11 +238,9 @@ private theorem sign_order_aux (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     exact Or.inr ⟨sign_neg hn,
       lt_of_le_of_ne (sign.monotone (hm ⟨le_rfl, hab.le⟩ ⟨hab.le, le_rfl⟩ hab).le) hne.symm⟩
   · have hp0 : p.derivative = 0 := by
-      apply p.derivative.eq_zero_of_infinite_isRoot
-      apply (Ioo_infinite hab).mono
+      apply eq_zero_of_sign p.derivative hab
       intro x hx
-      have h := hd x ⟨hx.1.le, hx.2.le⟩
-      simpa only [Set.mem_ofPred_eq, Polynomial.IsRoot, hz, sign_zero, sign_eq_zero_iff] using h
+      simpa only [hz, sign_zero] using hd x ⟨hx.1.le, hx.2.le⟩
     have hc := eq_C_of_derivative_eq_zero hp0
     exact (hne (by rw [hc]; simp)).elim
   · have hm : StrictMonoOn p.eval (Icc a b) :=
@@ -284,6 +305,21 @@ theorem thomEncoding_order (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
     simpa only [thomEncoding_apply, Nat.sub_add_cancel hjpos] using he
   · simp [derivativeSign_eq_zero p _ (by omega : p.natDegree < j)]
 
+/-- The common finite Thom coordinate immediately above the last disagreement is nonzero. -/
+theorem thomEncoding_next_ne_zero (p : R[X]) (hrolle : PolynomialRolle R) {a b : R}
+    (i : Fin p.natDegree)
+    (hne : thomEncoding p a i ≠ thomEncoding p b i)
+    (htail : ∀ j : Fin p.natDegree, i < j → thomEncoding p a j = thomEncoding p b j) :
+    thomEncoding p a ⟨i.val + 1, thom_lt_degree p hne⟩ ≠ 0 := by
+  have hab : a ≠ b := fun h => hne (congrArg (fun x => thomEncoding p x i) h)
+  rcases hab.lt_or_gt with hlt | hlt
+  · rcases (thomEncoding_order p hrolle i hne htail).mp hlt with h | h <;>
+      simp only [h.1, ne_eq, reduceCtorEq, not_false_eq_true]
+  · have ht := fun j hj => (htail j hj).symm
+    rw [htail ⟨i.val + 1, thom_lt_degree p hne⟩ (by exact Nat.lt_succ_self i.val)]
+    rcases (thomEncoding_order p hrolle i hne.symm ht).mp hlt with h | h <;>
+      simp only [h.1, ne_eq, reduceCtorEq, not_false_eq_true]
+
 /-- The common sign immediately above the last disagreement cannot be zero. -/
 theorem thom_next_nonzero (p : R[X]) (hrolle : PolynomialRolle R) {a b : R} {k : ℕ}
     (hne : derivativeSign p a k ≠ derivativeSign p b k)
@@ -291,10 +327,12 @@ theorem thom_next_nonzero (p : R[X]) (hrolle : PolynomialRolle R) {a b : R} {k :
     derivativeSign p a (k + 1) ≠ 0 := by
   have hab : a ≠ b := fun h => hne (congrArg (fun x => derivativeSign p x k) h)
   rcases hab.lt_or_gt with hlt | hlt
-  · rcases (thom_order p hrolle hne htail).mp hlt with h | h <;> simp [h.1]
+  · rcases (thom_order p hrolle hne htail).mp hlt with h | h <;>
+      simp only [h.1, ne_eq, reduceCtorEq, not_false_eq_true]
   · have ht := fun j hj => (htail j hj).symm
     rw [htail (k + 1) (by omega)]
-    rcases (thom_order p hrolle hne.symm ht).mp hlt with h | h <;> simp [h.1]
+    rcases (thom_order p hrolle hne.symm ht).mp hlt with h | h <;>
+      simp only [h.1, ne_eq, reduceCtorEq, not_false_eq_true]
 
 /-- Distinct roots have a last disagreement strictly below the degree.
 All larger derivative signs agree, including the highest derivative sign. -/
@@ -333,20 +371,5 @@ theorem exists_thom_disagreement (p : R[X]) (hrolle : PolynomialRolle R) (hp : p
       exact ⟨by omega, hne⟩
     have hle : j ≤ k := Finset.le_max' s j hjs
     omega
-
-/-- For distinct roots the last differing derivative index exists, the next
-common sign is nonzero, and these two signs determine the root order. -/
-theorem thom_root_order (p : R[X]) (hrolle : PolynomialRolle R) (hp : p ≠ 0) {a b : R}
-    (ha : p.eval a = 0) (hb : p.eval b = 0) (hab : a ≠ b) :
-    ∃ k, 0 < k ∧ k < p.natDegree ∧
-      derivativeSign p a k ≠ derivativeSign p b k ∧
-      (∀ j, k < j → derivativeSign p a j = derivativeSign p b j) ∧
-      derivativeSign p a (k + 1) ≠ 0 ∧
-      (a < b ↔
-        (derivativeSign p a (k + 1) = 1 ∧ derivativeSign p a k < derivativeSign p b k) ∨
-        (derivativeSign p a (k + 1) = -1 ∧ derivativeSign p b k < derivativeSign p a k)) := by
-  obtain ⟨k, hk, hkd, hne, ht⟩ := exists_thom_disagreement p hrolle hp ha hb hab
-  exact ⟨k, hk, hkd, hne, ht, thom_next_nonzero p hrolle hne ht,
-    thom_order p hrolle hne ht⟩
 
 end Polynomial

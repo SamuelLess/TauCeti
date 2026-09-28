@@ -67,7 +67,8 @@ jobs:
           permission-issues: write
           permission-pull-requests: write
           permission-contents: read
-          permission-actions: read
+          # No `actions` permission: the App does not hold it, and the run listings batch.py reads
+          # are public for this public repository.
       # The trusted base checkout: the scripts that run are the ones on the target branch, never the
       # version proposed by the PR.
       - uses: actions/checkout@v4

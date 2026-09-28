@@ -131,7 +131,7 @@ theorem fullMatrix_mul_fullInverse : fullMatrix J * fullInverse J = 1 := by
 theorem fullMatrix_mulVec_occCount (obs : X → (J → SignType)) :
     fullMatrix J *ᵥ (fun σ => (occCount obs σ : ℚ)) =
       fun e => ∑ x, ∏ j, (obs x j : ℚ) ^ (e j).val := by
-  simpa only [fullMatrix, id_eq] using
+  simpa only [fullMatrix_def, id_eq] using
     Function.mulVec_occCount obs id Function.injective_id (fun x => ⟨obs x, rfl⟩)
       (fun (e : J → Fin 3) σ => ∏ j, (σ j : ℚ) ^ (e j).val)
 

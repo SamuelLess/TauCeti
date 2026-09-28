@@ -142,7 +142,8 @@ theorem tarskiQuery_eq_sum (p q : R[X]) :
     tarskiQuery p q = ∑ x ∈ p.roots.toFinset, (sign (q.eval x) : ℤ) := by
   rw [tarskiQuery_eq_signSum, signSum_eq_sum]
 
-/-- The Tarski query is the positive root count minus the negative root count. -/
+/-- The number of distinct roots of `p` where `q` is positive minus the number
+where `q` is negative. -/
 theorem tarskiQuery_eq_card_sub_card (p q : R[X]) :
     tarskiQuery p q = ((p.roots.toFinset.filter (fun x => 0 < q.eval x)).card : ℤ) -
       (p.roots.toFinset.filter (fun x => q.eval x < 0)).card := by
@@ -157,12 +158,12 @@ theorem tarskiQuery_zero_right (p : R[X]) : tarskiQuery p 0 = 0 := by
   simp [tarskiQuery_eq_signSum]
 
 @[simp, grind =]
-theorem tarskiQuery_one [ZeroLEOneClass R] (p : R[X]) :
+theorem tarskiQuery_one_right [ZeroLEOneClass R] (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
 
 /-- Counts at the roots of a nonzero polynomial count exactly its realizing zeros. -/
-theorem signCount_roots_eq_card {J : Type*} {p : R[X]} (hp : p ≠ 0)
+theorem signCount_roots_eq_natCard {J : Type*} {p : R[X]} (hp : p ≠ 0)
     (Q : J → R[X]) (σ : J → SignType) :
     signCount p.roots.toFinset Q σ =
       Nat.card {x : R // p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j} := by
@@ -170,8 +171,9 @@ theorem signCount_roots_eq_card {J : Type*} {p : R[X]} (hp : p ≠ 0)
   rw [signCount_eq_card_filter, ← Nat.card_eq_finsetCard]
   simp only [Finset.mem_filter, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
 
-/-- A Tarski query is the difference of the positive and negative zero-set cardinalities. -/
-theorem tarskiQuery_eq_card {p : R[X]} (hp : p ≠ 0) (q : R[X]) :
+/-- A Tarski query counts the zeros of `p` where `q` is positive, minus those
+where `q` is negative. -/
+theorem tarskiQuery_eq_sub {p : R[X]} (hp : p ≠ 0) (q : R[X]) :
     tarskiQuery p q = (Nat.card {x : R // p.eval x = 0 ∧ 0 < q.eval x} : ℤ) -
       Nat.card {x : R // p.eval x = 0 ∧ q.eval x < 0} := by
   classical

@@ -16,6 +16,10 @@ integer sum of signs on a specified finite set. `signSum_eq_sum_signCount` expre
 the sign sum of a product as a moment of these counts. `fullInverse_mulVec_signSum` inverts
 the full moment system over the rationals.
 
+For injective columns covering every point of the finite set, `mulVec_signCount`
+is the restricted moment identity, `eq_signCount` recovers counts using a left
+inverse, and `signCount_solution_pos_iff` characterizes realizability by positivity.
+
 The multiplicative moment identities use a compatibly ordered commutative ring.
 For root sign determination,
 take the finite set to be the distinct roots of a nonzero polynomial, possibly
@@ -124,14 +128,9 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
-  apply eq_signCount Z Q id (fun (e : J → Fin 3) j => (e j).val)
-    Function.injective_id (fun x _ => ⟨_, rfl⟩) (fullInverse J)
-  · simp only [id_eq]
-    rw [← fullMatrix_def]
-    exact fullInverse_mul_fullMatrix J
-  · simp only [id_eq]
-    rw [← fullMatrix_def, Matrix.mulVec_mulVec, fullMatrix_mul_fullInverse,
-      Matrix.one_mulVec]
+  simp_rw [signSum_prod_pow]
+  simpa only [signCount_eq_occCount] using
+    fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
 
 /-- The integer BKR moment identity on a finite set of sample points. -/
 theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]

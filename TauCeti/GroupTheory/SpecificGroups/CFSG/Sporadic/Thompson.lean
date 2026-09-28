@@ -44,11 +44,11 @@ rather than typographical.
 
 The source writes an equation `w₁ = w₂` for the relator `w₁ w₂⁻¹`, which is
 `TauCeti.Relator.div`; it writes `w₁ ^ w₂` for `w₂⁻¹ w₁ w₂`, which is `TauCeti.Relator.conj`; and
-it writes `[w₁, w₂]` for `w₁⁻¹ w₂⁻¹ w₁ w₂`, which is `TauCeti.Relator.sourceCommutator`, that is,
+it writes `[w₁, w₂]` for `w₁⁻¹ w₂⁻¹ w₁ w₂`, which is `TauCeti.Relator.commInvInv`, that is,
 Mathlib's commutator applied to the two inverses. The three conventions are pinned by
 `TauCeti.Relator.toFreeGroup_div` (with Mathlib's `div_eq_one`, which turns the relator `w₁ w₂⁻¹`
 back into the source's equation),
-`TauCeti.Relator.toFreeGroup_conj` and `TauCeti.Relator.toFreeGroup_comm_inv_inv`, so no step
+`TauCeti.Relator.toFreeGroup_conj` and `TauCeti.Relator.toFreeGroup_commInvInv`, so no step
 between the printed source and the free-group element used as a relation is left unstated.
 
 ## What is and is not claimed
@@ -103,7 +103,7 @@ following six groups of relators:
 Reading each source line against `relatorsOne` through `relatorsSix` found the same letters, order,
 exponents, equations, conjugations, and commutators. In particular, the chained equality in (6)
 becomes its two equations and no extra relation. The translation uses `.pow` for powers, `.div` for
-the source's equation `w₁ = w₂`, `.conj` for `w₁ ^ w₂`, and `Relator.sourceCommutator` for the
+the source's equation `w₁ = w₂`, `.conj` for `w₁ ^ w₂`, and `Relator.commInvInv` for the
 source convention `[w₁,w₂] = w₁⁻¹w₂⁻¹w₁w₂`; the characteristic free-group lemmas cited above check
 those three nontrivial notation choices. `relatorList` concatenates the six source groups in order,
 and their checked lengths give `14 + 6 + 7 + 7 + 1 + 4 = 39`, with none dropped or duplicated. This
@@ -218,11 +218,11 @@ Together with relators (1), on the generators `a, b, c, d, e, s`, these present 
 @[expose]
 def relatorsTwo : List (Relator (Fin 8)) :=
   [genS.pow 7,
-    Relator.sourceCommutator genS genA,
-    Relator.sourceCommutator genS genB,
-    Relator.sourceCommutator genS genC,
+    Relator.commInvInv genS genA,
+    Relator.commInvInv genS genB,
+    Relator.commInvInv genS genC,
     (genS ⬝ genD).pow 2,
-    (Relator.sourceCommutator genE genS).div (genE.conj (genS.pow 3))]
+    (Relator.commInvInv genE genS).div (genE.conj (genS.pow 3))]
 
 /-- Relators (3) of the source: `t³, [t, a], [t, b], [t, c], [t, d], [t, e], s ^ t = s²`.
 
@@ -231,11 +231,11 @@ which the final coset enumeration is run. -/
 @[expose]
 def relatorsThree : List (Relator (Fin 8)) :=
   [genT.pow 3,
-    Relator.sourceCommutator genT genA,
-    Relator.sourceCommutator genT genB,
-    Relator.sourceCommutator genT genC,
-    Relator.sourceCommutator genT genD,
-    Relator.sourceCommutator genT genE,
+    Relator.commInvInv genT genA,
+    Relator.commInvInv genT genB,
+    Relator.commInvInv genT genC,
+    Relator.commInvInv genT genD,
+    Relator.commInvInv genT genE,
     (genS.conj genT).div (genS.pow 2)]
 
 /-- Relators (4) of the source: `u² = ac, [u, a], [u, c], [u, e], (d e d ^ u)²,
@@ -247,12 +247,12 @@ relator is the one the source singles out as the crucial one, found with GAP's
 @[expose]
 def relatorsFour : List (Relator (Fin 8)) :=
   [(genU.pow 2).div (genA ⬝ genC),
-    Relator.sourceCommutator genU genA,
-    Relator.sourceCommutator genU genC,
-    Relator.sourceCommutator genU genE,
+    Relator.commInvInv genU genA,
+    Relator.commInvInv genU genC,
+    Relator.commInvInv genU genE,
     (genD ⬝ genE ⬝ genD.conj genU).pow 2,
-    (Relator.sourceCommutator genU ((genA ⬝ genC).conj genB)).div genE,
-    (Relator.sourceCommutator (genU.conj genD) ((genA ⬝ genC).conj genB)).div
+    (Relator.commInvInv genU ((genA ⬝ genC).conj genB)).div genE,
+    (Relator.commInvInv (genU.conj genD) ((genA ⬝ genC).conj genB)).div
       (genU ⬝ genE ⬝ (genA ⬝ genC).conj genB ⬝ genU.conj genD ⬝ genE ⬝ genC)]
 
 /-- Relator (5) of the source: `t ^ u = t⁻¹`.
@@ -270,9 +270,9 @@ The source obtained these last relators from explicit `248`-dimensional matrices
 generating `Th` and satisfying relators (1) to (5). -/
 @[expose]
 def relatorsSix : List (Relator (Fin 8)) :=
-  [Relator.sourceCommutator genE (genU.conj (genS.pow 2)),
+  [Relator.commInvInv genE (genU.conj (genS.pow 2)),
     (genA ⬝ genC).div ((genU ⬝ genS).pow 3),
-    ((genU ⬝ genS).pow 3).div ((Relator.sourceCommutator genU genS).pow 4),
+    ((genU ⬝ genS).pow 3).div ((Relator.commInvInv genU genS).pow 4),
     ((genD ⬝ genU.conj (genS.pow 2)).pow 4).div
       (genA ⬝ genC ⬝ genC.conj genD ⬝ genC.conj (genD ⬝ genE ⬝ Relator.inv genS) ⬝
         genC.conj (genD ⬝ genE ⬝ genS.pow 2))]
@@ -390,7 +390,7 @@ theorem map_length_relators_presentation :
         4,
         12, 8, 22, 45] := by
   simp only [GroupPresentation.relators_def, presentation, relatorList, relatorsOne, relatorsTwo,
-    relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.sourceCommutator, Relator.conj,
+    relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.commInvInv, Relator.conj,
     Relator.div, List.map_cons, List.map_nil, List.append_assoc, List.cons_append, List.nil_append,
     Relator.toWord_gen, Relator.toWord_inv, Relator.toWord_mul, Relator.toWord_pow,
     Relator.toWord_comm]
@@ -417,7 +417,7 @@ theorem map_length_reduce_relators_presentation :
         4,
         12, 8, 18, 41] := by
   simp only [GroupPresentation.relators_def, presentation, relatorList, relatorsOne, relatorsTwo,
-    relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.sourceCommutator, Relator.conj,
+    relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.commInvInv, Relator.conj,
     Relator.div, List.map_cons, List.map_nil, List.append_assoc, List.cons_append, List.nil_append,
     Relator.toWord_gen, Relator.toWord_inv, Relator.toWord_mul, Relator.toWord_pow,
     Relator.toWord_comm]
@@ -445,7 +445,7 @@ theorem isCyclicallyReduced_reduce_of_mem_presentation_relators :
   have h : (presentation.relators.all fun w =>
       decide (FreeGroup.IsCyclicallyReduced (FreeGroup.reduce w))) = true := by
     simp only [GroupPresentation.relators_def, presentation, relatorList, relatorsOne, relatorsTwo,
-      relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.sourceCommutator,
+      relatorsThree, relatorsFour, relatorsFive, relatorsSix, Relator.commInvInv,
       Relator.conj, Relator.div, List.map_cons, List.map_nil, List.append_assoc, List.cons_append,
       List.nil_append, Relator.toWord_gen, Relator.toWord_inv, Relator.toWord_mul,
       Relator.toWord_pow, Relator.toWord_comm]

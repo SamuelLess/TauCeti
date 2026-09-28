@@ -32,7 +32,7 @@ The last three are redundant, and are flagged as such by the source; they are tr
 because the coset enumerations that the source uses to justify the presentation are run with them.
 
 The source's commutator convention is `[r,s] = r⁻¹s⁻¹rs`, opposite to Mathlib's
-`commutatorElement`, so each commutator is stored as `Relator.comm (.inv r) (.inv s)` as
+`commutatorElement`, so each commutator is stored as `Relator.commInvInv r s` as
 `TauCeti.Relator` prescribes. The proved `TauCeti.Relator.toWord_toFreeGroup` is the audit boundary
 between these expressions and the signed words that `PresentedGroup` consumes.
 
@@ -198,9 +198,9 @@ def hsPresentation : GroupPresentation where
       .pow b 5,
       .pow ab1 11,
       .pow ab2 10,
-      .pow (.sourceCommutator a b) 5,
-      .pow (.sourceCommutator a (b ⬝ a ⬝ b)) 3,
-      .pow (.sourceCommutator a (.pow b 2)) 6,
+      .pow (.commInvInv a b) 5,
+      .pow (.commInvInv a (b ⬝ a ⬝ b)) 3,
+      .pow (.commInvInv a (.pow b 2)) 6,
       ab1 ⬝ ab1 ⬝ ab2 ⬝ abNeg1 ⬝ abNeg2 ⬝ abNeg1 ⬝ ab2 ⬝ ab1 ⬝ ab1 ⬝ .pow abNeg2 4,
       ab1 ⬝ .pow (ab2 ⬝ .pow abNeg2 2) 2 ⬝ ab2 ⬝ ab1 ⬝ ab2 ⬝ .pow (abNeg1 ⬝ ab2) 2,
       ab1 ⬝ ab1 ⬝ .pow ab2 2 ⬝ ab1 ⬝ .pow abNeg1 2 ⬝ ab1 ⬝ .pow ab2 2 ⬝ ab1 ⬝ ab1 ⬝
@@ -358,7 +358,7 @@ theorem hsPresentation_transcribed :
           (.gen ⟨0, by simp⟩ ⬝ .gen ⟨1, by simp⟩) ⬝
           (.gen ⟨0, by simp⟩ ⬝ .inv (.gen ⟨1, by simp⟩)) ⬝
           (.gen ⟨0, by simp⟩ ⬝ .pow (.gen ⟨1, by simp⟩) 2) ] := by
-  simp [hsPresentation]
+  simp [hsPresentation, Relator.commInvInv]
 
 /-- The generator and relator counts recorded for `HS` agree with the transcribed data. -/
 theorem hsPresentation_matchesMetadata : hsPresentation.matchesMetadata := by decide
@@ -386,7 +386,7 @@ theorem hsPresentation_relatorsCyclicallyReduced :
     hsPresentation.relatorsCyclicallyReduced := by
   simp only [GroupPresentation.relatorsCyclicallyReduced_iff, GroupPresentation.relators_def,
     hsPresentation, List.map_cons, List.map_nil, Relator.toWord_mul, Relator.toWord_pow,
-    Relator.toWord_inv, Relator.toWord_comm, Relator.toWord_gen]
+    Relator.toWord_inv, Relator.toWord_commInvInv, Relator.toWord_gen]
   decide
 
 end TauCeti.Sporadic

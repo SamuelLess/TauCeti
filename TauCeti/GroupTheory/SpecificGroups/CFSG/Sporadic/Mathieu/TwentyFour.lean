@@ -30,7 +30,7 @@ transcribed in `TauCeti.GroupTheory.SpecificGroups.CFSG.Sporadic.Mathieu.TwentyT
 inside its relator list as written and is counted.
 
 The source's commutator convention is `[r,s] = r⁻¹s⁻¹rs`, opposite to Mathlib's
-`commutatorElement`, so each commutator is stored as `Relator.comm (.inv r) (.inv s)` as
+`commutatorElement`, so each commutator is stored as `Relator.commInvInv r s` as
 `TauCeti.Relator` prescribes. The proved `TauCeti.Relator.toWord_toFreeGroup` is the audit boundary
 between these expressions and the signed words that `PresentedGroup` consumes.
 
@@ -194,8 +194,8 @@ def m24Presentation : GroupPresentation where
     [ .pow a 2,
       .pow b 3,
       .pow ab1 23,
-      .pow (.sourceCommutator a b) 12,
-      .pow (.sourceCommutator a (b ⬝ a ⬝ b)) 5,
+      .pow (.commInvInv a b) 12,
+      .pow (.commInvInv a (b ⬝ a ⬝ b)) 5,
       .pow (ab1 ⬝ ab1 ⬝ abNeg1) 3 ⬝ .pow (ab1 ⬝ abNeg1 ⬝ abNeg1) 3,
       .pow (ab1 ⬝ .pow (ab1 ⬝ abNeg1) 3) 4 ]
 
@@ -295,7 +295,7 @@ theorem m24Presentation_transcribed :
         .pow ((.gen ⟨0, by simp⟩ ⬝ .gen ⟨1, by simp⟩) ⬝
           .pow ((.gen ⟨0, by simp⟩ ⬝ .gen ⟨1, by simp⟩) ⬝
             (.gen ⟨0, by simp⟩ ⬝ .inv (.gen ⟨1, by simp⟩))) 3) 4 ] := by
-  simp [m24Presentation]
+  simp [m24Presentation, Relator.commInvInv]
 
 /-- The generator and relator counts recorded for `M₂₄` agree with the transcribed data. -/
 theorem m24Presentation_matchesMetadata : m24Presentation.matchesMetadata := by
@@ -320,7 +320,7 @@ theorem m24Presentation_relatorsCyclicallyReduced :
     m24Presentation.relatorsCyclicallyReduced := by
   simp only [GroupPresentation.relatorsCyclicallyReduced_iff, GroupPresentation.relators_def,
     m24Presentation, List.map_cons, List.map_nil, Relator.toWord_mul, Relator.toWord_pow,
-    Relator.toWord_inv, Relator.toWord_comm, Relator.toWord_gen]
+    Relator.toWord_inv, Relator.toWord_commInvInv, Relator.toWord_gen]
   decide
 
 end TauCeti.Sporadic

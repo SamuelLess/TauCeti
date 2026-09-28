@@ -34,7 +34,7 @@ theorem mulVec_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C �
       fun i => ∑ x, weight i (obs x) := by
   classical
   funext i
-  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply]
+  simp only [Matrix.mulVec_apply_eq_sum, Matrix.of_apply]
   have h := Function.sum_occCount_nsmul obs (T := Finset.univ.image columns)
     (fun x => by
       obtain ⟨c, hc⟩ := cover x

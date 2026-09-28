@@ -54,10 +54,10 @@ variable {R : Type*} [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
 private theorem signSum_prod {J : Type*} [Fintype J] (Z : Finset R) (Q : J → R[X]) :
     signSum Z (∏ j, Q j) = ∑ x : Z, ∏ j, (sign ((Q j).eval x.val) : ℤ) := by
   rw [signSum_eq_sum_subtype]
-  simp_rw [eval_prod]
-  change (∑ x : Z, SignType.castHom (signHom (∏ j, (Q j).eval x.val))) = _
-  simp only [map_prod]
-  rfl
+  apply Finset.sum_congr rfl
+  intro x _
+  rw [eval_prod]
+  exact map_prod (SignType.castHom.comp signHom) (fun j => (Q j).eval x.val) Finset.univ
 
 /-- After casting to a commutative ring, a sign sum of powers is a sum of sign products. -/
 theorem signSum_prod_pow {K : Type*} [CommRing K] {J : Type*} [Fintype J]
@@ -141,7 +141,7 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
   classical
   have h := congrFun (mulVec_signCount (K := ℤ) Z Q id (fun _ : Unit => e)
     Function.injective_id (fun x _ => ⟨_, rfl⟩)) ()
-  simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
+  simpa only [Matrix.mulVec_apply_eq_sum, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
 
 
 end Finset

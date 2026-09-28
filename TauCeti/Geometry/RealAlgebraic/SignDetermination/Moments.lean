@@ -46,15 +46,15 @@ def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
   | .neg => if e = 1 then -1/2 else if e = 2 then 1/2 else 0
   | .pos => if e = 1 then 1/2 else if e = 2 then 1/2 else 0
 
-@[simp, grind =]
+@[grind =]
 theorem inverseCoeff_zero (e : Fin 3) :
     inverseCoeff 0 e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
 
-@[simp, grind =]
+@[grind =]
 theorem inverseCoeff_neg_one (e : Fin 3) :
     inverseCoeff (-1) e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
-@[simp, grind =]
+@[grind =]
 theorem inverseCoeff_one (e : Fin 3) :
     inverseCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
@@ -77,6 +77,11 @@ variable (J : Type*) [Fintype J] [DecidableEq J]
 column per sign word. An empty coordinate set gives the one-by-one matrix. -/
 def fullMatrix : Matrix (J → Fin 3) (J → SignType) ℚ :=
   Matrix.of fun e σ => ∏ j, (σ j : ℚ) ^ (e j).val
+
+omit [DecidableEq J] in
+/-- The full matrix is the moment matrix for all sign columns and ternary exponent rows. -/
+theorem fullMatrix_def : fullMatrix J =
+    Matrix.of (fun (e : J → Fin 3) (σ : J → SignType) => ∏ j, (σ j : ℚ) ^ (e j).val) := (rfl)
 
 /-- Tensor product of the one-coordinate inverse coefficients. -/
 def fullInverse : Matrix (J → SignType) (J → Fin 3) ℚ :=

@@ -19,6 +19,14 @@ realizing each sign condition.
 The zero and unit laws reduce queries to zero or a distinct-root count, while
 `tarskiQuery_eq_card_sub_card` expresses a query as a difference of sign counts.
 The proofs use finite sign determination without Sturm theory.
+
+## References
+
+For Tarski queries and their use in sign determination, see S. Basu, R. Pollack,
+and M.-F. Roy, [Algorithms in Real Algebraic Geometry](https://doi.org/10.1007/3-540-33099-2),
+second edition, Chapter 10. The sign-matrix method originates with M. Ben-Or,
+D. Kozen, and J. Reif, “The complexity of elementary algebra and geometry”,
+Journal of Computer and System Sciences 32 (1986), 251–264.
 -/
 
 public section
@@ -62,6 +70,24 @@ theorem tarskiQuery_one [ZeroLEOneClass R] (p : R[X]) :
     tarskiQuery p 1 = p.roots.toFinset.card := by
   simp [tarskiQuery_eq_signSum]
 
+/-- Counts at the roots of a nonzero polynomial count exactly its realizing zeros. -/
+theorem signCount_roots_eq_card {J : Type*} {p : R[X]} (hp : p ≠ 0)
+    (Q : J → R[X]) (σ : J → SignType) :
+    signCount p.roots.toFinset Q σ =
+      Nat.card {x : R // p.eval x = 0 ∧ ∀ j, sign ((Q j).eval x) = σ j} := by
+  classical
+  rw [signCount_eq_card_filter, ← Nat.card_eq_finsetCard]
+  simp only [Finset.mem_filter, Multiset.mem_toFinset, mem_roots hp, IsRoot.def]
+
+/-- A Tarski query is the difference of the positive and negative zero-set cardinalities. -/
+theorem tarskiQuery_eq_card {p : R[X]} (hp : p ≠ 0) (q : R[X]) :
+    tarskiQuery p q = (Nat.card {x : R // p.eval x = 0 ∧ 0 < q.eval x} : ℤ) -
+      Nat.card {x : R // p.eval x = 0 ∧ q.eval x < 0} := by
+  classical
+  rw [tarskiQuery_eq_card_sub_card]
+  simp only [← Nat.card_eq_finsetCard, Finset.mem_filter, Multiset.mem_toFinset,
+    mem_roots hp, IsRoot.def]
+
 /-- A positive count at the roots of a nonzero polynomial is an actual realizable condition. -/
 theorem signCount_roots_pos {J : Type*}
     {p : R[X]} (hp : p ≠ 0) (Q : J → R[X]) (σ : J → SignType) :
@@ -90,7 +116,6 @@ theorem fullInverse_mulVec_tarskiQuery {J : Type*} [Fintype J] [DecidableEq J]
     fullInverse J *ᵥ (fun e => (tarskiQuery p (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount p.roots.toFinset Q σ : ℚ) := by
   simp only [tarskiQuery_eq_signSum, fullInverse_mulVec_signSum]
-
 
 end Moments
 

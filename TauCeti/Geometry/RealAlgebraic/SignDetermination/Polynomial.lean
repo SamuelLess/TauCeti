@@ -227,9 +227,14 @@ theorem fullInverse_mulVec_signSum {J : Type*} [Fintype J] [DecidableEq J]
     (Z : Finset R) (Q : J → R[X]) :
     fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ)) =
       fun σ => (signCount Z Q σ : ℚ) := by
-  simp_rw [signSum_prod_pow]
-  simpa only [signCount_eq_occCount] using
-    fullInverse_mulVec J (fun x : Z => fun j => sign ((Q j).eval x.val))
+  apply eq_signCount Z Q id (fun (e : J → Fin 3) j => (e j).val)
+    Function.injective_id (fun x _ => ⟨_, rfl⟩) (fullInverse J)
+  · simp only [id_eq]
+    rw [← fullMatrix_def]
+    exact fullInverse_mul_fullMatrix J
+  · simp only [id_eq]
+    rw [← fullMatrix_def, Matrix.mulVec_mulVec, fullMatrix_mul_fullInverse,
+      Matrix.one_mulVec]
 
 /-- The integer BKR moment identity on a finite set of sample points. -/
 theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
@@ -241,12 +246,5 @@ theorem signSum_eq_sum_signCount {J : Type*} [Fintype J] [DecidableEq J]
     Function.injective_id (fun x _ => ⟨_, rfl⟩)) ()
   simpa only [Matrix.mulVec, dotProduct, Matrix.of_apply, id_eq, Int.cast_id] using h.symm
 
-/-- The recovered sign pattern is positive exactly when it is realized. -/
-theorem fullInverse_mulVec_signSum_pos {J : Type*} [Fintype J] [DecidableEq J]
-    (Z : Finset R) (Q : J → R[X]) (σ : J → SignType) :
-    0 < (fullInverse J *ᵥ (fun e => (signSum Z (∏ j, Q j ^ (e j).val) : ℚ))) σ ↔
-      ∃ x ∈ Z, ∀ j, sign ((Q j).eval x) = σ j := by
-  rw [fullInverse_mulVec_signSum]
-  simp only [Nat.cast_pos, signCount_pos]
 
 end Finset

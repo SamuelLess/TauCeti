@@ -848,6 +848,11 @@ def main(argv: list[str] | None = None) -> int:
                              "those modules' files. A PR can add a violation only where it changes "
                              "a file, as long as the Mathlib pin is unchanged; callers lint in full "
                              "otherwise.")
+    parser.add_argument("--base-source-root", type=pathlib.Path, default=None,
+                        help="with --only-modules, the same source tree at the change's merge base: "
+                             "if the namespaces Tau Ceti owns differ between the two, every file is "
+                             "checked, because ownership decided in one file changes the findings "
+                             "of others")
     args = parser.parse_args(argv)
 
     try:
@@ -869,6 +874,18 @@ def main(argv: list[str] | None = None) -> int:
                 for name in args.only_modules.read_text().splitlines() if name.strip()}
         print(f"lint-dot-notation: checking the {len(only)} changed module(s) only")
     owned = own_declaration_paths_parallel(sources)
+    if only is not None:
+        base = args.base_source_root
+        if base is None or not base.is_dir():
+            print("lint-dot-notation: no merge-base sources to compare ownership against; "
+                  "checking every file")
+            only = None
+        else:
+            base_sources = {path: path.read_text(errors="ignore") for path in base.rglob("*.lean")}
+            if own_declaration_paths_parallel(base_sources) != owned:
+                print("lint-dot-notation: this change alters which namespaces Tau Ceti owns; "
+                      "checking every file")
+                only = None
     if only is not None:
         found = find_violations(sources, namespace_names, only=only, owned=owned)
     else:

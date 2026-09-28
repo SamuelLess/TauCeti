@@ -103,7 +103,32 @@ partial def reachesDisallowedAxiom (c : Name) : AxiomCacheM Bool := do
   modify (·.insert c res)
   return res
 
-/-- Audit every declaration defined in `TauCeti`. Returns the number audited and a list of
+/-- `seed` together with every module that imports one of them, directly or transitively.
+
+A module's compiled declarations depend on the code it imports as well as on its own source: a
+changed macro, elaborator, tactic, attribute handler or initializer in one module can change what
+an unchanged module that uses it emits when Lake rebuilds it. So the modules whose declarations a
+change can affect are exactly the changed ones and everything downstream of them; every other
+module compiles to what `main` already audited. -/
+def importersClosure (env : Environment) (seed : Std.HashSet Name) : Std.HashSet Name := Id.run do
+  let names := env.header.moduleNames
+  let data := env.header.moduleData
+  let mut importers : Std.HashMap Name (Array Name) := {}
+  for i in [0:names.size] do
+    for imp in data[i]!.imports do
+      importers := importers.insert imp.module ((importers.getD imp.module #[]).push names[i]!)
+  let mut seen := seed
+  let mut todo := seed.toArray
+  while !todo.isEmpty do
+    let m := todo.back!
+    todo := todo.pop
+    for d in importers.getD m #[] do
+      if !seen.contains d then
+        seen := seen.insert d
+        todo := todo.push d
+  return seen
+
+/-- Audit every declaration defined in `TauCeti` (in the scope, if one is given). Returns the number audited and a list of
 violation messages, **already rendered to `String`**.
 
 The strings must be materialized here, inside the environment callback: declaration and
@@ -112,6 +137,7 @@ axiom `Name`s loaded from `.olean`s live in a memory-mapped region that is unmap
 def audit (only : Option (Std.HashSet Name)) : CoreM (Nat × Array String) := do
   let env ← getEnv
   let modNames := env.allImportedModuleNames
+  let only := only.map (importersClosure env)
   let wanted (m : Name) : Bool := inAuditedLib m && (only.map (·.contains m)).getD true
   -- Candidate declarations: those defined in a `TauCeti` module (in the scope, if one is given).
   let candidates : Array Name := env.constants.fold (init := #[]) fun acc declName _ =>
@@ -138,12 +164,12 @@ def audit (only : Option (Std.HashSet Name)) : CoreM (Nat × Array String) := do
 -- imported environment down in order; an abrupt `exit()` can segfault during teardown.
 /-- The optional audit scope: `AXIOMS_ONLY_MODULES` names a file listing module names, one per line
 (pr-build.yml passes the changed modules of an ordinary PR). Unset or empty means the whole library.
+The audit then covers those modules and everything that imports them (`importersClosure`).
 
-Auditing only a PR's changed modules is sound because the library on `main` passed the full audit
-(every push to `main` and every merge-queue build runs it unscoped): a declaration's axioms can only
-change if it, or something it depends on, changed, and a disallowed axiom introduced by the change
-is reached from a declaration in a changed module. Lake-pin bumps, which change what everything
-depends on, and any change the module list cannot name are audited in full by the caller. -/
+That is sound because the library on `main` passed the full audit (every push to `main` and every
+merge-queue build runs it unscoped): a module outside the closure imports nothing that changed, so
+it compiles to exactly what was audited. Lake-pin bumps, which change what everything depends on,
+and any change the module list cannot name are audited in full by the caller. -/
 def scope : IO (Option (Std.HashSet Name)) := do
   match (← IO.getEnv "AXIOMS_ONLY_MODULES") with
   | none | some "" => return none
@@ -156,7 +182,8 @@ def main : IO UInt32 := do
   let modules ← auditedModules
   let only ← scope
   if let some s := only then
-    IO.println s!"axioms: auditing the {s.size} changed module(s) only (AXIOMS_ONLY_MODULES)"
+    IO.println s!"axioms: auditing the {s.size} changed module(s) and everything importing them \
+      (AXIOMS_ONLY_MODULES)"
   let (audited, messages) ← withImportedEnv modules (audit only)
   if audited == 0 && only.isNone then
     -- Governance tooling must fail loudly if it audited nothing (e.g. miswired import).

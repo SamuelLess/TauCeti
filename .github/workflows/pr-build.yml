@@ -863,7 +863,7 @@ jobs:
             --baseline gate/scripts/lint-dot-notation-baseline.txt \
             --mathlib-root pr/.lake/packages/mathlib/Mathlib \
             --source-root pr/TauCeti \
-            ${DOT_ONLY_MODULES:+--only-modules "$DOT_ONLY_MODULES"}
+            ${DOT_ONLY_MODULES:+--only-modules "$DOT_ONLY_MODULES" --base-source-root mergebase/TauCeti}
 
       # Enable Lake's built-in artifact cache for the build below ONLY when the public read
       # endpoints are configured (repo variables). Until then this is a no-op: LAKE_*

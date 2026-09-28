@@ -6,11 +6,9 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.Data.Matrix.OccCount
+public import TauCeti.Data.SignType.Lagrange
 import Mathlib.LinearAlgebra.Matrix.SemiringInverse
-import Mathlib.Algebra.BigOperators.Fin
-public import Mathlib.Basic.Sign.Basic
-public import Mathlib.Algebra.Field.Rat
-import Mathlib.Tactic.NormNum
+import Mathlib.Algebra.BigOperators.Ring.Finset
 
 /-! # Finite sign determination
 
@@ -37,35 +35,6 @@ public section
 open scoped Matrix
 
 open Function (occCount)
-
-namespace SignType
-
-/-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/
-def lagrangeCoeff (s : SignType) (e : Fin 3) : ℚ :=
-  match s with
-  | .zero => if e = 0 then 1 else if e = 2 then -1 else 0
-  | .neg => if e = 1 then -1/2 else if e = 2 then 1/2 else 0
-  | .pos => if e = 1 then 1/2 else if e = 2 then 1/2 else 0
-
-@[grind =]
-theorem lagrangeCoeff_zero (e : Fin 3) :
-    lagrangeCoeff 0 e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
-
-@[grind =]
-theorem lagrangeCoeff_neg_one (e : Fin 3) :
-    lagrangeCoeff (-1) e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
-
-@[grind =]
-theorem lagrangeCoeff_one (e : Fin 3) :
-    lagrangeCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
-
-/-- The one-coordinate moment matrix has an explicit rational left inverse. -/
-@[simp]
-theorem sum_lagrangeCoeff_mul_pow (s t : SignType) :
-    ∑ e : Fin 3, lagrangeCoeff s e * (t : ℚ) ^ e.val = if s = t then 1 else 0 := by
-  cases s <;> cases t <;> norm_num [Fin.sum_univ_three, lagrangeCoeff]
-
-end SignType
 
 namespace TauCeti.SignDetermination
 

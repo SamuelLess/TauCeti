@@ -6,6 +6,7 @@ Authors: Kim Morrison
 module
 
 public import TauCeti.Geometry.RealAlgebraic.SignDetermination.Moments
+import Mathlib.Basic.Sign.Basic
 public import TauCeti.Geometry.RealAlgebraic.SignDetermination.Defs
 
 /-! # Sign determination from polynomial sign sums

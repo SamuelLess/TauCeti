@@ -61,7 +61,11 @@ jobs:
     # but no runner, while newer events collapse into the one pending run behind it. Without it,
     # events arriving continuously kept one runner busy back to back; with it, a batch runs at most
     # about every two minutes (the wait plus the batch) and covers everything that arrived meanwhile.
-    environment: pr-status-debounce
+    # `deployment: false` keeps the wait timer without recording a deployment for every batch.
+    # Keep secrets out of this environment: they would become available to the job.
+    environment:
+      name: pr-status-debounce
+      deployment: false
     steps:
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1; v1 ignores permission-* inputs
         id: app-token

@@ -7,7 +7,7 @@ module
 
 public import TauCeti.Data.Fintype.Fiber
 public import Mathlib.Algebra.Polynomial.Roots
-public import Mathlib.Basic.Sign.Basic
+public import Mathlib.Basic.Sign.Defs
 import Mathlib.Algebra.Order.Ring.Int
 
 /-! # Polynomial sign counts and Tarski queries

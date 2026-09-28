@@ -7,7 +7,6 @@ module
 
 public import TauCeti.Geometry.RealAlgebraic.SignDetermination.Moments
 public import TauCeti.Geometry.RealAlgebraic.SignDetermination.Defs
-public import Mathlib.Algebra.Order.Field.Rat
 
 /-! # Sign determination from polynomial sign sums
 

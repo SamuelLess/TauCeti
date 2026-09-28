@@ -509,18 +509,6 @@ theorem exists_refined_terminal_vertex [LocallyPathConnectedSpace X]
   · exact pathComponentIn_subset.trans Set.inter_subset_left
   · exact pathComponentIn_subset.trans Set.inter_subset_right
 
-theorem isOpen_refined_tubeNeighborhood {x₀ : X} {n' : ℕ} (part : unitInterval.Partition (n' + 1))
-    {U : Fin (n' + 1) → Set X} {V : Fin (n' + 2) → Set X}
-    (hU_open : ∀ i, IsOpen (U i)) (hV_open : ∀ j, IsOpen (V j)) :
-    IsOpen {β : BasedPath x₀ |
-      (∀ i : Fin (n' + 1), Set.MapsTo β.1 (Set.Icc (part.t i.castSucc) (part.t i.succ)) (U i)) ∧
-      (∀ j, β.1 (part.t j) ∈ V j)} := by
-  simp only [Set.ofPred_and, Set.ofPred_forall]
-  refine (isOpen_iInter_of_finite fun i ↦ ?_).inter (isOpen_iInter_of_finite fun j ↦ ?_)
-  · exact (ContinuousMap.isOpen_setOfPred_mapsTo isCompact_Icc (hU_open i)).preimage
-      continuous_subtype_val
-  · exact (hV_open j).preimage ((continuous_eval_const (part.t j)).comp continuous_subtype_val)
-
 /-- **Refining the terminal vertex set of a tube.** If the last vertex set of `T` is replaced by a
 smaller `V_last'` that is itself open, path-connected and contains `endpoint α`, the resulting
 family is again open and path-connected, is contained in `T.V` pointwise, and `α` still passes
@@ -621,7 +609,13 @@ public theorem exists_open_nhds_pathComponent_preimage
       (∀ i : Fin (n' + 1), Set.MapsTo β.1 (Set.Icc (part.t i.castSucc) (part.t i.succ)) (T.U i)) ∧
       (∀ j, β.1 (part.t j) ∈ V' j)} with hN_def
   refine ⟨N, ?_, ?_, ?_, ?_⟩
-  · simpa [hN_def] using! isOpen_refined_tubeNeighborhood part T.isOpen_U hV'_open_all
+  · -- The topology on `BasedPath x₀` is induced by `Subtype.val`, so `N` is the preimage of an
+    -- open set of maps `C(I, X)`.
+    have hval : Continuous (fun β : BasedPath x₀ ↦ β.1) := continuous_subtype_val
+    have h := (part.isOpen_setOf_mapsTo_Icc_and_mem T.isOpen_U hV'_open_all).preimage hval
+    rw [Set.preimage_ofPred_eq] at h
+    -- `h` is `IsOpen N`, up to reading the vertex index type `Fin (n' + 1 + 1)` as `Fin (n' + 2)`.
+    exact h
   · -- `α ∈ N`.
     exact ⟨hα_tube.mapsTo, hα_passes_V'⟩
   · -- `N ⊆ endpoint ⁻¹' U`.

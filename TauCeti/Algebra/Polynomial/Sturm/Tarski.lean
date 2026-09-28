@@ -7,7 +7,6 @@ module
 
 public import TauCeti.Algebra.Polynomial.Sturm.SignedRemainders
 public import TauCeti.Algebra.Polynomial.Sturm.Sum
-public import TauCeti.Algebra.Polynomial.Squarefree
 
 /-! # Sturm–Tarski over an arbitrary real closed ordered field
 
@@ -99,7 +98,7 @@ theorem sturmSeq {p f q : R[X]} (h : IsTarskiSeed p f q) :
   by_cases hp : p = 0
   · subst p
     simpa using mul_derivative (0 : R[X]) f
-  simpa only [getD_head?_tail_sturmSeq hp] using h
+  simpa only [List.head?_tail, getD_getElem?_sturmSeq hp] using h
 
 end IsTarskiSeed
 
@@ -218,7 +217,8 @@ private theorem sum_sign_cons {p f q : Polynomial R} {cs : List (Polynomial R)}
 
 /-- **Sturm–Tarski** for any nonempty signed remainder chain, including a singleton.
 The seed is the second entry, or zero when the chain has only its head.
-Only roots inside the queried interval must be simple. -/
+Only roots inside the queried interval must be simple; squarefreeness is sufficient.
+See `TauCeti.Algebra.Polynomial.Squarefree` for that implication. -/
 theorem sum_sign {p f : Polynomial R} {cs : List (Polynomial R)}
     (h : IsSignedRemainderSeq (p :: cs)) (hseed : IsTarskiSeed p f (cs.head?.getD 0))
     {a b : R} (hsimple : ∀ r, a < r → r < b → p.eval r = 0 → p.derivative.eval r ≠ 0)
@@ -235,18 +235,6 @@ theorem sum_sign {p f : Polynomial R} {cs : List (Polynomial R)}
       (fun r hr => isRoot_of_mem_roots
         (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hr).1))).symm
   | cons q cs => exact sum_sign_cons h hseed hsimple hab ha hb
-
-/-- Squarefreeness supplies the simple-root hypothesis in Sturm–Tarski. -/
-theorem sum_sign_of_squarefree {p f : Polynomial R} {cs : List (Polynomial R)}
-    (h : IsSignedRemainderSeq (p :: cs)) (hseed : IsTarskiSeed p f (cs.head?.getD 0))
-    (hp : Squarefree p)
-    {a b : R} (hab : a < b) (ha : p.eval a ≠ 0) (hb : p.eval b ≠ 0) :
-    (signVariationsAt (p :: cs) a : ℤ) - signVariationsAt (p :: cs) b =
-      ∑ r ∈ p.roots.toFinset.filter (fun r => a < r ∧ r < b),
-        (SignType.sign (f.eval r) : ℤ) := by
-  apply sum_sign h hseed ?_ hab ha hb
-  intro r _ _ hr
-  exact hp.eval_derivative_ne_zero hr
 
 /-- Sturm–Tarski directly for Mathlib's concrete signed remainder sequence. -/
 theorem sum_sign_sturmSeq (p f : R[X])

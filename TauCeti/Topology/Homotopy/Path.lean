@@ -8,6 +8,7 @@ module
 public import Mathlib.Topology.Subpath
 public import Mathlib.Topology.Homotopy.Contractible
 public import Mathlib.AlgebraicTopology.FundamentalGroupoid.SimplyConnected
+public import TauCeti.Topology.UnitInterval
 -- Private: `Path.Homotopic.map_trans_evalAt` is used only in the proof of
 -- `map_nullhomotopic_of_nullhomotopic` below, so this import is not re-exported.
 import Mathlib.AlgebraicTopology.FundamentalGroupoid.InducedMaps
@@ -36,8 +37,9 @@ ambient space whose intermediate paths all stay in `V`. Analytic continuation co
 `Path.exists_monotone_range_subpath_subset` subdivides a path, by the Lebesgue number lemma on the
 unit interval, so that each consecutive subpath lies in a member of a given family of sets. It is
 used for the generation half of the groupoid van Kampen theorem in
-`AlgebraicTopology/FundamentalGroupoid/CoverGeneration.lean` and for the tube construction in
-`AlgebraicTopology/UniversalCover/PathHomotopyDiscreteness.lean`.
+`AlgebraicTopology/FundamentalGroupoid/CoverGeneration.lean`, and, repackaged over a
+`unitInterval.Partition` as `Path.exists_partition_with_property`, for the tube construction in
+`Topology/Homotopy/TubeNeighborhood.lean`.
 -/
 
 public section
@@ -194,7 +196,33 @@ theorem exists_monotone_range_subpath_subset {ι : Type*} {U : ι → Set X} {x 
   have hs' : s ∈ γ ⁻¹' U i := interior_subset (hi (by simpa using hs))
   exact hs'
 
+-- The statement is ported from https://github.com/leanprover-community/mathlib4/pull/44183.
+/-- If every point on a path has an open neighborhood satisfying `P`, then there is a partition
+`0 = t₀ ≤ ⋯ ≤ tₙ = 1` such that each segment `γ [tᵢ, tᵢ₊₁]` lies in an open set satisfying
+`P`. -/
+theorem exists_partition_with_property {x y : X} (γ : Path x y) (P : Set X → Prop)
+    (h : ∀ z ∈ range γ, ∃ U : Set X, IsOpen U ∧ z ∈ U ∧ P U) :
+    ∃ (n : ℕ) (part : unitInterval.Partition n),
+      ∀ i : Fin n, ∃ U : Set X, IsOpen U ∧ P U ∧
+        MapsTo γ (Icc (part.t i.castSucc) (part.t i.succ)) U := by
+  choose U hU_open hU_mem hU_P using h
+  obtain ⟨N, t, ht0, htN, ht_mono, ht_cover⟩ :=
+    γ.exists_monotone_range_subpath_subset (U := fun z : range γ ↦ U z.val z.property)
+      fun s ↦ ⟨⟨γ s, s, rfl⟩, γ.continuous.continuousAt.preimage_mem_nhds
+        ((hU_open _ _).mem_nhds (hU_mem _ _))⟩
+  refine ⟨N, ⟨t, ht_mono, ht0, htN⟩, fun i ↦ ?_⟩
+  obtain ⟨⟨z, hz⟩, h_seg⟩ := ht_cover i
+  rw [range_subpath_of_le _ _ _ (ht_mono i.castSucc_le_succ)] at h_seg
+  exact ⟨U z hz, hU_open z hz, hU_P z hz, fun s hs ↦ h_seg ⟨s, hs, rfl⟩⟩
+
 end Path
+
+-- Ported from https://github.com/leanprover-community/mathlib4/pull/44183.
+/-- Two points of a path-connected set are joined by a path with range in that set. -/
+theorem IsPathConnected.exists_path {X : Type*} [TopologicalSpace X] {a b : X} {U : Set X}
+    (hU : IsPathConnected U) (ha : a ∈ U) (hb : b ∈ U) : ∃ p : Path a b, range p ⊆ U :=
+  let hab : JoinedIn U a b := hU.joinedIn _ ha _ hb
+  ⟨hab.somePath, range_subset_iff.mpr hab.somePath_mem⟩
 
 namespace Path
 variable {X : Type*} [TopologicalSpace X] {x y : X}

@@ -86,22 +86,27 @@ theorem occCount_pos (f : X → S) (y : S) [Finite {x // f x = y}] :
   simp only [occCount_def, Nat.card_pos_iff, nonempty_subtype,
     and_iff_left (inferInstance : Finite {x // f x = y})]
 
+private theorem occCount_eq_card_preimage (f : X → S) (y : S) :
+    occCount f y = Nat.card (f ⁻¹' {y}) := by
+  rw [occCount_def]
+  exact Nat.card_congr (Equiv.subtypeEquivRight fun x => by
+    simp only [Set.mem_preimage, Set.mem_singleton_iff])
+
 /-- A value outside the range has occurrence count zero. -/
 @[simp]
 theorem occCount_of_notMem_range (f : X → S) (y : S) (h : y ∉ Set.range f) :
     occCount f y = 0 := by
-  have he := Set.preimage_singleton_eq_empty.mpr h
-  simpa [occCount_def, Set.preimage, Set.coe_ofPred] using
-    congrArg (fun s : Set X => Nat.card s) he
+  rw [occCount_eq_card_preimage, Set.preimage_singleton_eq_empty.mpr h]
+  exact Nat.card_of_isEmpty
 
 /-- An injective function gives occurrence count one precisely on its range. -/
 theorem occCount_of_injective (f : X → S) (hinj : Function.Injective f) (y : S)
     [Decidable (∃ x, f x = y)] :
     occCount f y = if ∃ x, f x = y then 1 else 0 := by
-  rw [occCount_def]
   split_ifs with h
-  · have hc := Nat.card_preimage_of_injective hinj (Set.singleton_subset_iff.mpr h)
-    simpa only [Set.preimage, Set.mem_singleton_iff, Set.coe_ofPred, Nat.card_unique] using hc
+  · rw [occCount_eq_card_preimage]
+    simpa only [Nat.card_unique] using
+      Nat.card_preimage_of_injective hinj (Set.singleton_subset_iff.mpr h)
   · exact occCount_of_notMem_range f y h
 
 /-- Every value of an injective function occurs exactly once. -/

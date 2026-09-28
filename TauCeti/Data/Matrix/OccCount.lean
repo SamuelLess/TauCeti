@@ -26,7 +26,7 @@ variable {X S C I : Type*} [Fintype X] [Fintype C] [Fintype I]
     [DecidableEq C]
 
 omit [Fintype I] [DecidableEq C] in
-/-- Complete candidate columns satisfy the moment equations. -/
+/-- Injective candidate columns covering every observation satisfy the moment equations. -/
 theorem mulVec_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) :
@@ -42,9 +42,8 @@ theorem mulVec_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C �
   rw [Finset.sum_image hinj.injOn] at h
   simpa only [nsmul_eq_mul, Nat.cast_comm] using h
 
-/-- An independently checked left inverse gives uniqueness on the candidate
-columns. Coverage is an essential separate premise, not a consequence of this
-matrix identity. -/
+/-- A left inverse gives uniqueness for injective candidate columns covering every
+observation. Coverage is a separate premise, not a consequence of the matrix identity. -/
 theorem eq_occCount {K : Type*} [Semiring K] (obs : X → S) (columns : C → S)
     (hinj : Function.Injective columns) (cover : ∀ x, ∃ c, columns c = obs x)
     (weight : I → S → K) (A : Matrix C I K)

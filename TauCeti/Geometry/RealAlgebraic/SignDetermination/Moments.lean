@@ -14,10 +14,11 @@ import Mathlib.Tactic.NormNum
 
 /-! # Finite sign determination
 
-Counts refer to an actual finite family of observations, independently of a
-proposed solution of a moment system. `Function.eq_occCount` recovers multiplicities on
-candidate columns only when they cover every observation. `fullInverse_mulVec` gives
-an explicit inverse for all ternary sign conditions.
+`SignType.lagrangeCoeff` gives the coefficients of the Lagrange indicator
+polynomials on `{-1,0,1}`. The full ternary moment matrix `fullMatrix` has one row
+per exponent word and one column per sign word. Its tensor inverse `fullInverse`
+is both a left and a right inverse; `fullInverse_mulVec` recovers occurrence
+counts from all sign moments, including when the coordinate set is empty.
 
 Here `X` indexes observations and `J` indexes the sign queries.
 
@@ -40,29 +41,29 @@ open Function (occCount)
 namespace SignType
 
 /-- Coefficients of the three Lagrange indicator polynomials on `{-1,0,1}`. -/
-def inverseCoeff (s : SignType) (e : Fin 3) : ℚ :=
+def lagrangeCoeff (s : SignType) (e : Fin 3) : ℚ :=
   match s with
   | .zero => if e = 0 then 1 else if e = 2 then -1 else 0
   | .neg => if e = 1 then -1/2 else if e = 2 then 1/2 else 0
   | .pos => if e = 1 then 1/2 else if e = 2 then 1/2 else 0
 
 @[grind =]
-theorem inverseCoeff_zero (e : Fin 3) :
-    inverseCoeff 0 e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
+theorem lagrangeCoeff_zero (e : Fin 3) :
+    lagrangeCoeff 0 e = if e = 0 then 1 else if e = 2 then -1 else 0 := (rfl)
 
 @[grind =]
-theorem inverseCoeff_neg_one (e : Fin 3) :
-    inverseCoeff (-1) e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
+theorem lagrangeCoeff_neg_one (e : Fin 3) :
+    lagrangeCoeff (-1) e = if e = 1 then -1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
 @[grind =]
-theorem inverseCoeff_one (e : Fin 3) :
-    inverseCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
+theorem lagrangeCoeff_one (e : Fin 3) :
+    lagrangeCoeff 1 e = if e = 1 then 1/2 else if e = 2 then 1/2 else 0 := (rfl)
 
 /-- The one-coordinate moment matrix has an explicit rational left inverse. -/
 @[simp]
-theorem sum_inverseCoeff_mul_pow (s t : SignType) :
-    ∑ e : Fin 3, inverseCoeff s e * (t : ℚ) ^ e.val = if s = t then 1 else 0 := by
-  cases s <;> cases t <;> norm_num [Fin.sum_univ_three, inverseCoeff]
+theorem sum_lagrangeCoeff_mul_pow (s t : SignType) :
+    ∑ e : Fin 3, lagrangeCoeff s e * (t : ℚ) ^ e.val = if s = t then 1 else 0 := by
+  cases s <;> cases t <;> norm_num [Fin.sum_univ_three, lagrangeCoeff]
 
 end SignType
 
@@ -85,7 +86,7 @@ theorem fullMatrix_def : fullMatrix J =
 
 /-- Tensor product of the one-coordinate inverse coefficients. -/
 def fullInverse : Matrix (J → SignType) (J → Fin 3) ℚ :=
-  Matrix.of fun σ e => ∏ j, inverseCoeff (σ j) (e j)
+  Matrix.of fun σ e => ∏ j, lagrangeCoeff (σ j) (e j)
 
 omit [DecidableEq J] in
 @[simp, grind =]
@@ -95,10 +96,10 @@ theorem fullMatrix_apply (e : J → Fin 3) (σ : J → SignType) :
 omit [DecidableEq J] in
 @[simp, grind =]
 theorem fullInverse_apply (σ : J → SignType) (e : J → Fin 3) :
-    fullInverse J σ e = ∏ j, inverseCoeff (σ j) (e j) := (rfl)
+    fullInverse J σ e = ∏ j, lagrangeCoeff (σ j) (e j) := (rfl)
 
-/-- The tensor inverse works for every finite number of sign queries,
-including zero. This is the uniqueness fact a full-table solver needs. -/
+/-- `fullInverse` is a left inverse of `fullMatrix` for every finite number of
+sign queries, including zero. -/
 @[simp, grind =]
 theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
   classical
@@ -106,8 +107,8 @@ theorem fullInverse_mul_fullMatrix : fullInverse J * fullMatrix J = 1 := by
   rw [Matrix.mul_apply, Matrix.one_apply]
   simp only [fullInverse_apply, fullMatrix_apply]
   simp only [← Finset.prod_mul_distrib]
-  rw [← Fintype.prod_sum (fun (j : J) (e : Fin 3) => inverseCoeff (σ j) e * (τ j : ℚ) ^ e.val)]
-  simp only [sum_inverseCoeff_mul_pow]
+  rw [← Fintype.prod_sum (fun (j : J) (e : Fin 3) => lagrangeCoeff (σ j) e * (τ j : ℚ) ^ e.val)]
+  simp only [sum_lagrangeCoeff_mul_pow]
   by_cases heq : σ = τ
   · subst τ
     simp

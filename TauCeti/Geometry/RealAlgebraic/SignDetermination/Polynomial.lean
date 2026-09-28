@@ -199,9 +199,11 @@ theorem eq_signCount {K : Type*} [CommRing K] {J C I : Type*}
     (hsolve : (Matrix.of fun i c => ∏ j, (columns c j : K) ^ rows i j) *ᵥ proposed =
       fun i => (signSum Z (∏ j, Q j ^ rows i j) : K)) :
     proposed = fun c => (signCount Z Q (columns c) : K) := by
-  have hm := mulVec_signCount (K := K) Z Q columns rows hinj cover
-  have he := congrArg (fun v => A *ᵥ v) (hsolve.trans hm.symm)
-  simpa only [Matrix.mulVec_mulVec, hA, Matrix.one_mulVec] using he
+  simp_rw [signSum_prod_pow] at hsolve
+  simpa only [signCount_eq_occCount] using
+    Function.eq_occCount (fun x : Z => fun j => sign ((Q j).eval x.val)) columns hinj
+      (fun x => cover x.val x.property) (fun i σ => ∏ j, (σ j : K) ^ rows i j)
+      A hA proposed hsolve
 
 /-- Positive entries of a solved, complete polynomial moment system are exactly
 its realizable candidate sign conditions. -/

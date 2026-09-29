@@ -415,6 +415,26 @@ theorem explicitMap0_comp {H : Type*} [Monoid H] {N : Type*} [AddCommGroup N]
       (explicitMap0 H N ψ q hequivq).comp (explicitMap0 G M φ f hequiv) :=
   AddMonoidHom.ext fun _ => Subtype.ext (rfl)
 
+/-- A coefficient homomorphism induces an additive map on degree-zero cohomology: the
+compatible-pair pullback along the identity of the group. -/
+def explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N] (f : M →+[G] N) :
+    H0 G M →+ H0 G N :=
+  explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m)
+
+/-- The degree-zero coefficient map applies the underlying coefficient homomorphism. -/
+@[simp]
+theorem coe_explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
+    (f : M →+[G] N) (m : H0 G M) : (explicitCoeff0 G M f m : N) = f (m : M) :=
+  coe_explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m) m
+
+/-- A coefficient map in degree zero is the compatible-pair pullback along the identity of the
+group. -/
+theorem explicitCoeff0_eq_explicitMap0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
+    (f : M →+[G] N) :
+    explicitCoeff0 G M f =
+      explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m) :=
+  (rfl)
+
 end CompatiblePairDegreeZero
 
 section RestrictionDegreeZero
@@ -422,41 +442,15 @@ section RestrictionDegreeZero
 variable (G : Type u) [Group G] (M : Type v) [AddCommGroup M] [DistribMulAction G M]
   (U : Subgroup G)
 
-private def H0.toFixedPointsTop : H0 G M →+ FixedPoints.addSubmonoid (⊤ : Subgroup G) M where
-  toFun m := ⟨m, (FixedPoints.mem_addSubmonoid (⊤ : Subgroup G) M m).2 fun g =>
-    (FixedPoints.mem_addSubgroup G M m).1 m.2 (g : G)⟩
-  map_zero' := rfl
-  map_add' _ _ := rfl
-
-private def H0.ofFixedPointsTop : FixedPoints.addSubmonoid (⊤ : Subgroup G) M →+ H0 G M where
-  toFun m := ⟨m, (FixedPoints.mem_addSubgroup G M m).2 fun g =>
-    (FixedPoints.mem_addSubmonoid (⊤ : Subgroup G) M m).1 m.2 ⟨g, Subgroup.mem_top g⟩⟩
-  map_zero' := rfl
-  map_add' _ _ := rfl
-
-/-- A coefficient homomorphism induces an additive map on degree-zero cohomology. -/
-def explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N] (f : M →+[G] N) :
-    H0 G M →+ H0 G N :=
-  (H0.ofFixedPointsTop G N).comp
-    ((fixedPointsMap f (⊤ : Subgroup G)).comp (H0.toFixedPointsTop G M))
-
-/-- The degree-zero coefficient map applies the underlying coefficient homomorphism. -/
-@[simp]
-theorem coe_explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
-    (f : M →+[G] N) (m : H0 G M) : (explicitCoeff0 G M f m : N) = f (m : M) := by
-  unfold explicitCoeff0 H0.ofFixedPointsTop H0.toFixedPointsTop
-  exact coe_fixedPointsMap f ⊤ _
-
-/-- **Restriction in degree zero**, the inclusion `H⁰(G, M) → H⁰(U, M)`. -/
+/-- **Restriction in degree zero**, the inclusion `H⁰(G, M) → H⁰(U, M)`: the compatible-pair
+pullback along the inclusion of the subgroup, with the identity on the coefficients. -/
 def explicitRes0 : H0 G M →+ H0 U M :=
-  (fixedPointsInclusion (M := M) (show U ≤ (⊤ : Subgroup G) from le_top)).comp
-    (H0.toFixedPointsTop G M)
+  explicitMap0 G M U.subtype (AddMonoidHom.id M) (fun _ _ => rfl)
 
 /-- Restriction in degree zero does not change the underlying coefficient. -/
 @[simp]
-theorem coe_explicitRes0 (m : H0 G M) : (explicitRes0 G M U m : M) = m := by
-  unfold explicitRes0 H0.toFixedPointsTop
-  exact coe_fixedPointsInclusion (M := M) (show U ≤ (⊤ : Subgroup G) from le_top) _
+theorem coe_explicitRes0 (m : H0 G M) : (explicitRes0 G M U m : M) = m :=
+  coe_explicitMap0 G M U.subtype (AddMonoidHom.id M) (fun _ _ => rfl) m
 
 /-- Restriction in degree zero is natural in equivariant coefficient homomorphisms. -/
 theorem map_explicitRes0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
@@ -477,17 +471,7 @@ with the identity on the coefficients. -/
 theorem explicitRes0_eq_explicitMap0 :
     explicitRes0 G M U =
       explicitMap0 G M U.subtype (AddMonoidHom.id M) (fun _ _ => rfl) :=
-  AddMonoidHom.ext fun m => Subtype.ext ((coe_explicitRes0 G M U m).trans
-    (coe_explicitMap0 G M U.subtype (AddMonoidHom.id M) (fun _ _ => rfl) m).symm)
-
-/-- A coefficient map in degree zero is the compatible-pair pullback along the identity of the
-group. -/
-theorem explicitCoeff0_eq_explicitMap0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
-    (f : M →+[G] N) :
-    explicitCoeff0 G M f =
-      explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m) :=
-  AddMonoidHom.ext fun m => Subtype.ext ((coe_explicitCoeff0 G M f m).trans
-    (coe_explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m) m).symm)
+  (rfl)
 
 end RestrictionDegreeZero
 

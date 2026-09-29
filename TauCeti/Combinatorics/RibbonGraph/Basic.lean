@@ -18,15 +18,16 @@ import TauCeti.GroupTheory.Perm.Basic
 
 A finite bipartite ribbon graph consists of a finite set of edges, finite sets of black and white
 vertices, an endpoint of each colour for every edge, and a cyclic order on the edges incident to
-each vertex.  The cyclic orders are encoded by two permutations of the common edge set.  Requiring
-each incidence fibre to be a single cycle excludes isolated vertices and makes the encoding
-extensional: there is no unused cyclic-order data away from the incident edges.
+each vertex.  The cyclic orders are encoded by two permutations of the common edge set.  The two
+endpoint maps are surjective, which excludes isolated vertices, and requiring each incidence
+fibre to be a single cycle makes the encoding extensional: there is no unused cyclic-order data
+away from the incident edges.
 
-The product of the two vertex rotations determines the face permutation.  Its orbits are the
-faces of the associated oriented combinatorial surface, so the Euler characteristic is
-`|B| + |W| - |E| + |F|`.  This file also provides morphisms, isomorphisms, automorphisms,
-connected components, vertex degrees, the two incidence degree-sum formulas, and the copy of a
-ribbon graph in a higher universe.
+The product of the two vertex rotations determines the face permutation, whose orbits are the
+faces.  Gluing a disc into each face gives a closed oriented surface, one for each connected
+component, and `eulerChar` is its Euler characteristic `|B| + |W| - |E| + |F|`.  This file also
+provides morphisms, isomorphisms, automorphisms, connected components, vertex degrees, the two
+incidence degree-sum formulas, and the copy of a ribbon graph in a higher universe.
 
 ## References
 
@@ -215,7 +216,9 @@ noncomputable def faceCount : ℕ :=
 /-- The number of faces is the number of orbits of the face permutation. -/
 theorem faceCount_def : Γ.faceCount = Fintype.card Γ.Face := (rfl)
 
-/-- The Euler characteristic of the oriented combinatorial surface carried by the ribbon graph. -/
+/-- The Euler characteristic `|B| + |W| + F - |E|` of the closed oriented surface obtained by
+gluing a disc into each face of the ribbon graph (a disjoint union of closed surfaces when the
+graph is disconnected). -/
 noncomputable def eulerChar : ℤ :=
   Fintype.card Γ.B + Fintype.card Γ.W + Γ.faceCount - Fintype.card Γ.E
 

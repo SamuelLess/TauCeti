@@ -125,8 +125,8 @@ noncomputable def adjointEquiv (hA : A.IsNondegenerate) :
 
 @[simp]
 theorem adjointEquiv_apply (hA : A.IsNondegenerate) (x : A) :
-    A.adjointEquiv hA x = A.toFiniteBilinearModule.pairing x := by
-  exact A.toFiniteBilinearModule.adjointEquiv_apply hA x
+    A.adjointEquiv hA x = A.toFiniteBilinearModule.pairing x :=
+  A.toFiniteBilinearModule.adjointEquiv_apply hA x
 
 /-! ## Morphisms and isometries -/
 
@@ -390,8 +390,8 @@ theorem neg_toFiniteBilinearModule :
 
 /-- Form negation preserves nondegeneracy. -/
 @[simp]
-theorem isNondegenerate_neg : A.neg.IsNondegenerate ↔ A.IsNondegenerate := by
-  exact A.toFiniteBilinearModule.isNondegenerate_neg
+theorem isNondegenerate_neg : A.neg.IsNondegenerate ↔ A.IsNondegenerate :=
+  A.toFiniteBilinearModule.isNondegenerate_neg
 
 /-- The orthogonal product of two finite quadratic modules.
 
@@ -425,8 +425,8 @@ theorem prod_toFiniteBilinearModule (B : FiniteQuadraticModule) :
 /-- An orthogonal product is nondegenerate exactly when both factors are nondegenerate. -/
 @[simp]
 theorem isNondegenerate_prod (B : FiniteQuadraticModule) :
-    (A.prod B).IsNondegenerate ↔ A.IsNondegenerate ∧ B.IsNondegenerate := by
-  exact A.toFiniteBilinearModule.isNondegenerate_prod B.toFiniteBilinearModule
+    (A.prod B).IsNondegenerate ↔ A.IsNondegenerate ∧ B.IsNondegenerate :=
+  A.toFiniteBilinearModule.isNondegenerate_prod B.toFiniteBilinearModule
 
 /-! ## Quadratic isotropy -/
 
@@ -582,8 +582,8 @@ theorem IsLagrangian.eq_orthogonalComplement {H : AddSubgroup A} (hH : A.IsLagra
 when its squared order is the order of the ambient module. -/
 theorem IsIsotropic.isLagrangian_of_card_sq_eq {H : AddSubgroup A}
     (hH : A.IsIsotropic H) (hA : A.IsNondegenerate)
-    (hcard : Nat.card H ^ 2 = Nat.card A) : A.IsLagrangian H := by
-  exact ⟨hH, FiniteBilinearModule.IsIsotropic.isLagrangian_of_card_sq_eq
+    (hcard : Nat.card H ^ 2 = Nat.card A) : A.IsLagrangian H :=
+  ⟨hH, FiniteBilinearModule.IsIsotropic.isLagrangian_of_card_sq_eq
     A.toFiniteBilinearModule hH.toFiniteBilinearModule hA hcard⟩
 
 /-! ## Quotients by isotropic subgroups -/
@@ -663,8 +663,8 @@ theorem quotientOfLeQuadraticRadicalMk_apply (K : AddSubgroup A)
 theorem quotientOfLeQuadraticRadical_quadratic_mk (K : AddSubgroup A)
     (hK : K.toIntSubmodule ≤ A.quadratic.radical) (x : A) :
     (A.quotientOfLeQuadraticRadical K hK).quadratic
-      (A.quotientOfLeQuadraticRadicalMk K hK x) = A.quadratic x := by
-  exact QuadraticMap.lift_mk hK x
+      (A.quotientOfLeQuadraticRadicalMk K hK x) = A.quadratic x :=
+  QuadraticMap.lift_mk hK x
 
 /-- The quotient polar pairing is represented by the original pairing. -/
 @[simp]
@@ -732,15 +732,15 @@ polar pairing. -/
 theorem isNondegenerate_quotientOfLeQuadraticRadical_iff (K : AddSubgroup A)
     (hK : K.toIntSubmodule ≤ A.quadratic.radical) :
     (A.quotientOfLeQuadraticRadical K hK).IsNondegenerate ↔
-      A.toFiniteBilinearModule.radical ≤ K := by
-  exact A.toFiniteBilinearModule.isNondegenerate_quotientOfLeRadical_iff K
+      A.toFiniteBilinearModule.radical ≤ K :=
+  A.toFiniteBilinearModule.isNondegenerate_quotientOfLeRadical_iff K
     (A.le_radical_of_toIntSubmodule_le_quadraticRadical hK)
 
 /-- The order of a quadratic quotient is the index of the subgroup being divided out. -/
 theorem card_quotientOfLeQuadraticRadical (K : AddSubgroup A)
     (hK : K.toIntSubmodule ≤ A.quadratic.radical) :
-    Nat.card (A.quotientOfLeQuadraticRadical K hK) = K.index := by
-  exact A.toFiniteBilinearModule.card_quotientOfLeRadical K
+    Nat.card (A.quotientOfLeQuadraticRadical K hK) = K.index :=
+  A.toFiniteBilinearModule.card_quotientOfLeRadical K
     (A.le_radical_of_toIntSubmodule_le_quadraticRadical hK)
 
 /-! ### The induced quadratic form on `H^⊥ / H` -/
@@ -953,8 +953,6 @@ theorem IsNondegenerate.card_orthogonalQuotient_mul_card_sq (hA : A.IsNondegener
 /-! ### Transport of an orthogonal quotient along an isometry -/
 
 namespace Isometry
-
-universe w
 
 variable {A : FiniteQuadraticModule.{u}} {B : FiniteQuadraticModule.{v}}
 

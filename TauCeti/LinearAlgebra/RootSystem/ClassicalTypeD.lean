@@ -580,7 +580,7 @@ private lemma two_mul_typeDSimpleRootCoordinates (hn : 4 ≤ n) (x : TypeDRoot n
       ite_true, mul_sub, h2]
   · simp [h2]
 
-/-- The doubled fundamental coweights separate the vectors of `ℤ ^ n`: their Gram matrix against
+/-- The doubled fundamental coweights separate the vectors of `ℤ ^ n`: their pairing matrix with
 the simple roots is `2 • 1`, so their matrix has nonzero determinant. -/
 private lemma eq_zero_of_typeDDoubleCoweight_dotProduct (hn : 4 ≤ n) {v : Fin n → ℤ}
     (hv : ∀ k, typeDDoubleCoweight n k ⬝ᵥ v = 0) : v = 0 := by

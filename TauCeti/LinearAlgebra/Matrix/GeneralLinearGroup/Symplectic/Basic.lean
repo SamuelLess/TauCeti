@@ -7,7 +7,7 @@ module
 
 -- `Matrix.symplecticGroup`, `Matrix.J`, and the `SymplecticGroup` lemmas occur in the
 -- statements below.
-public import TauCeti.LinearAlgebra.Matrix.SymplecticGroup
+public import TauCeti.LinearAlgebra.SymplecticGroup
 -- This module supplies general-linear-group reindexing and re-exports the `GL` notation and its
 -- matrix coercion.
 public import TauCeti.LinearAlgebra.Matrix.GeneralLinearGroup.Equivalence

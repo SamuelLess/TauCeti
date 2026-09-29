@@ -580,10 +580,11 @@ private lemma two_mul_typeDSimpleRootCoordinates (hn : 4 ≤ n) (x : TypeDRoot n
       ite_true, mul_sub, h2]
   · simp [h2]
 
-/-- The doubled fundamental coweights separate the vectors of `ℤ ^ n`: their pairing matrix with
-the simple roots is `2 • 1`, so their matrix has nonzero determinant. -/
-private lemma eq_zero_of_typeDDoubleCoweight_dotProduct (hn : 4 ≤ n) {v : Fin n → ℤ}
-    (hv : ∀ k, typeDDoubleCoweight n k ⬝ᵥ v = 0) : v = 0 := by
+/-- Every type `Dₙ` root is the indicated integral combination of the Bourbaki simple roots. -/
+theorem sum_smul_typeDSimpleRootCoordinates (hn : 4 ≤ n) (x : TypeDRoot n) :
+    ∑ i : Fin n, typeDSimpleRootCoordinates n hn x i • typeDSimpleRoot n hn i = x.1 := by
+  -- The doubled coweights pair with the simple roots by `2 • 1`, so their matrix is nonsingular
+  -- and a vector that every doubled coweight annihilates is zero.
   have hWA : Matrix.of (typeDDoubleCoweight n) *
       Matrix.transpose (Matrix.of (typeDSimpleRoot n hn)) = Matrix.diagonal fun _ => 2 := by
     ext k i
@@ -595,12 +596,9 @@ private lemma eq_zero_of_typeDDoubleCoweight_dotProduct (hn : 4 ≤ n) {v : Fin 
     rw [Matrix.det_mul, h, zero_mul, Matrix.det_diagonal] at this
     simp at this
     exact pow_ne_zero n two_ne_zero this.symm
-  exact Matrix.eq_zero_of_mulVec_eq_zero hdet (funext fun k => hv k)
-
-/-- Every type `Dₙ` root is the indicated integral combination of the Bourbaki simple roots. -/
-theorem sum_smul_typeDSimpleRootCoordinates (hn : 4 ≤ n) (x : TypeDRoot n) :
-    ∑ i : Fin n, typeDSimpleRootCoordinates n hn x i • typeDSimpleRoot n hn i = x.1 := by
-  refine sub_eq_zero.mp (eq_zero_of_typeDDoubleCoweight_dotProduct hn fun k => ?_)
+  have hsep (v : Fin n → ℤ) (hv : ∀ k, typeDDoubleCoweight n k ⬝ᵥ v = 0) : v = 0 :=
+    Matrix.eq_zero_of_mulVec_eq_zero hdet (funext fun k => hv k)
+  refine sub_eq_zero.mp (hsep _ fun k => ?_)
   rw [dotProduct_sub, typeDDoubleCoweight_dotProduct_sum_smul, two_mul_typeDSimpleRootCoordinates,
     sub_self]
 

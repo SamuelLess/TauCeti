@@ -211,10 +211,8 @@ theorem d0_eq_zero_of_smul_eq_self : d0 G M = 0 :=
   AddMonoidHom.ext fun m => funext fun g => by simp [htriv g m]
 
 /-- For a trivial action there are no nonzero `1`-coboundaries. -/
-theorem B1_eq_bot_of_smul_eq_self : B1 G M = ⊥ := by
-  refine eq_bot_iff.2 fun f hf => ?_
-  obtain ⟨m, rfl⟩ := AddMonoidHom.mem_range.1 hf
-  simp [d0_eq_zero_of_smul_eq_self htriv]
+theorem B1_eq_bot_of_smul_eq_self : B1 G M = ⊥ :=
+  AddMonoidHom.range_eq_bot_iff.2 (d0_eq_zero_of_smul_eq_self htriv)
 
 end TrivialAction
 
@@ -264,38 +262,17 @@ theorem d2_apply (f : G × G → M) (g h j : G) :
 @[simp]
 theorem d1_apply_eq_zero_iff {f : G → M} :
     d1 G M f = 0 ↔ groupCohomology.IsCocycle₁ f := by
-  simp only [funext_iff, Prod.forall, groupCohomology.IsCocycle₁]
-  refine forall_congr' fun g => forall_congr' fun h => ?_
-  rw [d1_apply, Pi.zero_apply]
-  constructor
-  · intro hgh
-    calc
-      f (g * h) = f (g * h) + (g • f h - f (g * h) + f g) := by rw [hgh, add_zero]
-      _ = g • f h + f g := by abel
-  · intro hgh
-    rw [hgh]
-    abel
+  simp only [funext_iff, Prod.forall, groupCohomology.IsCocycle₁, d1_apply, Pi.zero_apply]
+  exact forall₂_congr fun g h => by rw [sub_add_eq_add_sub, sub_eq_zero, eq_comm]
 
 /-- A `2`-cochain is killed by `d²` exactly when it is a `2`-cocycle. -/
 @[simp]
 theorem d2_apply_eq_zero_iff {f : G × G → M} :
     d2 G M f = 0 ↔ groupCohomology.IsCocycle₂ f := by
-  simp only [funext_iff, Prod.forall, groupCohomology.IsCocycle₂]
-  refine forall_congr' fun g => forall_congr' fun h => forall_congr' fun j => ?_
-  rw [d2_apply, Pi.zero_apply]
-  constructor
-  · intro hghj
-    calc
-      f (g * h, j) + f (g, h) =
-          f (g * h, j) + f (g, h) +
-            (g • f (h, j) - f (g * h, j) + f (g, h * j) - f (g, h)) := by
-              rw [hghj, add_zero]
-      _ = g • f (h, j) + f (g, h * j) := by abel
-  · intro hghj
-    calc
-      g • f (h, j) - f (g * h, j) + f (g, h * j) - f (g, h) =
-          (g • f (h, j) + f (g, h * j)) - (f (g * h, j) + f (g, h)) := by abel
-      _ = 0 := by rw [← hghj, sub_self]
+  simp only [funext_iff, Prod.forall, groupCohomology.IsCocycle₂, d2_apply, Pi.zero_apply]
+  refine forall₃_congr fun g h j => ?_
+  rw [← sub_eq_zero (a := f (g * h, j) + f (g, h)), ← neg_eq_zero]
+  exact Eq.congr_left (by abel)
 
 end CocycleConditions
 
@@ -850,10 +827,8 @@ variable (G : Type u) [Monoid G] [TopologicalSpace G] [Subsingleton G]
 vanishes at the only element. -/
 instance subsingleton_H1_of_subsingleton : Subsingleton (H1 G M) := by
   have hzero : ∀ f : Z1 G M, (f : G → M) = 0 := fun f => funext fun g => by
-    have h := (mem_Z1_iff.1 f.2).2 1 1
     rw [Subsingleton.elim g 1]
-    rw [mul_one, one_smul] at h
-    simpa using h
+    exact map_one_of_mem_Z1 f.2
   refine ⟨fun x y => ?_⟩
   induction x using QuotientAddGroup.induction_on with
   | _ f =>

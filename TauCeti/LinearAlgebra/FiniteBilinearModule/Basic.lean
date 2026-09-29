@@ -413,18 +413,7 @@ No nondegeneracy conclusion is asserted: a subgroup of a nondegenerate module ca
 degenerate restricted pairing. -/
 abbrev restrict (H : AddSubgroup A) : FiniteBilinearModule where
   carrier := H
-  pairing :=
-    { toFun := fun (x : H) ↦
-        { toFun := fun (y : H) ↦ A.pairing x.1 y.1
-          map_zero' := A.pairing_zero_right x.1
-          map_add' := fun y z ↦ by
-            simp only [AddSubgroup.coe_add, pairing_add_right] }
-      map_zero' := by
-        ext (x : H)
-        exact A.pairing_zero_left x.1
-      map_add' := fun (x y : H) ↦ by
-        ext (z : H)
-        exact A.pairing_add_left x.1 y.1 z.1 }
+  pairing := (A.pairing.comp H.subtype).compl₂ H.subtype
   pairing_comm x y := A.pairing_comm x.1 y.1
 
 theorem restrict_pairing (H : AddSubgroup A) (x y : H) :
@@ -465,22 +454,8 @@ theorem isNondegenerate_neg : A.neg.IsNondegenerate ↔ A.IsNondegenerate := by
 abbrev prod (B : FiniteBilinearModule) : FiniteBilinearModule where
   carrier := A.carrier × B.carrier
   pairing :=
-    { toFun := fun x ↦
-        { toFun := fun y ↦ A.pairing x.1 y.1 + B.pairing x.2 y.2
-          map_zero' := by
-            simp only [Prod.fst_zero, Prod.snd_zero, pairing_zero_right, add_zero]
-          map_add' := fun y z ↦ by
-            simp only [Prod.fst_add, Prod.snd_add, pairing_add_right]
-            abel }
-      map_zero' := by
-        ext ⟨z₁, z₂⟩
-        exact (congrArg₂ (· + ·) (A.pairing_zero_left z₁) (B.pairing_zero_left z₂)).trans
-          (add_zero 0)
-      map_add' := fun ⟨x₁, x₂⟩ ⟨y₁, y₂⟩ ↦ by
-        ext ⟨z₁, z₂⟩
-        exact (congrArg₂ (· + ·) (A.pairing_add_left x₁ y₁ z₁) (B.pairing_add_left x₂ y₂ z₂)).trans
-          (add_add_add_comm (A.pairing x₁ z₁) (A.pairing y₁ z₁) (B.pairing x₂ z₂)
-            (B.pairing y₂ z₂)) }
+    (A.pairing.comp (AddMonoidHom.fst _ _)).compl₂ (AddMonoidHom.fst _ _) +
+      (B.pairing.comp (AddMonoidHom.snd _ _)).compl₂ (AddMonoidHom.snd _ _)
   pairing_comm := fun ⟨x₁, x₂⟩ ⟨y₁, y₂⟩ ↦
     congrArg₂ (· + ·) (A.pairing_comm x₁ y₁) (B.pairing_comm x₂ y₂)
 

@@ -401,6 +401,11 @@ def toHom (f : Isometry A B) : Hom A B where
 @[simp]
 theorem toHom_apply (f : Isometry A B) (x : A) : f.toHom x = f x := (rfl)
 
+/-- The additive homomorphism underlying `f.toHom` is that of the additive equivalence of `f`. -/
+@[simp]
+theorem toHom_toAddMonoidHom (f : Isometry A B) :
+    f.toHom.toAddMonoidHom = (f.toAddEquiv : A →+ B) := (rfl)
+
 /-- The underlying morphism of an isometry is bijective. -/
 theorem toHom_bijective (f : Isometry A B) : Function.Bijective f.toHom := by
   simpa only [Function.Bijective, Function.Injective, Function.Surjective, toHom_apply,
@@ -775,8 +780,9 @@ theorem Hom.isIsotropicElem_iff {B : FiniteBilinearModule} (f : Hom A B) (x : A)
 /-- An isometry preserves and reflects isotropic elements. -/
 @[simp]
 theorem Isometry.isIsotropicElem_iff {B : FiniteBilinearModule} (f : Isometry A B) (x : A) :
-    B.IsIsotropicElem (f x) ↔ A.IsIsotropicElem x :=
-  f.toHom.isIsotropicElem_iff A x
+    B.IsIsotropicElem (f x) ↔ A.IsIsotropicElem x := by
+  rw [← f.toHom_apply]
+  exact f.toHom.isIsotropicElem_iff A x
 
 /-- Form negation preserves isotropic elements. -/
 @[simp]
@@ -963,8 +969,9 @@ equivalence. -/
 @[simp]
 theorem Isometry.isIsotropic_map_iff {B : FiniteBilinearModule} (f : Isometry A B)
     (H : AddSubgroup A) :
-    B.IsIsotropic (H.map f.toAddEquiv) ↔ A.IsIsotropic H :=
-  f.toHom.isIsotropic_map_iff A H
+    B.IsIsotropic (H.map f.toAddEquiv) ↔ A.IsIsotropic H := by
+  rw [← f.toHom_toAddMonoidHom]
+  exact f.toHom.isIsotropic_map_iff A H
 
 /-- An isometry transports isotropic subgroups by inverse image. -/
 @[simp]

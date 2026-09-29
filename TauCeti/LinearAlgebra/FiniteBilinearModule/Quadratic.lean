@@ -246,6 +246,11 @@ def toHom (f : Isometry A B) : Hom A B :=
 @[simp]
 theorem toHom_apply (f : Isometry A B) (x : A) : f.toHom x = f x := (rfl)
 
+/-- The additive homomorphism underlying `f.toHom` is that of the additive equivalence of `f`. -/
+@[simp]
+theorem toHom_toAddMonoidHom (f : Isometry A B) :
+    ((f.toHom : Hom A B) : A →+ B) = (f.toAddEquiv : A →+ B) := (rfl)
+
 /-- Forgetting the identity quadratic isometry gives the identity quadratic morphism. -/
 @[simp]
 theorem refl_toHom (A : FiniteQuadraticModule) :
@@ -463,8 +468,9 @@ theorem Hom.isIsotropicElem_iff {B : FiniteQuadraticModule} (f : Hom A B) (x : A
 /-- A quadratic isometry preserves and reflects isotropic elements. -/
 @[simp]
 theorem Isometry.isIsotropicElem_iff {B : FiniteQuadraticModule} (f : Isometry A B) (x : A) :
-    B.IsIsotropicElem (f x) ↔ A.IsIsotropicElem x :=
-  f.toHom.isIsotropicElem_iff A x
+    B.IsIsotropicElem (f x) ↔ A.IsIsotropicElem x := by
+  rw [← f.toHom_apply]
+  exact f.toHom.isIsotropicElem_iff A x
 
 /-- Form negation preserves quadratic isotropy. -/
 @[simp]
@@ -505,8 +511,9 @@ its additive equivalence. -/
 @[simp]
 theorem Isometry.isIsotropic_map_iff {B : FiniteQuadraticModule} (f : Isometry A B)
     (H : AddSubgroup A) :
-    B.IsIsotropic (H.map f.toAddEquiv) ↔ A.IsIsotropic H :=
-  f.toHom.isIsotropic_map_iff A H
+    B.IsIsotropic (H.map f.toAddEquiv) ↔ A.IsIsotropic H := by
+  rw [← f.toHom_toAddMonoidHom]
+  exact f.toHom.isIsotropic_map_iff A H
 
 /-- An element of a quadratically isotropic subgroup is isotropic. -/
 theorem isIsotropicElem_of_mem_isIsotropic {H : AddSubgroup A} (hH : A.IsIsotropic H)

@@ -529,7 +529,7 @@ end Normalizations
 
 section ZeroLocus
 
-variable {G : Type u} [Group G] {M : Type v} [AddCommGroup M] [DistribMulAction G M]
+variable {G : Type u} [Group G] {M : Type v} [AddCommGroup M] [MulAction G M]
 
 /-- The zero locus of a continuous `1`-cocycle with values in a `T1` module is closed. -/
 theorem isClosed_zeroLocus [TopologicalSpace G] [TopologicalSpace M] [T1Space M] {f : G → M}

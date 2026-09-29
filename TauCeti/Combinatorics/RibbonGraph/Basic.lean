@@ -165,7 +165,6 @@ theorem isConnected_def :
     Γ.IsConnected ↔ Nonempty Γ.E ∧ MulAction.IsPretransitive Γ.rotationGroup Γ.E := Iff.rfl
 
 /-- A ribbon graph is connected exactly when it has one connected component. -/
-@[simp]
 theorem isConnected_iff_card_connectedComponent_eq_one :
     Γ.IsConnected ↔ Fintype.card Γ.ConnectedComponent = 1 := by
   rw [← Nat.card_eq_fintype_card, Nat.card_eq_one_iff_unique]

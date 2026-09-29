@@ -12,9 +12,10 @@ import Mathlib.Analysis.Fourier.FiniteAbelian.PontryaginDuality
 /-!
 # Character modules of finite abelian groups
 
-The character module `CharacterModule M = M →+ AddCircle (1 : ℚ)` of a finite abelian group `M`
-is finite, with as many elements as `M`:
+The characters `CharacterModule M = M →+ AddCircle (1 : ℚ)` of an abelian group `M` separate its
+points, and when `M` is finite its character module is finite with as many elements as `M`:
 
+* `TauCeti.CharacterModule.eval_injective`: evaluation embeds `M` in its double character module;
 * an instance `Finite (CharacterModule M)` for finite `M`;
 * `TauCeti.natCard_characterModule`: `Nat.card (CharacterModule M) = Nat.card M`.
 -/
@@ -99,33 +100,25 @@ private theorem card_characterModule_le (M : Type*) [AddCommGroup M] [Finite M] 
   rw [Nat.card_eq_fintype_card, Nat.card_eq_fintype_card]
   exact hle
 
-/-- The double dual evaluation map is injective. -/
-private def characterModuleEval (M : Type*) [AddCommGroup M] :
-    M →+ CharacterModule (CharacterModule M) where
-  toFun m :=
-    { toFun := fun c ↦ c m
-      map_zero' := rfl
-      map_add' := fun c₁ c₂ ↦ rfl }
-  map_zero' := by ext c; exact map_zero c
-  map_add' x y := by ext c; exact map_add c x y
-
-private theorem characterModuleEval_injective (M : Type*) [AddCommGroup M] :
-    Function.Injective (characterModuleEval M) := by
+/-- Evaluation `m ↦ (c ↦ c m)`, Mathlib's `AddMonoidHom.eval`, embeds an abelian group in its
+double character module: the characters of `M` separate its points. -/
+theorem CharacterModule.eval_injective (M : Type*) [AddCommGroup M] :
+    Function.Injective (AddMonoidHom.eval : M →+ CharacterModule (CharacterModule M)) := by
   intro x y hxy
   have h : ∀ c : CharacterModule M, c (x - y) = 0 := fun c ↦ by
     have hc : c x = c y := DFunLike.congr_fun hxy c
     rw [map_sub, hc, sub_self]
-  have hzero := CharacterModule.eq_zero_of_character_apply h
-  exact sub_eq_zero.mp hzero
+  exact sub_eq_zero.mp (CharacterModule.eq_zero_of_character_apply h)
 
 /-- The cardinality of the character module equals the cardinality of the group. -/
+@[simp]
 theorem natCard_characterModule (M : Type*) [AddCommGroup M] [Finite M] :
     Nat.card (CharacterModule M) = Nat.card M := by
   cases nonempty_fintype M
   have : Fintype (CharacterModule M) := Fintype.ofFinite _
   have : Fintype (CharacterModule (CharacterModule M)) := Fintype.ofFinite _
   have h1 : Fintype.card M ≤ Fintype.card (CharacterModule (CharacterModule M)) :=
-    Fintype.card_le_of_injective (characterModuleEval M) (characterModuleEval_injective M)
+    Fintype.card_le_of_injective _ (CharacterModule.eval_injective M)
   have h2 : Fintype.card (CharacterModule (CharacterModule M)) ≤
       Fintype.card (CharacterModule M) := by
     have hle := card_characterModule_le (CharacterModule M)

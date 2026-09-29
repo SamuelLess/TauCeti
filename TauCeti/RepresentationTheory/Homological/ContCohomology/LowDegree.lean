@@ -5,7 +5,6 @@ Authors: The Tau Ceti contributors
 -/
 module
 
-public import Mathlib.Algebra.Ring.Action.Submonoid
 public import Mathlib.GroupTheory.QuotientGroup.Basic
 public import Mathlib.RepresentationTheory.Homological.GroupCohomology.LowDegree
 public import Mathlib.Topology.Algebra.ContinuousMonoidHom
@@ -416,7 +415,7 @@ theorem explicitMap0_comp {H : Type*} [Monoid H] {N : Type*} [AddCommGroup N]
   AddMonoidHom.ext fun _ => Subtype.ext (rfl)
 
 /-- A coefficient homomorphism induces an additive map on degree-zero cohomology: the
-compatible-pair pullback along the identity of the group. -/
+compatible-pair pullback along the identity of the acting monoid. -/
 def explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N] (f : M →+[G] N) :
     H0 G M →+ H0 G N :=
   explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m)
@@ -428,7 +427,7 @@ theorem coe_explicitCoeff0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
   coe_explicitMap0 G M (MonoidHom.id G) f.toAddMonoidHom (fun g m => f.map_smul g m) m
 
 /-- A coefficient map in degree zero is the compatible-pair pullback along the identity of the
-group. -/
+acting monoid. -/
 theorem explicitCoeff0_eq_explicitMap0 {N : Type*} [AddCommGroup N] [DistribMulAction G N]
     (f : M →+[G] N) :
     explicitCoeff0 G M f =

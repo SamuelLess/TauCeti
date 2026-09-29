@@ -546,13 +546,8 @@ theorem eq_of_mem_Z1_of_eqOn_of_topologicalClosure_closure_eq_top [IsTopological
     [T1Space M] {c₁ c₂ : G → M} (h₁ : c₁ ∈ Z1 G M) (h₂ : c₂ ∈ Z1 G M) {s : Set G}
     (hs : (Subgroup.closure s).topologicalClosure = ⊤) (h : Set.EqOn c₁ c₂ s) : c₁ = c₂ := by
   obtain ⟨hcont, hcoc⟩ := mem_Z1_iff.1 ((Z1 G M).sub_mem h₁ h₂)
-  have hle : (Subgroup.closure s).topologicalClosure ≤ groupCohomology.zeroLocus hcoc :=
-    Subgroup.topologicalClosure_minimal _
-      ((Subgroup.closure_le _).2 fun g hg ↦
-        (groupCohomology.mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
-      (groupCohomology.isClosed_zeroLocus hcoc hcont)
-  funext g
-  exact sub_eq_zero.1 ((groupCohomology.mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
+  exact sub_eq_zero.1 (groupCohomology.eq_zero_of_eqOn_zero_of_topologicalClosure_closure_eq_top
+    hcoc hcont hs fun g hg ↦ sub_eq_zero.2 (h hg))
 
 end Inverse
 

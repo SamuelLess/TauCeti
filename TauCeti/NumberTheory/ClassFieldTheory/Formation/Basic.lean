@@ -548,18 +548,8 @@ theorem map_groundLevelEquiv_submoduleOf :
     Submodule.map (L.groundLevelEquiv F).toLinearMap
         ((LinearMap.range (L.rep F).ρ.norm).submoduleOf (L.rep F).ρ.invariants) =
       L.normSubgroup F := by
-  ext y
-  simp only [Submodule.mem_map, Submodule.submoduleOf, Submodule.mem_comap,
-    LinearMap.mem_range, mem_normSubgroup, LinearEquiv.coe_coe]
-  constructor
-  · rintro ⟨z, ⟨v, hv⟩, rfl⟩
-    refine ⟨v, Subtype.ext ?_⟩
-    -- The congruence is bound first: elaborated against the goal, `congrArg` would unify its
-    -- arguments with the two sides of the goal instead of with the two sides of `hv`.
-    have h := congrArg Subtype.val hv
-    exact h
-  · rintro ⟨v, rfl⟩
-    exact ⟨_, ⟨v, rfl⟩, rfl⟩
+  simp only [normSubgroup, norm, LinearMap.range_comp, LinearMap.range_codRestrict,
+    Submodule.submoduleOf]
 
 /-- **Degree-zero Tate cohomology of a finite normal layer is its norm quotient.** This is the
 low-degree identification that the Artin map of a class formation is read through. -/

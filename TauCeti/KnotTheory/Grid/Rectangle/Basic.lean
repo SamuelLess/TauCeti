@@ -455,21 +455,25 @@ instance : DecidableEq (GridRectangleBetween x y) :=
   sidePair_injective.decidableEq
 
 /-- For fixed source and target grid states, the oriented rectangles between them form a
-finite type. Each rectangle is determined by its two side columns. -/
-noncomputable instance : Fintype (GridRectangleBetween x y) :=
-  Fintype.ofInjective (fun R : GridRectangleBetween x y => (R.left, R.right))
-    sidePair_injective
+finite type: a rectangle is its ordered pair of side columns, and the pairs that occur form a
+decidable subset of `Fin n × Fin n`. The instance is computable, so `decide` can count
+rectangles on a concrete grid. -/
+instance : Fintype (GridRectangleBetween x y) :=
+  Fintype.ofEquiv {p : Fin n × Fin n // p.1 ≠ p.2 ∧ y p.1 = x p.2 ∧ y p.2 = x p.1 ∧
+      ∀ c, c ≠ p.1 → c ≠ p.2 → y c = x c}
+    { toFun p := ⟨p.1.1, p.1.2, p.2.1, p.2.2.1, p.2.2.2.1, p.2.2.2.2⟩
+      invFun R := ⟨(R.left, R.right), R.left_ne_right, R.map_left, R.map_right, R.map_of_ne⟩
+      left_inv _ := rfl
+      right_inv _ := rfl }
 
 /-- The finite set of all oriented rectangles from `x` to `y`. -/
-noncomputable def all (x y : GridState n) : Finset (GridRectangleBetween x y) := by
-  classical
-  exact Finset.univ
+def all (x y : GridState n) : Finset (GridRectangleBetween x y) :=
+  Finset.univ
 
 /-- Membership in `GridRectangleBetween.all` is automatic. -/
 @[simp]
-theorem mem_all (R : GridRectangleBetween x y) : R ∈ all x y := by
-  classical
-  simp [all]
+theorem mem_all (R : GridRectangleBetween x y) : R ∈ all x y :=
+  Finset.mem_univ R
 
 variable (R : GridRectangleBetween x y)
 

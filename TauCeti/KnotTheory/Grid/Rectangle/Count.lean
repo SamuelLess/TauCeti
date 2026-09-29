@@ -90,8 +90,7 @@ two side columns are exactly the two columns where `x` and `y` differ, which are
 theorem eq_or_eq_swapSides (S : GridRectangleBetween x y) : S = R ∨ S = R.swapSides := by
   rcases (R.apply_ne_iff S.left).mp S.left_apply_ne with hSl | hSl
   · exact Or.inl (GridRectangleBetween.left_injective hSl)
-  · exact Or.inr (GridRectangleBetween.left_injective
-      (show S.left = R.swapSides.left by rw [swapSides_left]; exact hSl))
+  · exact Or.inr (GridRectangleBetween.left_injective (by simpa only [swapSides_left] using hSl))
 
 /-- The oriented rectangles between two states are contained in the pair `{R, R.swapSides}`. -/
 theorem all_subset_pair : all x y ⊆ {R, R.swapSides} := by

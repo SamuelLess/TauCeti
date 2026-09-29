@@ -366,6 +366,7 @@ theorem avoidsMarkings_iff_forall (G : GridDiagram n) :
 
 /-- Marking avoidance is unchanged by swapping the `O` and `X` markings, since it only refers to
 the union of the two marking sets. -/
+@[simp]
 theorem avoidsMarkings_swapMarkings (G : GridDiagram n) :
     R.AvoidsMarkings G.swapMarkings ↔ R.AvoidsMarkings G := by
   rw [avoidsMarkings_iff, avoidsMarkings_iff, GridDiagram.swapMarkings_OSet,
@@ -421,6 +422,7 @@ theorem coveredSquares_transpose : R.transpose.coveredSquares = R.coveredSquares
 
 /-- The diagonal reflection preserves emptiness: the reflected rectangle is empty for the reflected
 state exactly when the rectangle is empty for the state. -/
+@[simp]
 theorem isEmptyFor_transpose (x : GridState n) :
     R.transpose.IsEmptyFor x.transpose ↔ R.IsEmptyFor x := by
   rw [IsEmptyFor, IsEmptyFor, R.interior_transpose, x.transpose_pointSet,
@@ -428,6 +430,7 @@ theorem isEmptyFor_transpose (x : GridState n) :
 
 /-- The diagonal reflection preserves marking avoidance: the reflected rectangle avoids the
 markings of the reflected diagram exactly when the rectangle avoids those of the diagram. -/
+@[simp]
 theorem avoidsMarkings_transpose (G : GridDiagram n) :
     R.transpose.AvoidsMarkings G.transpose ↔ R.AvoidsMarkings G := by
   rw [AvoidsMarkings, AvoidsMarkings, R.coveredSquares_transpose, G.transpose_OSet,
@@ -1041,6 +1044,7 @@ theorem interior_transpose (R : GridRectangleBetween x y) :
   exact R.toGridRectangle.interior_transpose
 
 /-- The diagonal reflection preserves emptiness of a rectangle between grid states. -/
+@[simp]
 theorem isEmpty_transpose (R : GridRectangleBetween x y) :
     R.transpose.IsEmpty ↔ R.IsEmpty := by
   rw [isEmpty_iff_toGridRectangle_isEmptyFor, isEmpty_iff_toGridRectangle_isEmptyFor,
@@ -1057,6 +1061,7 @@ theorem coveredSquares_transpose (R : GridRectangleBetween x y) :
   exact R.toGridRectangle.coveredSquares_transpose
 
 /-- The diagonal reflection preserves marking avoidance of a rectangle between grid states. -/
+@[simp]
 theorem avoidsMarkings_transpose (G : GridDiagram n) (R : GridRectangleBetween x y) :
     R.transpose.AvoidsMarkings G.transpose ↔ R.AvoidsMarkings G := by
   unfold GridRectangleBetween.AvoidsMarkings
@@ -1065,6 +1070,7 @@ theorem avoidsMarkings_transpose (G : GridDiagram n) (R : GridRectangleBetween x
 
 /-- Swapping the `O` and `X` markings preserves marking avoidance of a rectangle between grid
 states. -/
+@[simp]
 theorem avoidsMarkings_swapMarkings (G : GridDiagram n) (R : GridRectangleBetween x y) :
     R.AvoidsMarkings G.swapMarkings ↔ R.AvoidsMarkings G :=
   R.toGridRectangle.avoidsMarkings_swapMarkings G

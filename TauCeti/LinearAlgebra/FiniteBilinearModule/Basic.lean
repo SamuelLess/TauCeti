@@ -129,11 +129,8 @@ theorem isRefl_toBilin : A.toBilin.IsRefl := fun x y h ↦ by
 def IsNondegenerate : Prop := Function.Bijective A.pairing
 
 /-- An injective pairing on a finite module is nondegenerate by finite duality. -/
-theorem isNondegenerate_of_injective (hA : Function.Injective A.pairing) : A.IsNondegenerate := by
-  cases nonempty_fintype A
-  have : Fintype (CharacterModule A) := Fintype.ofFinite _
-  refine (Fintype.bijective_iff_injective_and_card A.pairing).mpr ⟨hA, ?_⟩
-  rw [Fintype.card_eq_nat_card, Fintype.card_eq_nat_card, natCard_characterModule]
+theorem isNondegenerate_of_injective (hA : Function.Injective A.pairing) : A.IsNondegenerate :=
+  (Nat.bijective_iff_injective_and_card A.pairing).2 ⟨hA, (natCard_characterModule A).symm⟩
 
 /-- Nondegeneracy is equivalent to injectivity of the adjoint pairing for a finite module. -/
 theorem isNondegenerate_iff_injective : A.IsNondegenerate ↔ Function.Injective A.pairing :=
@@ -463,55 +460,6 @@ theorem prod_pairing (B : FiniteBilinearModule) (x y : A.carrier × B.carrier) :
     (prod A B).pairing x y = A.pairing x.1 y.1 + B.pairing x.2 y.2 :=
   rfl
 
-/-- An orthogonal direct sum of finite bilinear modules is nondegenerate if and only if both
-factors are nondegenerate. -/
-@[simp]
-theorem isNondegenerate_prod (B : FiniteBilinearModule) :
-    (A.prod B).IsNondegenerate ↔ A.IsNondegenerate ∧ B.IsNondegenerate := by
-  rw [(A.prod B).isNondegenerate_iff_injective, A.isNondegenerate_iff_injective,
-    B.isNondegenerate_iff_injective]
-  constructor
-  · intro h
-    constructor
-    · intro x y hxy
-      have heq : (A.prod B).pairing (x, 0) = (A.prod B).pairing (y, 0) := by
-        ext ⟨u, v⟩
-        have h1 : (A.prod B).pairing (x, 0) (u, v) = A.pairing x u := by
-          rw [prod_pairing, pairing_zero_left, add_zero]
-        have h2 : (A.prod B).pairing (y, 0) (u, v) = A.pairing y u := by
-          rw [prod_pairing, pairing_zero_left, add_zero]
-        rw [h1, h2, DFunLike.congr_fun hxy u]
-      have := h heq
-      exact Prod.ext_iff.mp this |>.1
-    · intro x y hxy
-      have heq : (A.prod B).pairing (0, x) = (A.prod B).pairing (0, y) := by
-        ext ⟨u, v⟩
-        have h1 : (A.prod B).pairing (0, x) (u, v) = B.pairing x v := by
-          rw [prod_pairing, pairing_zero_left, zero_add]
-        have h2 : (A.prod B).pairing (0, y) (u, v) = B.pairing y v := by
-          rw [prod_pairing, pairing_zero_left, zero_add]
-        rw [h1, h2, DFunLike.congr_fun hxy v]
-      have := h heq
-      exact Prod.ext_iff.mp this |>.2
-  · rintro ⟨hA, hB⟩ ⟨x₁, y₁⟩ ⟨x₂, y₂⟩ hxy
-    have hx : A.pairing x₁ = A.pairing x₂ := by
-      ext u
-      have heq := DFunLike.congr_fun hxy (u, 0)
-      have h1 : (A.prod B).pairing (x₁, y₁) (u, 0) = A.pairing x₁ u := by
-        rw [prod_pairing, pairing_zero_right, add_zero]
-      have h2 : (A.prod B).pairing (x₂, y₂) (u, 0) = A.pairing x₂ u := by
-        rw [prod_pairing, pairing_zero_right, add_zero]
-      exact h1.symm.trans (heq.trans h2)
-    have hy : B.pairing y₁ = B.pairing y₂ := by
-      ext v
-      have heq := DFunLike.congr_fun hxy (0, v)
-      have h1 : (A.prod B).pairing (x₁, y₁) (0, v) = B.pairing y₁ v := by
-        rw [prod_pairing, pairing_zero_right, zero_add]
-      have h2 : (A.prod B).pairing (x₂, y₂) (0, v) = B.pairing y₂ v := by
-        rw [prod_pairing, pairing_zero_right, zero_add]
-      exact h1.symm.trans (heq.trans h2)
-    exact Prod.ext (hA hx) (hB hy)
-
 section IsometryProd
 
 variable {A : FiniteBilinearModule.{u}} {B : FiniteBilinearModule.{v}}
@@ -548,6 +496,26 @@ theorem mem_radical_iff (x : A) : x ∈ A.radical ↔ ∀ y, A.pairing x y = 0 :
 /-- A finite bilinear module is nondegenerate if and only if its radical is trivial. -/
 theorem isNondegenerate_iff_radical_eq_bot : A.IsNondegenerate ↔ A.radical = ⊥ :=
   A.isNondegenerate_iff_injective.trans A.pairing.ker_eq_bot_iff.symm
+
+/-- The radical of an orthogonal direct sum is the product of the radicals. -/
+theorem radical_prod (B : FiniteBilinearModule) :
+    (A.prod B).radical = A.radical.prod B.radical := by
+  ext ⟨x, y⟩
+  rw [mem_radical_iff, AddSubgroup.mem_prod, mem_radical_iff, mem_radical_iff]
+  refine ⟨fun h ↦ ⟨fun u ↦ ?_, fun v ↦ ?_⟩, fun ⟨hx, hy⟩ ⟨u, v⟩ ↦ ?_⟩
+  · have := h (u, 0)
+    rwa [prod_pairing, pairing_zero_right, add_zero] at this
+  · have := h (0, v)
+    rwa [prod_pairing, pairing_zero_right, zero_add] at this
+  · rw [prod_pairing, hx, hy, add_zero]
+
+/-- An orthogonal direct sum of finite bilinear modules is nondegenerate if and only if both
+factors are nondegenerate. -/
+@[simp]
+theorem isNondegenerate_prod (B : FiniteBilinearModule) :
+    (A.prod B).IsNondegenerate ↔ A.IsNondegenerate ∧ B.IsNondegenerate := by
+  rw [isNondegenerate_iff_radical_eq_bot, isNondegenerate_iff_radical_eq_bot,
+    isNondegenerate_iff_radical_eq_bot, radical_prod, AddSubgroup.prod_eq_bot_iff]
 
 /-- An element pairing trivially with every element is zero in a nondegenerate module. -/
 theorem IsNondegenerate.eq_zero_of_forall_pairing_eq_zero (hA : A.IsNondegenerate) {x : A}
@@ -792,14 +760,9 @@ theorem Isometry.map_mem_orthogonalComplement_of_forall_mem {B : FiniteBilinearM
     (f : Isometry A B) {H : AddSubgroup A} {K : AddSubgroup B}
     (h : ∀ x : A, f x ∈ K → x ∈ H) {x : A} (hx : x ∈ A.orthogonalComplement H) :
     f x ∈ B.orthogonalComplement K := by
-  have hle : K ≤ H.map f.toAddEquiv := by
-    intro y hy
-    have hy' : f (f.symm y) ∈ K := by simpa
-    have hpre : f.symm y ∈ H := h (f.symm y) hy'
-    exact (AddSubgroup.mem_map_equiv (f := f.toAddEquiv) (K := H) (x := y)).mpr hpre
-  apply B.orthogonalComplement_anti hle
-  rw [← f.map_orthogonalComplement (H := H)]
-  exact AddSubgroup.mem_map_of_mem _ hx
+  have hx' : x ∈ A.orthogonalComplement (K.comap f.toAddEquiv) :=
+    A.orthogonalComplement_anti (fun y hy ↦ h y hy) hx
+  rwa [f.comap_orthogonalComplement, AddSubgroup.mem_comap] at hx'
 
 /-- An isometry carrying `H` onto `K` carries every element of `H^⊥` into `K^⊥`. -/
 theorem Isometry.map_mem_orthogonalComplement_of_map_eq {B : FiniteBilinearModule}

@@ -13,10 +13,10 @@ public import TauCeti.LinearAlgebra.QuadraticForm.Radical
 # Finite quadratic modules
 
 A finite quadratic module is a finite abelian group equipped with a quadratic map to `ℚ/ℤ`.
-Its symmetric bilinear pairing is not stored separately: it is the polar form of the quadratic
-map.  This file packages that canonical underlying finite bilinear module and develops restriction,
-form negation, orthogonal products, morphisms, isometries, quadratic-isotropic subgroups, and
-quadratic Lagrangians.
+It extends the finite bilinear module of its symmetric pairing, and the field `polar_eq_pairing'`
+requires that stored pairing to be the polar form of the quadratic map, so the quadratic map
+determines it. This file develops restriction, form negation, orthogonal products, morphisms,
+isometries, quadratic-isotropic subgroups, and quadratic Lagrangians.
 
 The convention is the half-norm convention used for discriminant forms: for an even integral
 lattice the quadratic value of a dual class represented by `x` is `B(x, x) / 2` modulo `ℤ`, and

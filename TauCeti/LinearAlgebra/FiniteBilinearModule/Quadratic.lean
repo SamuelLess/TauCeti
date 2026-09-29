@@ -299,13 +299,19 @@ theorem toIsometry_toHom (f : Hom A B) (hf : Function.Bijective f) :
   ext
   rfl
 
+end Hom
+
+namespace Isometry
+
+variable {A : FiniteQuadraticModule.{u}} {B : FiniteQuadraticModule.{v}}
+
 /-- Packaging the underlying morphism of an isometry recovers the isometry. -/
 @[simp]
 theorem toHom_toIsometry (f : Isometry A B) :
-    f.toHom.toIsometry f.toHom_bijective = f := by
-  exact DFunLike.ext _ _ fun _ ↦ rfl
+    f.toHom.toIsometry f.toHom_bijective = f :=
+  DFunLike.ext _ _ fun _ ↦ rfl
 
-end Hom
+end Isometry
 
 /-! ## Canonical constructions -/
 

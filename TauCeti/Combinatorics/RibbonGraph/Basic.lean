@@ -679,6 +679,30 @@ def ulift : BipartiteRibbonGraph.{max u v} where
     ext ⟨e⟩
     simp [Equiv.ulift, ULift.ext_iff]
 
+/-- A lifted edge has the lifted black end. -/
+@[simp]
+theorem ulift_blackEnd_up (e : Γ.E) :
+    (Γ.ulift : BipartiteRibbonGraph.{max u v}).blackEnd (ULift.up e) = ULift.up (Γ.blackEnd e) :=
+  (rfl)
+
+/-- A lifted edge has the lifted white end. -/
+@[simp]
+theorem ulift_whiteEnd_up (e : Γ.E) :
+    (Γ.ulift : BipartiteRibbonGraph.{max u v}).whiteEnd (ULift.up e) = ULift.up (Γ.whiteEnd e) :=
+  (rfl)
+
+/-- The black rotation of the lifted graph lifts the black rotation. -/
+@[simp]
+theorem ulift_rotB_up (e : Γ.E) :
+    (Γ.ulift : BipartiteRibbonGraph.{max u v}).rotB (ULift.up e) = ULift.up (Γ.rotB e) :=
+  (rfl)
+
+/-- The white rotation of the lifted graph lifts the white rotation. -/
+@[simp]
+theorem ulift_rotW_up (e : Γ.E) :
+    (Γ.ulift : BipartiteRibbonGraph.{max u v}).rotW (ULift.up e) = ULift.up (Γ.rotW e) :=
+  (rfl)
+
 /-- The number of edges is unchanged by universe lifting. -/
 theorem card_E_ulift :
     Fintype.card (Γ.ulift : BipartiteRibbonGraph.{max u v}).E = Fintype.card Γ.E :=

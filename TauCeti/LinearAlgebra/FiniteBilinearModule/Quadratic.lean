@@ -136,8 +136,8 @@ theorem IsNondegenerate.quadratic_radical_eq_bot (hA : A.IsNondegenerate) :
   refine eq_bot_iff.2 fun x hx => (Submodule.mem_bot _).2 ?_
   refine FiniteBilinearModule.IsNondegenerate.eq_zero_of_forall_pairing_eq_zero
     (A := A.toFiniteBilinearModule) hA fun y => ?_
-  rw [← A.polar_eq_pairing]
-  exact congrArg (· y) hx.2
+  rw [← A.polar_eq_pairing, ← QuadraticMap.polarBilin_apply_apply,
+    LinearMap.mem_ker.1 (QuadraticMap.radical_le_ker_polarBilin hx), LinearMap.zero_apply]
 
 /-! ## Morphisms and isometries -/
 
@@ -221,19 +221,6 @@ theorem toFiniteBilinearModule_comp (g : Hom B C) (f : Hom A B) :
   ext x
   rw [toFiniteBilinearModule_apply, comp_apply, FiniteBilinearModule.Hom.comp_apply,
     toFiniteBilinearModule_apply, toFiniteBilinearModule_apply]
-
-/-- A morphism out of a finite quadratic module with trivial quadratic radical is injective: its
-kernel lies in the quadratic radical. A nondegenerate module qualifies by
-`TauCeti.FiniteQuadraticModule.IsNondegenerate.quadratic_radical_eq_bot`. -/
-theorem injective (f : Hom A B) (hA : A.quadratic.radical = ⊥) : Function.Injective f := by
-  refine (injective_iff_map_eq_zero f).2 fun x hx => ?_
-  have hmem : x ∈ A.quadratic.radical := by
-    refine ⟨by rw [← f.map_app x, hx, map_zero], ?_⟩
-    ext y
-    rw [QuadraticMap.polarBilin_apply_apply, LinearMap.zero_apply, A.polar_eq_pairing,
-      ← f.map_pairing, hx, map_zero]
-    rfl
-  simpa [hA] using hmem
 
 end Hom
 

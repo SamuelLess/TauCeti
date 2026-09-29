@@ -20,7 +20,8 @@ Facts about a `1`-cocycle `f : G → M` in the sense of Mathlib's unbundled
   changes the value, after the action of `k`, by the coboundary of `f k`.
 * `groupCohomology.smul_zero_of_isCocycle₁`: an action admitting a `1`-cocycle fixes `0`.
 * `groupCohomology.zeroLocus`: the zero locus `{g | f g = 0}` is a subgroup of `G`, for any group
-  action (not necessarily distributive) admitting the cocycle.
+  action (not necessarily distributive) admitting the cocycle. As a set it is `f ⁻¹' {0}`
+  (`groupCohomology.coe_zeroLocus`), so it is closed whenever `f` is continuous into a `T1` space.
 
 Continuous cohomology uses the conjugation identity in transgression, and the zero locus to show
 that a continuous `1`-cocycle is determined by its values on a topological generating set.
@@ -41,12 +42,13 @@ theorem smul_apply_inv_mul_mul_of_isCocycle₁ {G M : Type*} [Group G] [AddCommG
   rw [eq_sub_of_add_eq h.symm]
   abel
 
-variable {G M : Type*} [Group G] [AddCommGroup M] [MulAction G M]
-
 /-- An action admitting a `1`-cocycle fixes `0`: `f g = f (g * 1) = g • f 1 + f g` and `f 1 = 0`.
 So a cocycle needs no distributive action for `g • 0 = 0`. -/
-theorem smul_zero_of_isCocycle₁ {f : G → M} (hf : IsCocycle₁ f) (g : G) : g • (0 : M) = 0 := by
+theorem smul_zero_of_isCocycle₁ {G M : Type*} [Monoid G] [AddCommGroup M] [MulAction G M]
+    {f : G → M} (hf : IsCocycle₁ f) (g : G) : g • (0 : M) = 0 := by
   simpa only [mul_one, map_one_of_isCocycle₁ hf, right_eq_add] using hf g 1
+
+variable {G M : Type*} [Group G] [AddCommGroup M] [MulAction G M]
 
 /-- **The zero locus of a `1`-cocycle is a subgroup.** The cocycle identity
 `f (g * h) = g • f h + f g` closes it under multiplication, and the inverse formula
@@ -67,5 +69,9 @@ def zeroLocus {f : G → M} (hf : IsCocycle₁ f) : Subgroup G where
 @[simp]
 theorem mem_zeroLocus {f : G → M} (hf : IsCocycle₁ f) {g : G} : g ∈ zeroLocus hf ↔ f g = 0 :=
   Iff.rfl
+
+/-- The zero locus of a `1`-cocycle is the preimage of `0`. -/
+theorem coe_zeroLocus {f : G → M} (hf : IsCocycle₁ f) : (zeroLocus hf : Set G) = f ⁻¹' {0} :=
+  (rfl)
 
 end groupCohomology

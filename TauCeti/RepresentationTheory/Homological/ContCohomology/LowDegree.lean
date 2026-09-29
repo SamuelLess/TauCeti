@@ -527,20 +527,6 @@ theorem map_one_snd_of_mem_Z2 {f : G × G → M} (hf : f ∈ Z2 G M) (g : G) :
 
 end Normalizations
 
-section ZeroLocus
-
-variable {G : Type u} [Group G] {M : Type v} [AddCommGroup M] [MulAction G M]
-
-/-- The zero locus of a continuous `1`-cocycle with values in a `T1` module is closed. -/
-theorem isClosed_zeroLocus [TopologicalSpace G] [TopologicalSpace M] [T1Space M] {f : G → M}
-    (hf : groupCohomology.IsCocycle₁ f) (hc : Continuous f) :
-    IsClosed (groupCohomology.zeroLocus hf : Set G) := by
-  rw [show (groupCohomology.zeroLocus hf : Set G) = f ⁻¹' {0} from
-    Set.ext fun _ => groupCohomology.mem_zeroLocus hf]
-  exact isClosed_singleton.preimage hc
-
-end ZeroLocus
-
 section Inverse
 
 variable {G : Type u} [Group G] [TopologicalSpace G]
@@ -564,7 +550,7 @@ theorem eq_of_mem_Z1_of_eqOn_of_topologicalClosure_closure_eq_top [IsTopological
     Subgroup.topologicalClosure_minimal _
       ((Subgroup.closure_le _).2 fun g hg ↦
         (groupCohomology.mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
-      (isClosed_zeroLocus hcoc hcont)
+      (groupCohomology.coe_zeroLocus hcoc ▸ isClosed_singleton.preimage hcont)
   funext g
   exact sub_eq_zero.1 ((groupCohomology.mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
 

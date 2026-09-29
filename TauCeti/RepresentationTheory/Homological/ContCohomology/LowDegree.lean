@@ -11,6 +11,7 @@ public import Mathlib.Topology.Algebra.ContinuousMonoidHom
 public import Mathlib.Topology.Algebra.MulAction
 public import Mathlib.Topology.ContinuousMap.Algebra
 public import TauCeti.GroupTheory.GroupAction.FixedPoints
+public import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle
 
 import Mathlib.Tactic.Abel
 
@@ -275,23 +276,6 @@ theorem d2_apply_eq_zero_iff {f : G × G → M} :
 
 end CocycleConditions
 
-section CocycleIdentities
-
-variable {G : Type u} [Group G] {M : Type v} [AddCommGroup M] [SMul G M]
-
-/-- Conjugating the argument of a `1`-cocycle by `k` changes its value, after the action of `k`,
-by the coboundary of `c k`. -/
-theorem smul_apply_inv_mul_mul_of_isCocycle₁ {c : G → M}
-    (hc : groupCohomology.IsCocycle₁ c) (k m : G) :
-    k • c (k⁻¹ * m * k) = m • c k - c k + c m := by
-  have hmul : k * (k⁻¹ * m * k) = m * k := by group
-  have h := hc k (k⁻¹ * m * k)
-  rw [hmul, hc m k] at h
-  rw [eq_sub_of_add_eq h.symm]
-  abel
-
-end CocycleIdentities
-
 section Complex
 
 /-! `d ∘ d = 0` and degree `0` of the complex need the action to be associative and unital; only
@@ -548,31 +532,13 @@ section ZeroLocus
 
 variable {G : Type u} [Group G] {M : Type v} [AddCommGroup M] [DistribMulAction G M]
 
-/-- **The zero locus of a `1`-cocycle is a subgroup.** The cocycle identity
-`f (g * h) = g • f h + f g` closes it under multiplication, and the inverse formula
-`g • f g⁻¹ = -f g` closes it under inversion. No continuity is involved; it is used only to show
-the zero locus is closed (`TauCeti.ContCohomology.isClosed_zeroLocus`). -/
-def zeroLocus {f : G → M} (hf : groupCohomology.IsCocycle₁ f) : Subgroup G where
-  carrier := {g | f g = 0}
-  one_mem' := groupCohomology.map_one_of_isCocycle₁ hf
-  mul_mem' {g h} hg hh := by
-    simp only [Set.mem_ofPred_eq] at hg hh ⊢
-    rw [hf g h, hg, hh, smul_zero, add_zero]
-  inv_mem' {g} hg := by
-    simp only [Set.mem_ofPred_eq] at hg ⊢
-    have h := groupCohomology.map_inv_of_isCocycle₁ hf g
-    rwa [hg, neg_zero, smul_eq_zero_iff_eq] at h
-
-/-- An element lies in the zero locus of a `1`-cocycle exactly when the cocycle vanishes there. -/
-@[simp]
-theorem mem_zeroLocus {f : G → M} (hf : groupCohomology.IsCocycle₁ f) {g : G} :
-    g ∈ zeroLocus hf ↔ f g = 0 :=
-  Iff.rfl
-
 /-- The zero locus of a continuous `1`-cocycle with values in a `T1` module is closed. -/
 theorem isClosed_zeroLocus [TopologicalSpace G] [TopologicalSpace M] [T1Space M] {f : G → M}
-    (hf : groupCohomology.IsCocycle₁ f) (hc : Continuous f) : IsClosed (zeroLocus hf : Set G) :=
-  isClosed_singleton.preimage hc
+    (hf : groupCohomology.IsCocycle₁ f) (hc : Continuous f) :
+    IsClosed (groupCohomology.zeroLocus hf : Set G) := by
+  rw [show (groupCohomology.zeroLocus hf : Set G) = f ⁻¹' {0} from
+    Set.ext fun _ => groupCohomology.mem_zeroLocus hf]
+  exact isClosed_singleton.preimage hc
 
 end ZeroLocus
 
@@ -595,12 +561,13 @@ theorem eq_of_mem_Z1_of_eqOn_of_topologicalClosure_closure_eq_top [IsTopological
     [T1Space M] {c₁ c₂ : G → M} (h₁ : c₁ ∈ Z1 G M) (h₂ : c₂ ∈ Z1 G M) {s : Set G}
     (hs : (Subgroup.closure s).topologicalClosure = ⊤) (h : Set.EqOn c₁ c₂ s) : c₁ = c₂ := by
   obtain ⟨hcont, hcoc⟩ := mem_Z1_iff.1 ((Z1 G M).sub_mem h₁ h₂)
-  have hle : (Subgroup.closure s).topologicalClosure ≤ zeroLocus hcoc :=
+  have hle : (Subgroup.closure s).topologicalClosure ≤ groupCohomology.zeroLocus hcoc :=
     Subgroup.topologicalClosure_minimal _
-      ((Subgroup.closure_le _).2 fun g hg ↦ (mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
+      ((Subgroup.closure_le _).2 fun g hg ↦
+        (groupCohomology.mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
       (isClosed_zeroLocus hcoc hcont)
   funext g
-  exact sub_eq_zero.1 ((mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
+  exact sub_eq_zero.1 ((groupCohomology.mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
 
 end Inverse
 

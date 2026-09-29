@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.Ring.GeomSum
 public import Mathlib.Topology.Algebra.Group.Subgroup
 public import Mathlib.Topology.Separation.Basic
+public import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle.Topology
 
 /-!
 # Crossed homomorphisms twisted by a unit-valued function
@@ -164,23 +165,19 @@ theorem eq_of_eqOn_of_topologicalClosure_closure_eq_top {F₁ F₂ : H → R} (h
     (hs : (Subgroup.closure s).topologicalClosure = ⊤) (h : Set.EqOn F₁ F₂ s) : F₁ = F₂ := by
   have hsub : IsCrossedHom χ (F₁ - F₂) := fun x y ↦ by
     simp only [Pi.sub_apply, h₁ x y, h₂ x y, mul_sub, add_sub_add_comm]
-  -- The zero locus of the difference is a subgroup: the cocycle identity closes it under
-  -- multiplication and the inverse formula closes it under inversion.
-  let Z : Subgroup H :=
-    { carrier := {g | (F₁ - F₂) g = 0}
-      one_mem' := hsub.map_one
-      mul_mem' := fun {g g'} hg hg' ↦ by
-        simp only [Set.mem_ofPred_eq] at hg hg' ⊢
-        rw [hsub.map_mul, hg, hg', mul_zero, add_zero]
-      inv_mem' := fun {g} hg ↦ by
-        simp only [Set.mem_ofPred_eq] at hg ⊢
-        rw [hsub.map_inv, hg, mul_zero] }
-  have hZ : IsClosed (Z : Set H) := isClosed_singleton.preimage (hc₁.sub hc₂)
-  have hle : (Subgroup.closure s).topologicalClosure ≤ Z :=
+  -- `H` acts on `R` through `χ`, and for this action a crossed homomorphism is a `1`-cocycle,
+  -- whose zero locus is a subgroup.
+  let : MulAction H R := MulAction.compHom R ((Units.coeHom R).comp (χ : H →* Rˣ))
+  have hcoc : groupCohomology.IsCocycle₁ (F₁ - F₂) := fun x y ↦ by
+    rw [hsub.map_mul, MulAction.compHom_smul_def, MonoidHom.comp_apply, Units.coeHom_apply,
+      smul_eq_mul, MonoidHom.coe_ofClass]
+  have hle : (Subgroup.closure s).topologicalClosure ≤ groupCohomology.zeroLocus hcoc :=
     Subgroup.topologicalClosure_minimal _
-      ((Subgroup.closure_le _).2 fun g hg ↦ sub_eq_zero.2 (h hg)) hZ
+      ((Subgroup.closure_le _).2 fun g hg ↦
+        (groupCohomology.mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
+      (groupCohomology.isClosed_zeroLocus hcoc (hc₁.sub hc₂))
   funext g
-  exact sub_eq_zero.1 (hle (hs ▸ Subgroup.mem_top g))
+  exact sub_eq_zero.1 ((groupCohomology.mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
 
 end Topology
 

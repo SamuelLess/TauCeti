@@ -68,6 +68,7 @@ theorem mem_zeroLocus {f : G → M} (hf : IsCocycle₁ f) {g : G} : g ∈ zeroLo
   Iff.rfl
 
 /-- The zero locus of a `1`-cocycle is the preimage of `0`. -/
+@[simp]
 theorem coe_zeroLocus {f : G → M} (hf : IsCocycle₁ f) : (zeroLocus hf : Set G) = f ⁻¹' {0} :=
   (rfl)
 

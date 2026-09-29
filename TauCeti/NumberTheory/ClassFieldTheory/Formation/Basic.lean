@@ -270,9 +270,7 @@ theorem degree_eq_natCard_gal : L.degree = Nat.card L.Gal :=
 /-- The degree of a layer is the relative index of its top subgroup in its ground subgroup. -/
 theorem degree_eq_relIndex :
     L.degree = L.top.toSubgroup.relIndex L.ground.toSubgroup :=
-  by
-    rw [Subgroup.relIndex]
-    exact L.degree_eq_natCard_gal
+  (rfl)
 
 /-- The layer `V ◁ ⊤` cut out by an open normal subgroup of `G`. These layers are the finite
 Galois extensions of the ground field of a formation on `G`. -/
@@ -463,8 +461,8 @@ theorem tateHMinusTwoEquivAbelianization_symm_of (g : L.Gal) :
         (Rep.trivial ℤ L.Gal ℤ)
         (groupHomology.H1π (Rep.trivial ℤ L.Gal ℤ)
           ((groupHomology.cycles₁IsoOfIsTrivial (Rep.trivial ℤ L.Gal ℤ)).inv
-            (Finsupp.single g 1))) := by
-  exact TauCeti.TateCohomology.HNegTwoAddEquivAbelianization_symm_of g
+            (Finsupp.single g 1))) :=
+  TauCeti.TateCohomology.HNegTwoAddEquivAbelianization_symm_of g
 
 /-- **In positive degrees the Tate cohomology of a finite normal layer is its ordinary
 cohomology.** This is Mathlib's comparison `TateCohomology.isoGroupCohomology`, stated between the
@@ -491,8 +489,7 @@ landing in the ground level through `groundLevelEquiv`. -/
 def norm : F.level L.top →ₗ[ℤ] F.level L.ground :=
   (L.groundLevelEquiv F).toLinearMap ∘ₗ
     (L.rep F).ρ.norm.codRestrict (L.rep F).ρ.invariants fun x ↦
-      (Representation.mem_invariants _ _).2 fun g ↦ by
-        rw [← LinearMap.comp_apply, Representation.self_comp_norm]
+      (Representation.mem_invariants _ _).2 fun g ↦ Representation.self_norm_apply _ g x
 
 /-- The norm of a layer is the sum of the Galois conjugates: `N_{U/V}(x) = ∑_{γ ∈ U ⧸ V} γ x`. -/
 @[simp]

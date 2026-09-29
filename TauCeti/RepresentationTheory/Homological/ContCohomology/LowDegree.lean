@@ -6,7 +6,6 @@ Authors: The Tau Ceti contributors
 module
 
 public import Mathlib.GroupTheory.QuotientGroup.Basic
-public import Mathlib.RepresentationTheory.Homological.GroupCohomology.LowDegree
 public import Mathlib.Topology.Algebra.ContinuousMonoidHom
 public import Mathlib.Topology.Algebra.MulAction
 public import Mathlib.Topology.ContinuousMap.Algebra

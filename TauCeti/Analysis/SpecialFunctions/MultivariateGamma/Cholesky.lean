@@ -19,7 +19,7 @@ with positive diagonal, and reading off the on-or-below-diagonal entries of `L` 
 positive-definite cone into the region `TauCeti.posDiagLowerRegion p` of
 `TauCeti.lowerTriangle p → ℝ` whose diagonal coordinates are positive.  This file evaluates, in
 those coordinates, the integral whose value is `TauCeti.multivariateGamma p a` when
-`(p - 1) / 2 < a`:
+`(p - 1) / 2 < a` (a condition only in positive dimension):
 
 `∫ (det (L * Lᵀ)) ^ (a - (p + 1) / 2) * exp (-trace (L * Lᵀ)) * (2 ^ p * ∏ i, (L i i) ^ (p - i))`
 
@@ -132,14 +132,24 @@ private theorem indicator_eq_prod_choleskyFactor (a : ℝ) (x : lowerTriangle p 
 /-- **The multivariate Gamma integral in Cholesky coordinates.**  Over the region of
 lower-triangular coordinates with positive diagonal, the Wishart integrand `(det A) ^
 (a - (p + 1) / 2) * exp (-trace A)` pulled back along `L ↦ L * Lᵀ` and weighted by the Jacobian
-`2 ^ p * ∏ i, (L i i) ^ (p - i)` integrates to `Γ_p(a)` for `(p - 1) / 2 < a`. -/
+`2 ^ p * ∏ i, (L i i) ^ (p - i)` integrates to `Γ_p(a)` when `(p - 1) / 2 < a`. The bound is
+needed only in positive dimension: for `p = 0` the coordinate space is a point, where the integrand
+is `1 = Γ₀(a)` for every `a`. -/
 theorem integral_lowerTriangle_det_rpow_mul_exp_neg_trace
-    (ha : ((p : ℝ) - 1) / 2 < a) :
+    (ha : 0 < p → ((p : ℝ) - 1) / 2 < a) :
     ∫ x in posDiagLowerRegion p,
         ((lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).det ^ (a - ((p : ℝ) + 1) / 2) *
             exp (-(lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).trace)) *
           (2 ^ p * ∏ i : Fin p, x ⟨(i, i), le_rfl⟩ ^ (p - (i : ℕ))) =
       multivariateGamma p a := by
+  rcases Nat.eq_zero_or_pos p with rfl | hp
+  · -- In dimension zero the region is the whole one-point coordinate space.
+    have : IsEmpty (lowerTriangle 0) := ⟨fun ij ↦ ij.1.1.elim0⟩
+    rw [show posDiagLowerRegion 0 = Set.univ from
+        Set.eq_univ_of_forall fun x ↦ (mem_posDiagLowerRegion 0).2 fun i ↦ i.elim0,
+      Measure.restrict_univ, Measure.volume_pi_eq_dirac, integral_dirac, multivariateGamma_zero]
+    simp
+  have ha := ha hp
   calc ∫ x in posDiagLowerRegion p,
           ((lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).det ^ (a - ((p : ℝ) + 1) / 2) *
               exp (-(lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).trace)) *
@@ -157,19 +167,22 @@ theorem integral_lowerTriangle_det_rpow_mul_exp_neg_trace
         rw [Real.sqrt_eq_rpow, ← Real.rpow_natCast, ← Real.rpow_mul pi_pos.le, mul_comm]
         ring_nf
 
-/-- For `((p : ℝ) - 1) / 2 < a`, the Jacobian-weighted Wishart integrand `(det (L * Lᵀ)) ^
-(a - (p + 1) / 2) * exp (-trace (L * Lᵀ)) * (2 ^ p * ∏ i, (L i i) ^ (p - i))` is integrable over
-the region of lower-triangular coordinates with positive diagonal. -/
+/-- For `((p : ℝ) - 1) / 2 < a` (a condition only in positive dimension), the Jacobian-weighted
+Wishart integrand `(det (L * Lᵀ)) ^ (a - (p + 1) / 2) * exp (-trace (L * Lᵀ)) *
+(2 ^ p * ∏ i, (L i i) ^ (p - i))` is integrable over the region of lower-triangular coordinates
+with positive diagonal. -/
 theorem integrableOn_lowerTriangle_det_rpow_mul_exp_neg_trace
-    (ha : ((p : ℝ) - 1) / 2 < a) :
+    (ha : 0 < p → ((p : ℝ) - 1) / 2 < a) :
     IntegrableOn (fun x : lowerTriangle p → ℝ ↦
         ((lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).det ^ (a - ((p : ℝ) + 1) / 2) *
             exp (-(lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).trace)) *
           (2 ^ p * ∏ i : Fin p, x ⟨(i, i), le_rfl⟩ ^ (p - (i : ℕ))))
       (posDiagLowerRegion p) := by
-  -- A function whose integral is nonzero is integrable, and this integral is `Γ_p(a) > 0`.
+  -- A function whose integral is nonzero is integrable, and this integral is `Γ_p(a) ≠ 0`.
   apply Integrable.of_integral_ne_zero
   rw [integral_lowerTriangle_det_rpow_mul_exp_neg_trace ha]
-  exact (multivariateGamma_pos ha).ne'
+  rcases Nat.eq_zero_or_pos p with rfl | hp
+  · rw [multivariateGamma_zero]; exact one_ne_zero
+  · exact (multivariateGamma_pos (ha hp)).ne'
 
 end TauCeti

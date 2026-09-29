@@ -10,7 +10,7 @@ public import Mathlib.Topology.Algebra.ContinuousMonoidHom
 public import Mathlib.Topology.Algebra.MulAction
 public import Mathlib.Topology.ContinuousMap.Algebra
 public import TauCeti.GroupTheory.GroupAction.FixedPoints
-public import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle
+public import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle.Topology
 
 import Mathlib.Tactic.Abel
 
@@ -550,7 +550,7 @@ theorem eq_of_mem_Z1_of_eqOn_of_topologicalClosure_closure_eq_top [IsTopological
     Subgroup.topologicalClosure_minimal _
       ((Subgroup.closure_le _).2 fun g hg ↦
         (groupCohomology.mem_zeroLocus hcoc).2 (sub_eq_zero.2 (h hg)))
-      (groupCohomology.coe_zeroLocus hcoc ▸ isClosed_singleton.preimage hcont)
+      (groupCohomology.isClosed_zeroLocus hcoc hcont)
   funext g
   exact sub_eq_zero.1 ((groupCohomology.mem_zeroLocus hcoc).1 (hle (hs ▸ Subgroup.mem_top g)))
 

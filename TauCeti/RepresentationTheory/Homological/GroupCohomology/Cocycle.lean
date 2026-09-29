@@ -21,7 +21,8 @@ Facts about a `1`-cocycle `f : G → M` in the sense of Mathlib's unbundled
 * `groupCohomology.smul_zero_of_isCocycle₁`: an action admitting a `1`-cocycle fixes `0`.
 * `groupCohomology.zeroLocus`: the zero locus `{g | f g = 0}` is a subgroup of `G`, for any group
   action (not necessarily distributive) admitting the cocycle. As a set it is `f ⁻¹' {0}`
-  (`groupCohomology.coe_zeroLocus`), so it is closed whenever `f` is continuous into a `T1` space.
+  (`groupCohomology.coe_zeroLocus`); `GroupCohomology/Cocycle/Topology.lean` shows it is closed
+  when `f` is continuous into a `T1` space.
 
 Continuous cohomology uses the conjugation identity in transgression, and the zero locus to show
 that a continuous `1`-cocycle is determined by its values on a topological generating set.

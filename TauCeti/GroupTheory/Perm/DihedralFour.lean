@@ -51,7 +51,7 @@ noncomputable def wreathTwoMulEquivDihedralGroupFour :
 reading the image of `w` back in the `4T3` reference subgroup gives the conjugated action of
 `w`. -/
 @[simp]
-theorem coe_referenceSubgroup_symm_wreathTwoMulEquivDihedralGroupFour
+theorem coe_referenceSubgroupFourTwoMulEquivDihedralGroup_symm_apply_wreath
     (w : WreathProduct (Multiplicative (ZMod 2)) (Fin 2)) :
     (referenceSubgroupFourTwoMulEquivDihedralGroup.symm
       (wreathTwoMulEquivDihedralGroupFour w) : Perm (Fin 4)) =

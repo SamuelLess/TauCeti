@@ -498,6 +498,7 @@ theorem isNondegenerate_iff_radical_eq_bot : A.IsNondegenerate ↔ A.radical = �
   A.isNondegenerate_iff_injective.trans A.pairing.ker_eq_bot_iff.symm
 
 /-- The radical of an orthogonal direct sum is the product of the radicals. -/
+@[simp]
 theorem radical_prod (B : FiniteBilinearModule) :
     (A.prod B).radical = A.radical.prod B.radical := by
   ext ⟨x, y⟩

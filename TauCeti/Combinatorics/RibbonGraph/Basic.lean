@@ -168,8 +168,14 @@ theorem isConnected_def :
 @[simp]
 theorem isConnected_iff_card_connectedComponent_eq_one :
     Γ.IsConnected ↔ Fintype.card Γ.ConnectedComponent = 1 := by
-  rw [← Nat.card_eq_fintype_card, Nat.card_eq_one_iff_unique, isConnected_def, and_comm,
-    MulAction.pretransitive_iff_subsingleton_quotient, nonempty_quotient_iff]
+  rw [← Nat.card_eq_fintype_card, Nat.card_eq_one_iff_unique]
+  constructor
+  · rintro ⟨hE, hΓ⟩
+    exact ⟨(MulAction.pretransitive_iff_subsingleton_quotient _ _).mp hΓ,
+      (nonempty_quotient_iff _).mpr hE⟩
+  · rintro ⟨hsub, hne⟩
+    exact ⟨(nonempty_quotient_iff _).mp hne,
+      (MulAction.pretransitive_iff_subsingleton_quotient _ _).mpr hsub⟩
 
 /-! ### Degrees and Euler characteristic -/
 

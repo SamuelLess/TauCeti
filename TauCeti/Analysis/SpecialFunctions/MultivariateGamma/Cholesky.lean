@@ -18,8 +18,8 @@ Every positive-definite symmetric `p × p` matrix is `L * Lᵀ` for a unique low
 with positive diagonal, and reading off the on-or-below-diagonal entries of `L` turns the
 positive-definite cone into the region `TauCeti.posDiagLowerRegion p` of
 `TauCeti.lowerTriangle p → ℝ` whose diagonal coordinates are positive.  This file evaluates, in
-those coordinates, the integral whose value is `TauCeti.multivariateGamma p a` for
-`(p - 1) / 2 < a`, the range in which it converges:
+those coordinates, the integral whose value is `TauCeti.multivariateGamma p a` when
+`(p - 1) / 2 < a`:
 
 `∫ (det (L * Lᵀ)) ^ (a - (p + 1) / 2) * exp (-trace (L * Lᵀ)) * (2 ^ p * ∏ i, (L i i) ^ (p - i))`
 

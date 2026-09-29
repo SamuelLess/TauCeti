@@ -32,7 +32,7 @@ public section
 namespace groupCohomology
 
 /-- Conjugating the argument of a `1`-cocycle by `k` changes its value, after the action of `k`,
-by the coboundary of `c k`. Only the cocycle identity is used, so a bare scalar action suffices. -/
+by the coboundary of `c k`: `k • c (k⁻¹ * m * k) = m • c k - c k + c m`, for any scalar action. -/
 theorem smul_apply_inv_mul_mul_of_isCocycle₁ {G M : Type*} [Group G] [AddCommGroup M] [SMul G M]
     {c : G → M} (hc : IsCocycle₁ c) (k m : G) :
     k • c (k⁻¹ * m * k) = m • c k - c k + c m := by
@@ -42,18 +42,15 @@ theorem smul_apply_inv_mul_mul_of_isCocycle₁ {G M : Type*} [Group G] [AddCommG
   rw [eq_sub_of_add_eq h.symm]
   abel
 
-/-- An action admitting a `1`-cocycle fixes `0`: `f g = f (g * 1) = g • f 1 + f g` and `f 1 = 0`.
-So a cocycle needs no distributive action for `g • 0 = 0`. -/
+/-- A monoid action on an additive group that admits a `1`-cocycle fixes `0`. -/
 theorem smul_zero_of_isCocycle₁ {G M : Type*} [Monoid G] [AddCommGroup M] [MulAction G M]
     {f : G → M} (hf : IsCocycle₁ f) (g : G) : g • (0 : M) = 0 := by
   simpa only [mul_one, map_one_of_isCocycle₁ hf, right_eq_add] using hf g 1
 
 variable {G M : Type*} [Group G] [AddCommGroup M] [MulAction G M]
 
-/-- **The zero locus of a `1`-cocycle is a subgroup.** The cocycle identity
-`f (g * h) = g • f h + f g` closes it under multiplication, and the inverse formula
-`g • f g⁻¹ = -f g` closes it under inversion. Both steps use `g • 0 = 0`, which the cocycle itself
-provides (`smul_zero_of_isCocycle₁`), so the action need not be distributive. -/
+/-- **The zero locus of a `1`-cocycle**, `{g | f g = 0}`, as a subgroup of `G`, for any group
+action (not necessarily distributive). -/
 def zeroLocus {f : G → M} (hf : IsCocycle₁ f) : Subgroup G where
   carrier := {g | f g = 0}
   one_mem' := map_one_of_isCocycle₁ hf

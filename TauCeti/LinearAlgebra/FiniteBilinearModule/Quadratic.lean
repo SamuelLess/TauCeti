@@ -427,6 +427,10 @@ theorem isNondegenerate_prod (B : FiniteQuadraticModule) :
 /-- An element of a finite quadratic module is isotropic when its quadratic value vanishes. -/
 def IsIsotropicElem (x : A) : Prop := A.quadratic x = 0
 
+/-- Quadratic isotropy of an element, unfolded to its defining property. -/
+theorem isIsotropicElem_def (x : A) : A.IsIsotropicElem x ↔ A.quadratic x = 0 :=
+  Iff.rfl
+
 /-- Zero is quadratically isotropic. -/
 @[simp]
 theorem isIsotropicElem_zero : A.IsIsotropicElem 0 := by

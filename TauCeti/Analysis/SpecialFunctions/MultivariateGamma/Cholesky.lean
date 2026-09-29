@@ -7,7 +7,7 @@ module
 
 public import TauCeti.Analysis.SpecialFunctions.MultivariateGamma.Basic
 public import TauCeti.MeasureTheory.Measure.SymmetricMatrix.Cholesky
-public import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.MeasureTheory.Integral.Gamma
 
@@ -18,7 +18,8 @@ Every positive-definite symmetric `p × p` matrix is `L * Lᵀ` for a unique low
 with positive diagonal, and reading off the on-or-below-diagonal entries of `L` turns the
 positive-definite cone into the region `TauCeti.posDiagLowerRegion p` of
 `TauCeti.lowerTriangle p → ℝ` whose diagonal coordinates are positive.  This file evaluates, in
-those coordinates, the integral whose value is `TauCeti.multivariateGamma p a`:
+those coordinates, the integral whose value is `TauCeti.multivariateGamma p a` for
+`(p - 1) / 2 < a`, the range in which it converges:
 
 `∫ (det (L * Lᵀ)) ^ (a - (p + 1) / 2) * exp (-trace (L * Lᵀ)) * (2 ^ p * ∏ i, (L i i) ^ (p - i))`
 
@@ -78,10 +79,9 @@ private theorem integral_choleskyFactor (ha : ((p : ℝ) - 1) / 2 < a) (ij : low
       linarith
     rw [integral_indicator measurableSet_Ioi,
       setIntegral_congr_fun measurableSet_Ioi (g := fun s ↦
-        2 * (s ^ (2 * a - ((ij.1.1 : ℕ) : ℝ) - 1) * exp (-1 * s ^ (2 : ℝ))))
-        (fun s _ ↦ by simp only [Real.rpow_two, neg_one_mul]; ring),
-      integral_const_mul,
-      integral_rpow_mul_exp_neg_mul_rpow (by norm_num) (by linarith) one_pos, Real.one_rpow]
+        2 * (s ^ (2 * a - ((ij.1.1 : ℕ) : ℝ) - 1) * exp (-s ^ (2 : ℝ))))
+        (fun s _ ↦ by simp only [Real.rpow_two]; ring),
+      integral_const_mul, integral_rpow_mul_exp_neg_rpow (by norm_num) (by linarith)]
     have hexp : (2 * a - ((ij.1.1 : ℕ) : ℝ) - 1 + 1) / 2 = a - ((ij.1.1 : ℕ) : ℝ) / 2 := by ring
     rw [hexp]
     ring
@@ -97,7 +97,6 @@ private theorem indicator_eq_prod_choleskyFactor (a : ℝ) (x : lowerTriangle p 
               exp (-(lowerTriangleMatrix p y * (lowerTriangleMatrix p y)ᵀ).trace)) *
             (2 ^ p * ∏ i : Fin p, y ⟨(i, i), le_rfl⟩ ^ (p - (i : ℕ)))) x =
       ∏ ij : lowerTriangle p, choleskyFactor a ij (x ij) := by
-  classical
   by_cases hx : x ∈ posDiagLowerRegion p
   · have hpos : ∀ i : Fin p, 0 < x ⟨(i, i), le_rfl⟩ := (mem_posDiagLowerRegion p).mp hx
     -- Split each factor into the part depending on the exponent and a Gaussian part.
@@ -133,7 +132,7 @@ private theorem indicator_eq_prod_choleskyFactor (a : ℝ) (x : lowerTriangle p 
 /-- **The multivariate Gamma integral in Cholesky coordinates.**  Over the region of
 lower-triangular coordinates with positive diagonal, the Wishart integrand `(det A) ^
 (a - (p + 1) / 2) * exp (-trace A)` pulled back along `L ↦ L * Lᵀ` and weighted by the Jacobian
-`2 ^ p * ∏ i, (L i i) ^ (p - i)` integrates to `Γ_p(a)`. -/
+`2 ^ p * ∏ i, (L i i) ^ (p - i)` integrates to `Γ_p(a)` for `(p - 1) / 2 < a`. -/
 theorem integral_lowerTriangle_det_rpow_mul_exp_neg_trace
     (ha : ((p : ℝ) - 1) / 2 < a) :
     ∫ x in posDiagLowerRegion p,
@@ -149,7 +148,7 @@ theorem integral_lowerTriangle_det_rpow_mul_exp_neg_trace
         rw [← integral_indicator (measurableSet_posDiagLowerRegion p)]
         exact integral_congr_ae (.of_forall (indicator_eq_prod_choleskyFactor a))
     _ = ∏ ij : lowerTriangle p, ∫ t, choleskyFactor a ij t := by
-        rw [volume_pi]; exact integral_fintype_prod_eq_prod _
+        exact integral_fintype_prod_volume_eq_prod _
     _ = multivariateGamma p a := by
         rw [Finset.prod_congr rfl fun ij _ ↦ integral_choleskyFactor ha ij,
           prod_lowerTriangle_ite (fun i ↦ Real.Gamma (a - ((i : ℕ) : ℝ) / 2)) fun _ ↦ √π,
@@ -168,10 +167,9 @@ theorem integrableOn_lowerTriangle_det_rpow_mul_exp_neg_trace
             exp (-(lowerTriangleMatrix p x * (lowerTriangleMatrix p x)ᵀ).trace)) *
           (2 ^ p * ∏ i : Fin p, x ⟨(i, i), le_rfl⟩ ^ (p - (i : ℕ))))
       (posDiagLowerRegion p) := by
-  -- Were the integrand not integrable the integral would vanish, but it equals the positive
-  -- value `Γ_p(a)`.
-  by_contra h
+  -- A function whose integral is nonzero is integrable, and this integral is `Γ_p(a) > 0`.
+  apply Integrable.of_integral_ne_zero
+  rw [integral_lowerTriangle_det_rpow_mul_exp_neg_trace ha]
   exact (multivariateGamma_pos ha).ne'
-    ((integral_lowerTriangle_det_rpow_mul_exp_neg_trace ha).symm.trans (integral_undef h))
 
 end TauCeti

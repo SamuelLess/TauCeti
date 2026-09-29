@@ -269,8 +269,9 @@ theorem degree_eq_natCard_gal : L.degree = Nat.card L.Gal :=
 
 /-- The degree of a layer is the relative index of its top subgroup in its ground subgroup. -/
 theorem degree_eq_relIndex :
-    L.degree = L.top.toSubgroup.relIndex L.ground.toSubgroup :=
-  (rfl)
+    L.degree = L.top.toSubgroup.relIndex L.ground.toSubgroup := by
+  rw [Subgroup.relIndex]
+  exact L.degree_eq_natCard_gal
 
 /-- The layer `V ◁ ⊤` cut out by an open normal subgroup of `G`. These layers are the finite
 Galois extensions of the ground field of a formation on `G`. -/

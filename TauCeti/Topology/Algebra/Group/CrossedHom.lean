@@ -8,7 +8,8 @@ module
 public import Mathlib.Algebra.Ring.GeomSum
 public import Mathlib.Topology.Algebra.Group.Subgroup
 public import Mathlib.Topology.Separation.Basic
-public import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle.Topology
+
+import TauCeti.RepresentationTheory.Homological.GroupCohomology.Cocycle.Topology
 
 /-!
 # Crossed homomorphisms twisted by a unit-valued function

@@ -275,14 +275,8 @@ def IsEmptyFor (x : GridState n) : Prop :=
 /-- A rectangle is empty for a grid state exactly when no point of the state lies in its
 interior. -/
 theorem isEmptyFor_iff (x : GridState n) :
-    R.IsEmptyFor x ↔ ∀ p ∈ x.pointSet, p ∉ R.interior := by
-  rw [IsEmptyFor, disjoint_comm, Finset.disjoint_iff_ne]
-  constructor
-  · intro h p hp hpR
-    exact h p hp p hpR rfl
-  · intro h p hp q hq hpq
-    subst hpq
-    exact h p hp hq
+    R.IsEmptyFor x ↔ ∀ p ∈ x.pointSet, p ∉ R.interior :=
+  Finset.disjoint_right
 
 /-- A rectangle is empty for a grid state exactly when the state sends every column strictly
 between its two side columns to a row outside the open arc between its two side rows.

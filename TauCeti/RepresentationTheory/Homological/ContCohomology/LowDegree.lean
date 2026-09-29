@@ -725,7 +725,7 @@ continuous cohomology. -/
 def DiscreteH1 : Type _ := H1 G M
 
 /-- `DiscreteH1 G M` has the additive group structure of `H¹(G, M)`. -/
-noncomputable instance : AddCommGroup (DiscreteH1 G M) :=
+instance : AddCommGroup (DiscreteH1 G M) :=
   inferInstanceAs (AddCommGroup (H1 G M))
 
 /-- `DiscreteH1 G M` carries the discrete topology. -/
@@ -736,7 +736,7 @@ instance : DiscreteTopology (DiscreteH1 G M) := ⟨rfl⟩
 
 /-- The identity as an additive equivalence, so that the quotient-class computations on
 representatives stay available after passing to the discrete object. -/
-noncomputable def discreteH1Equiv : DiscreteH1 G M ≃+ H1 G M :=
+def discreteH1Equiv : DiscreteH1 G M ≃+ H1 G M :=
   AddEquiv.refl _
 
 variable {G M}
@@ -784,7 +784,7 @@ continuous cohomology. -/
 def DiscreteH2 : Type _ := H2 G M
 
 /-- `DiscreteH2 G M` has the additive group structure of `H²(G, M)`. -/
-noncomputable instance : AddCommGroup (DiscreteH2 G M) :=
+instance : AddCommGroup (DiscreteH2 G M) :=
   inferInstanceAs (AddCommGroup (H2 G M))
 
 /-- `DiscreteH2 G M` carries the discrete topology. -/
@@ -794,7 +794,7 @@ instance : TopologicalSpace (DiscreteH2 G M) := ⊥
 instance : DiscreteTopology (DiscreteH2 G M) := ⟨rfl⟩
 
 /-- The degree-`2` counterpart of `TauCeti.ContCohomology.discreteH1Equiv`. -/
-noncomputable def discreteH2Equiv : DiscreteH2 G M ≃+ H2 G M :=
+def discreteH2Equiv : DiscreteH2 G M ≃+ H2 G M :=
   AddEquiv.refl _
 
 variable {G M}
@@ -955,7 +955,7 @@ include htriv
 
 Continuity is what makes this useful rather than decorative: without it the right-hand side is the
 group of abstract homomorphisms, which for a profinite group is enormous. -/
-noncomputable def H1EquivOfSmulEqSelf :
+def H1EquivOfSmulEqSelf :
     H1 G M ≃+ Additive (ContinuousMonoidHom G (Multiplicative M)) :=
   (QuotientAddGroup.quotientAddEquivOfEq
       (M := (B1 G M).addSubgroupOf (Z1 G M)) (N := ⊥) (by

@@ -470,7 +470,7 @@ private theorem upperLongRoot_mem (i : Fin m) (c : R) :
     cases a <;> cases b <;>
       simp [Matrix.transvection, Matrix.single, Matrix.fromBlocks, Matrix.one_apply]
   rw [hmatrix]
-  exact SymplecticGroup.fromBlocks_upper_mem _ (by simp)
+  exact SymplecticGroup.fromBlocks_upper_mem (by simp)
 
 private theorem lowerLongRoot_mem (i : Fin m) (c : R) :
     transvectionUnit (Sum.inr_ne_inl : (Sum.inr i : Fin m ⊕ Fin m) ≠ Sum.inl i) c ∈
@@ -485,7 +485,7 @@ private theorem lowerLongRoot_mem (i : Fin m) (c : R) :
     cases a <;> cases b <;>
       simp [Matrix.transvection, Matrix.single, Matrix.fromBlocks, Matrix.one_apply]
   rw [hmatrix]
-  exact SymplecticGroup.fromBlocks_lower_mem _ (by simp)
+  exact SymplecticGroup.fromBlocks_lower_mem (by simp)
 
 /-- The symplectic matrix `x_{2eᵢ}(c) = 1 + c E_{i,m+i}`, in `Fin (m + m)` coordinates. -/
 def positiveLongRootTransvectionUnit (i : Fin m) (c : R) : GLSymplecticFin m R :=
@@ -697,7 +697,7 @@ private theorem positiveSumShortRoot_mem {i j : Fin m} (c : R) :
     cases a <;> cases b <;>
       simp [Matrix.single, Matrix.fromBlocks, Matrix.one_apply, add_comm]
   rw [hmatrix]
-  exact SymplecticGroup.fromBlocks_upper_mem _
+  exact SymplecticGroup.fromBlocks_upper_mem
     (by simp [Matrix.transpose_add, Matrix.transpose_single, add_comm])
 
 private theorem negativeSumShortRoot_mem {i j : Fin m} (c : R) :
@@ -724,7 +724,7 @@ private theorem negativeSumShortRoot_mem {i j : Fin m} (c : R) :
     cases a <;> cases b <;>
       simp [Matrix.single, Matrix.fromBlocks, Matrix.one_apply, add_comm]
   rw [hmatrix]
-  exact SymplecticGroup.fromBlocks_lower_mem _
+  exact SymplecticGroup.fromBlocks_lower_mem
     (by simp [Matrix.transpose_add, Matrix.transpose_single, add_comm])
 
 /-- The one-parameter subgroup attached to the short root `eᵢ-eⱼ`. -/

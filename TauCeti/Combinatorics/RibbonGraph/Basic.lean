@@ -635,18 +635,6 @@ instance : Group Γ.Aut where
 
 /-! ### Universe lifting -/
 
-/-- Transporting a permutation along an equivalence transports its cycles on a set. -/
-private theorem isCycleOn_permCongr_image {α β : Type*} (e : α ≃ β) {σ : Perm α} {s : Set α}
-    (h : σ.IsCycleOn s) : (e.permCongr σ).IsCycleOn (e '' s) := by
-  refine ⟨⟨?_, (e.permCongr σ).injective.injOn, ?_⟩, ?_⟩
-  · rintro _ ⟨x, hx, rfl⟩
-    exact ⟨σ x, h.1.mapsTo hx, by simp⟩
-  · rintro _ ⟨x, hx, rfl⟩
-    obtain ⟨y, hy, rfl⟩ := h.1.surjOn hx
-    exact ⟨e y, ⟨y, hy, rfl⟩, by simp⟩
-  · rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩
-    exact (Perm.sameCycle_permCongr σ e).2 (h.2 hx hy)
-
 universe v
 
 /-- The copy of a ribbon graph in a higher universe, with edges and vertices of both colours
@@ -671,11 +659,11 @@ def ulift : BipartiteRibbonGraph.{max u v} where
   whiteEnd_surjective w := ⟨⟨(Γ.whiteEnd_surjective w.down).choose⟩, by
     simp [(Γ.whiteEnd_surjective w.down).choose_spec]⟩
   isCycleOn_rotB b := by
-    convert isCycleOn_permCongr_image Equiv.ulift.symm (Γ.isCycleOn_rotB b.down)
+    convert (Γ.isCycleOn_rotB b.down).permCongr Equiv.ulift.symm
     ext ⟨e⟩
     simp [Equiv.ulift, ULift.ext_iff]
   isCycleOn_rotW w := by
-    convert isCycleOn_permCongr_image Equiv.ulift.symm (Γ.isCycleOn_rotW w.down)
+    convert (Γ.isCycleOn_rotW w.down).permCongr Equiv.ulift.symm
     ext ⟨e⟩
     simp [Equiv.ulift, ULift.ext_iff]
 

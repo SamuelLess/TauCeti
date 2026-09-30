@@ -219,7 +219,6 @@ the canonical exact structure. -/
 private def AdditiveInvariant.toExact (a : AdditiveInvariant C G) :
     ExactK0.AdditiveInvariant (ExactStructure.abelian C) G where
   obj := a.obj
-  map_iso := a.map_iso
   map_conflation _ hS := a.map_shortExact ((ExactStructure.abelian_conflation _).mp hS)
 
 omit [EssentiallySmall.{w} C] in

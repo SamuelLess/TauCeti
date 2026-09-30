@@ -191,7 +191,7 @@ theorem ConnectedCoverClass.isoClass_injective :
     ConnectedIsoClass.mk_eq_mk_iff_exists_smul] at h
   obtain ⟨τ, hτ⟩ := h
   exact ConnectedFiberNumberedCoverClass.forgetNumbering_eq_forgetNumbering_iff.2
-    ⟨τ⁻¹, inv_smul_eq_iff.2 (ConnectedFiberNumberedCoverClass.smul_eq_of_smul_triple_eq hτ).symm⟩
+    ⟨τ, ConnectedFiberNumberedCoverClass.smul_eq_of_smul_triple_eq hτ⟩
 
 /-! ### Pointed covers and marked triples -/
 
@@ -251,7 +251,6 @@ theorem ConnectedPointedCoverClass.markedClass_injective :
     MarkedIsoClass.mk_eq_mk_iff_exists_smul] at h
   obtain ⟨τ, hτ, hτi⟩ := h
   exact ConnectedFiberNumberedCoverClass.markLabel_eq_markLabel_iff.2
-    ⟨τ⁻¹, inv_smul_eq_iff.2 (ConnectedFiberNumberedCoverClass.smul_eq_of_smul_triple_eq hτ).symm,
-      by simp [← hτi]⟩
+    ⟨τ, ConnectedFiberNumberedCoverClass.smul_eq_of_smul_triple_eq hτ, hτi⟩
 
 end TauCeti

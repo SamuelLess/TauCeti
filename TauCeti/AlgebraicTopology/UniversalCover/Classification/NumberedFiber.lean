@@ -580,36 +580,36 @@ theorem markLabel_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCoverClass
 the same underlying cover exactly when a relabelling carries one to the other. -/
 @[simp]
 theorem forgetNumbering_eq_forgetNumbering_iff {C C' : ConnectedFiberNumberedCoverClass x n} :
-    C.forgetNumbering = C'.forgetNumbering ↔ ∃ τ : Perm (Fin n), τ • C = C' := by
+    C.forgetNumbering = C'.forgetNumbering ↔ ∃ τ : Perm (Fin n), τ • C' = C := by
   refine ⟨fun h => ?_, ?_⟩
   · obtain ⟨c, rfl⟩ := mk_surjective C
     obtain ⟨c', rfl⟩ := mk_surjective C'
     rw [forgetNumbering_mk, forgetNumbering_mk] at h
-    obtain ⟨f⟩ := ConnectedCoverClass.mk_eq_mk_iff.1 h
+    obtain ⟨f⟩ := ConnectedCoverClass.mk_eq_mk_iff.1 h.symm
     obtain ⟨τ, hτ, -⟩ := exists_smul_iso_of_iso f
     exact ⟨τ, by rw [smul_mk, mk_eq_mk_iff.2 hτ]⟩
   · rintro ⟨τ, rfl⟩
-    exact (forgetNumbering_smul τ C).symm
+    exact forgetNumbering_smul τ C'
 
 /-- **Marking a label is passing to the diagonal relabelling orbit.** Two numbered classes with
-marked labels give the same pointed class exactly when a relabelling carries the first class to
-the second and the first label to the second. -/
+marked labels give the same pointed class exactly when a relabelling carries the second class to
+the first and the second label to the first. -/
 @[simp]
 theorem markLabel_eq_markLabel_iff {C C' : ConnectedFiberNumberedCoverClass x n} {i j : Fin n} :
-    C.markLabel i = C'.markLabel j ↔ ∃ τ : Perm (Fin n), τ • C = C' ∧ τ i = j := by
+    C.markLabel i = C'.markLabel j ↔ ∃ τ : Perm (Fin n), τ • C' = C ∧ τ j = i := by
   refine ⟨fun h => ?_, ?_⟩
   · obtain ⟨c, rfl⟩ := mk_surjective C
     obtain ⟨c', rfl⟩ := mk_surjective C'
     rw [markLabel_mk, markLabel_mk] at h
-    obtain ⟨f, hf⟩ := ConnectedPointedCoverClass.mk_eq_mk_iff.1 h
+    obtain ⟨f, hf⟩ := ConnectedPointedCoverClass.mk_eq_mk_iff.1 h.symm
     obtain ⟨τ, hτ, hτi⟩ := exists_smul_iso_of_iso f
-    have he : fiberEquiv f (c.ν.symm i) = c'.ν.symm j :=
+    have he : fiberEquiv f (c'.ν.symm j) = c.ν.symm i :=
       Subtype.ext ((coe_fiberEquiv_apply f _).trans hf)
     refine ⟨τ, by rw [smul_mk, mk_eq_mk_iff.2 hτ], ?_⟩
     rw [hτi]
-    exact (congrArg c'.ν he).trans (apply_symm_apply _ _)
+    exact (congrArg c.ν he).trans (apply_symm_apply _ _)
   · rintro ⟨τ, rfl, rfl⟩
-    exact (markLabel_smul τ C i).symm
+    exact markLabel_smul τ C' j
 
 /-- The bare isomorphism classes of connected covers of degree `n` are the relabelling orbits of
 the numbered classes. -/
@@ -617,7 +617,7 @@ noncomputable def orbitRelQuotientEquiv :
     MulAction.orbitRel.Quotient (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) ≃
       ConnectedCoverClass x n :=
   (Quotient.congrRight fun _ _ => by
-    rw [MulAction.orbitRel_apply, MulAction.mem_orbit_iff, Setoid.ker_def, eq_comm,
+    rw [MulAction.orbitRel_apply, MulAction.mem_orbit_iff, Setoid.ker_def,
       forgetNumbering_eq_forgetNumbering_iff]).trans
     (Setoid.quotientKerEquivOfSurjective _ forgetNumbering_surjective)
 
@@ -634,7 +634,7 @@ noncomputable def markedOrbitRelQuotientEquiv :
   (Quotient.congrRight fun ⟨C, i⟩ ⟨C', j⟩ => by
     rw [MulAction.orbitRel_apply, MulAction.mem_orbit_iff, Setoid.ker_def]
     dsimp only
-    rw [eq_comm, markLabel_eq_markLabel_iff]
+    rw [markLabel_eq_markLabel_iff]
     simp [Prod.ext_iff, Perm.smul_def]).trans
     (Setoid.quotientKerEquivOfSurjective (fun Ci => Ci.1.markLabel Ci.2) fun C =>
       let ⟨N, i, h⟩ := C.exists_markLabel_eq

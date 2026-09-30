@@ -273,6 +273,11 @@ theorem hom_ext {f g : ExactK0 E →+ G} (h : ∀ X : C, f (of X) = g (of X)) : 
 
 end HomExt
 
+/-- A homomorphism into exact `K₀` whose range contains the class of every object is surjective. -/
+theorem surjective_of_forall_of_mem_range {G : Type*} [AddGroup G] {f : G →+ ExactK0 E}
+    (h : ∀ X : C, of X ∈ f.range) : Function.Surjective f :=
+  PresentedK0.surjective_of_forall_of_mem_range h
+
 variable {G : Type*} [AddCommGroup G]
 
 variable (E) in
@@ -545,10 +550,8 @@ theorem ofLE_unique (h : ∀ S : ShortComplex C, E.Conflation S → E''.Conflati
 /-- The comparison map is surjective: exact `K₀` is a quotient of the exact `K₀` of any exact
 structure with fewer conflations. -/
 theorem ofLE_surjective (h : ∀ S : ShortComplex C, E.Conflation S → E''.Conflation S) :
-    Function.Surjective (ofLE h) := by
-  rw [← AddMonoidHom.range_eq_top, eq_top_iff, ← closure_range_of, AddSubgroup.closure_le]
-  rintro _ ⟨X, rfl⟩
-  exact ⟨of X, ofLE_of h X⟩
+    Function.Surjective (ofLE h) :=
+  surjective_of_forall_of_mem_range fun X => ⟨of X, ofLE_of h X⟩
 
 /-- The comparison map of an exact structure with itself is the identity. -/
 @[simp]
@@ -594,10 +597,8 @@ theorem fromSplit_unique (f : SplitK0 C →+ ExactK0 E)
 
 /-- The canonical comparison out of split `K₀` is surjective: the classes of objects generate
 exact `K₀`, so the exact `K₀` of any exact structure is a quotient of split `K₀`. -/
-theorem fromSplit_surjective : Function.Surjective (fromSplit E) := by
-  rw [← AddMonoidHom.range_eq_top, eq_top_iff, ← closure_range_of, AddSubgroup.closure_le]
-  rintro _ ⟨X, rfl⟩
-  exact ⟨SplitK0.of X, fromSplit_of (E := E) X⟩
+theorem fromSplit_surjective : Function.Surjective (fromSplit E) :=
+  surjective_of_forall_of_mem_range fun X => ⟨SplitK0.of X, fromSplit_of (E := E) X⟩
 
 /-- The canonical comparison from split `K₀` to exact `K₀` is an equivalence when every
 conflation splits. -/

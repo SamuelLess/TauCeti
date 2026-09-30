@@ -259,30 +259,14 @@ theorem disjoint_pointSet_iff (x y : GridState n) :
 If `ρ` is the row permutation, the point in column `c` moves from row `x c` to row
 `ρ (x c)`. -/
 def relabelRows (ρ : Equiv.Perm (Fin n)) (x : GridState n) : GridState n where
-  toPerm :=
-    { toFun := fun c => ρ (x c)
-      invFun := fun r => x.toPerm.symm (ρ.symm r)
-      left_inv := by
-        intro c
-        simp
-      right_inv := by
-        intro r
-        simp }
+  toPerm := x.toPerm.trans ρ
 
 /-- Relabel the columns of a grid state by a permutation of `Fin n`.
 
 The point in the old column `c` appears in the new column `κ c`, so the row in a new column
 `c` is read from the old column `κ.symm c`. -/
 def relabelColumns (κ : Equiv.Perm (Fin n)) (x : GridState n) : GridState n where
-  toPerm :=
-    { toFun := fun c => x (κ.symm c)
-      invFun := fun r => κ (x.toPerm.symm r)
-      left_inv := by
-        intro c
-        simp
-      right_inv := by
-        intro r
-        simp }
+  toPerm := κ.symm.trans x.toPerm
 
 /-- Row relabeling evaluates by applying the row permutation to the old row. -/
 @[simp]

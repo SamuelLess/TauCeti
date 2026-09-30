@@ -118,8 +118,9 @@ theorem halfEdgeSuccEquiv_apply_inr_val {n : ℕ} (slot : Fin 4) :
 def oppositeCrossingSlot : Equiv.Perm (Fin 4) :=
   finCycle 2
 
-/-- The opposite crossing slot is obtained by adding two cyclically. This is not `@[simp]`: the
-simp normal form keeps `oppositeCrossingSlot`, which the simp lemmas about opposite slots match. -/
+-- Not `@[simp]`: the simp normal form keeps `oppositeCrossingSlot`, which the simp lemmas about
+-- opposite slots match.
+/-- The opposite crossing slot is obtained by adding two cyclically. -/
 theorem oppositeCrossingSlot_apply (slot : Fin 4) : oppositeCrossingSlot slot = slot + 2 :=
   finCycle_apply 2 slot
 

@@ -175,6 +175,14 @@ theorem componentCount_pos (D : PDCode n) (hn : n ≠ 0) : 0 < D.componentCount 
     (D.relabel half cross).componentCount = D.componentCount := by
   simp [componentCount]
 
+/-- Following a strand of the kink through its crossing passes to the opposite slot. -/
+@[simp] theorem kink_crossingTurn (i : Fin 1) (t : Fin 4) :
+    kink.crossingTurn (crossingSlotEquiv 1 (i, t))
+      = crossingSlotEquiv 1 (i, oppositeCrossingSlot t) := by
+  have h := kink.crossingTurn_crossing i t
+  rw [kink_halfEdge] at h
+  simpa using h
+
 end PDCode
 
 namespace OrientedPDCode

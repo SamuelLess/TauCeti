@@ -193,20 +193,6 @@ theorem sum_ite_mem_rows {R : Type*} [AddCommMonoidWithOne R] (x : GridState n)
   rw [sum_pointSet, Equiv.sum_comp x.toPerm fun r => if r ∈ D then (1 : R) else 0]
   simp
 
-/-- A grid state has a unique occupied row in each column. -/
-theorem existsUnique_row_of_column (x : GridState n) (c : Fin n) :
-    ∃! r : Fin n, (c, r) ∈ x.pointSet := by
-  refine ⟨x c, by simp, ?_⟩
-  intro r hr
-  exact ((mk_mem_pointSet x c r).mp hr).symm
-
-/-- A grid state has a unique occupied column in each row. -/
-theorem existsUnique_column_of_row (x : GridState n) (r : Fin n) :
-    ∃! c : Fin n, (c, r) ∈ x.pointSet := by
-  refine ⟨x.toPerm.symm r, by simp, ?_⟩
-  intro c hc
-  exact x.toPerm.injective (by simpa using hc)
-
 /-- A grid state occupies a square in every column, so it meets every nonempty vertical band of
 squares. -/
 theorem not_disjoint_product_univ_pointSet (M : GridState n) {s : Finset (Fin n)}
@@ -818,30 +804,6 @@ theorem card_OSet : G.OSet.card = n := by
 @[simp]
 theorem card_XSet : G.XSet.card = n := by
   simp [XSet]
-
-/-- A grid diagram has a unique `O` marking in each column. -/
-theorem existsUnique_ORow_of_column (c : Fin n) :
-    ∃! r : Fin n, (c, r) ∈ G.OSet := by
-  rw [OSet]
-  exact G.O.existsUnique_row_of_column c
-
-/-- A grid diagram has a unique `X` marking in each column. -/
-theorem existsUnique_XRow_of_column (c : Fin n) :
-    ∃! r : Fin n, (c, r) ∈ G.XSet := by
-  rw [XSet]
-  exact G.X.existsUnique_row_of_column c
-
-/-- A grid diagram has a unique `O` marking in each row. -/
-theorem existsUnique_OColumn_of_row (r : Fin n) :
-    ∃! c : Fin n, (c, r) ∈ G.OSet := by
-  rw [OSet]
-  exact G.O.existsUnique_column_of_row r
-
-/-- A grid diagram has a unique `X` marking in each row. -/
-theorem existsUnique_XColumn_of_row (r : Fin n) :
-    ∃! c : Fin n, (c, r) ∈ G.XSet := by
-  rw [XSet]
-  exact G.X.existsUnique_column_of_row r
 
 /-- The `O` and `X` marking sets of a grid diagram are disjoint. -/
 theorem disjoint_OSet_XSet : Disjoint G.OSet G.XSet := by

@@ -108,10 +108,10 @@ lemma conflationRelation_def (S : ShortComplex C) :
 /-- An additive homomorphism annihilates the relation of a short complex exactly when it is
 additive on that complex. This evaluates a conflation relation once and for all, for both the
 quotient map presenting exact `K₀` and the free extension of an invariant. -/
-lemma map_conflationRelation_eq_zero_iff {G : Type*} [AddGroup G]
+lemma map_conflationRelation_eq_zero_iff {G : Type*} [AddCommGroup G]
     (f : FreeAbelianGroup (ObjectCode C) →+ G) (S : ShortComplex C) :
     f (conflationRelation S) = 0 ↔ f (freeOf S.X₂) = f (freeOf S.X₁) + f (freeOf S.X₃) := by
-  rw [conflationRelation_def, sub_sub, map_sub, map_add, sub_eq_zero]
+  rw [conflationRelation_def, map_sub, map_sub, sub_sub, sub_eq_zero]
 
 /-- The free map of a functor carries the relation of a short complex to the relation of its
 image. -/
@@ -191,8 +191,8 @@ theorem of_eq_add_of_conflation {X Y Z : C} {i : X ⟶ Y} {p : Y ⟶ Z} (zero : 
 omit [EssentiallySmall.{w} C] in
 /-- An ambient conflation whose outer terms satisfy an extension-closed property gives the
 defining relation in the exact `K₀` of the induced full subcategory. -/
-theorem of_conflation_fullSubcategory {P : ObjectProperty C}
-    [EssentiallySmall.{w} P.FullSubcategory] [P.ContainsZero]
+theorem of_conflation_fullSubcategory {P : ObjectProperty C} [LocallySmall.{w} C]
+    [ObjectProperty.EssentiallySmall.{w} P] [P.ContainsZero]
     [P.IsClosedUnderBinaryProducts] (hP : E.IsExtensionClosed P)
     {S : ShortComplex C} (hS : E.Conflation S)
     (h₁ : P S.X₁) (h₃ : P S.X₃) :
@@ -229,8 +229,8 @@ omit [EssentiallySmall.{w} C] in
 subcategory is the sum of the classes of its summands. The middle object is the one supplied by
 closure under binary products; by proof irrelevance the statement applies to any presentation of
 it. -/
-theorem of_biprod_fullSubcategory [EssentiallySmall.{w} P.FullSubcategory]
-    (hP : E.IsExtensionClosed P) {X Y : C}
+theorem of_biprod_fullSubcategory [LocallySmall.{w} C]
+    [ObjectProperty.EssentiallySmall.{w} P] (hP : E.IsExtensionClosed P) {X Y : C}
     (hX : P X) (hY : P Y) :
     (of ⟨X ⊞ Y, P.prop_biprod_of_isClosedUnderBinaryProducts hX hY⟩ :
         ExactK0 (E.fullSubcategory P hP)) =
@@ -476,10 +476,10 @@ theorem map_comp {K : Type u''} [Category.{v''} K] [Preadditive K] [HasZeroObjec
     map (F ⋙ H) (hF.comp hH) = (map H hH).comp (map F hF) :=
   hom_ext fun X => by rw [map_of, AddMonoidHom.comp_apply, map_of, map_of, Functor.comp_obj]
 
-/-- Conflation-exact functors with isomorphic values on every object induce the same map. -/
-theorem map_congr {F' : C ⥤ D} [F'.Additive] (h : ∀ X : C, Nonempty (F.obj X ≅ F'.obj X))
-    (hF : E.IsConflationExact E' F) (hF' : E.IsConflationExact E' F') : map F hF = map F' hF' :=
-  hom_ext fun X => by rw [map_of, map_of, of_congr (h X).some]
+/-- Naturally isomorphic conflation-exact functors induce the same map. -/
+theorem map_congr {F' : C ⥤ D} [F'.Additive] (e : F ≅ F') (hF : E.IsConflationExact E' F)
+    (hF' : E.IsConflationExact E' F') : map F hF = map F' hF' :=
+  hom_ext fun X => by rw [map_of, map_of, of_congr (e.app X)]
 
 /-- **Equivalence invariance of exact `K₀`**: an exact equivalence, that is an equivalence whose
 two functors are conflation-exact, induces an isomorphism of exact Grothendieck groups. -/

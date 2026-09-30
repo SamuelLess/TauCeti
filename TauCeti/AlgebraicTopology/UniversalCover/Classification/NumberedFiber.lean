@@ -262,29 +262,29 @@ instance connectedCoverSetoid (x : X) (n : ℕ) : Setoid (ConnectedCover x n) :=
 /-! ### Isomorphism classes -/
 
 /-- Fibre-numbered connected covers of degree `n` up to label-preserving isomorphism. -/
-@[expose] def ConnectedFiberNumberedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
+def ConnectedFiberNumberedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
   Quotient (connectedFiberNumberedCoverSetoid x n)
 
 /-- Pointed connected covers of degree `n` up to pointed isomorphism. -/
-@[expose] def ConnectedPointedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
+def ConnectedPointedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
   Quotient (connectedPointedCoverSetoid x n)
 
 /-- Connected covers of degree `n` up to isomorphism. -/
-@[expose] def ConnectedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
+def ConnectedCoverClass (x : X) (n : ℕ) : Type (u + 1) :=
   Quotient (connectedCoverSetoid x n)
 
 /-- The isomorphism class of a fibre-numbered cover. -/
-@[expose] def ConnectedFiberNumberedCoverClass.mk (c : ConnectedFiberNumberedCover x n) :
+def ConnectedFiberNumberedCoverClass.mk (c : ConnectedFiberNumberedCover x n) :
     ConnectedFiberNumberedCoverClass x n :=
   Quotient.mk _ c
 
 /-- The isomorphism class of a pointed cover. -/
-@[expose] def ConnectedPointedCoverClass.mk (c : ConnectedPointedCover x n) :
+def ConnectedPointedCoverClass.mk (c : ConnectedPointedCover x n) :
     ConnectedPointedCoverClass x n :=
   Quotient.mk _ c
 
 /-- The isomorphism class of a cover. -/
-@[expose] def ConnectedCoverClass.mk (c : ConnectedCover x n) : ConnectedCoverClass x n :=
+def ConnectedCoverClass.mk (c : ConnectedCover x n) : ConnectedCoverClass x n :=
   Quotient.mk _ c
 
 @[simp]
@@ -305,6 +305,30 @@ theorem ConnectedCoverClass.mk_eq_mk_iff {c c' : ConnectedCover x n} :
 theorem ConnectedFiberNumberedCoverClass.mk_surjective :
     Function.Surjective (mk : ConnectedFiberNumberedCover x n → _) :=
   Quotient.mk_surjective
+
+/-- A function on numbered covers that is constant on label-preserving isomorphism classes, as a
+function on the classes. -/
+def ConnectedFiberNumberedCoverClass.lift {α : Sort*} (f : ConnectedFiberNumberedCover x n → α)
+    (hf : ∀ c c', ConnectedFiberNumberedCoverIso c c' → f c = f c') :
+    ConnectedFiberNumberedCoverClass x n → α :=
+  Quotient.lift f hf
+
+@[simp]
+theorem ConnectedFiberNumberedCoverClass.lift_mk {α : Sort*}
+    (f : ConnectedFiberNumberedCover x n → α)
+    (hf : ∀ c c', ConnectedFiberNumberedCoverIso c c' → f c = f c')
+    (c : ConnectedFiberNumberedCover x n) :
+    ConnectedFiberNumberedCoverClass.lift f hf (ConnectedFiberNumberedCoverClass.mk c) = f c :=
+  (rfl)
+
+/-- A property of the classes holds for every class once it holds for the class of every numbered
+cover. -/
+@[elab_as_elim]
+theorem ConnectedFiberNumberedCoverClass.ind
+    {motive : ConnectedFiberNumberedCoverClass x n → Prop}
+    (h : ∀ c, motive (ConnectedFiberNumberedCoverClass.mk c))
+    (C : ConnectedFiberNumberedCoverClass x n) : motive C :=
+  Quotient.ind h C
 
 theorem ConnectedPointedCoverClass.mk_surjective :
     Function.Surjective (mk : ConnectedPointedCover x n → _) :=
@@ -510,7 +534,7 @@ namespace ConnectedFiberNumberedCoverClass
 open ConnectedFiberNumberedCover
 
 instance : SMul (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) where
-  smul τ := Quotient.map (τ • ·) fun _ _ h => h.smul τ
+  smul τ := lift (fun c => mk (τ • c)) fun _ _ h => mk_eq_mk_iff.2 (h.smul τ)
 
 @[simp]
 theorem smul_mk (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) :
@@ -518,7 +542,7 @@ theorem smul_mk (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) :
   (rfl)
 
 instance : MulAction (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) :=
-  mk_surjective.mulAction mk smul_mk
+  mk_surjective.mulAction mk fun τ c => (smul_mk τ c).symm
 
 @[simp]
 theorem forgetNumbering_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCoverClass x n) :

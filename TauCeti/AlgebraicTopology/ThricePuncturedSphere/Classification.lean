@@ -119,29 +119,31 @@ namespace ConnectedFiberNumberedCoverClass
 noncomputable def triple :
     ConnectedFiberNumberedCoverClass (X := TopCat.of ThricePuncturedSphere) basePt n →
       ConnectedTriple n :=
-  Quotient.lift ConnectedFiberNumberedCover.connectedTriple fun _ _ h =>
+  ConnectedFiberNumberedCoverClass.lift ConnectedFiberNumberedCover.connectedTriple fun _ _ h =>
     ConnectedFiberNumberedCover.connectedTriple_eq_connectedTriple_iff.2 h
 
 @[simp]
 theorem triple_mk
     (c : ConnectedFiberNumberedCover (X := TopCat.of ThricePuncturedSphere) basePt n) :
     (mk c).triple = c.connectedTriple :=
-  (rfl)
+  lift_mk _ _ c
 
 /-- Relabeling a numbered class relabels its triple. -/
 @[simp]
 theorem triple_smul (τ : Perm (Fin n))
     (C : ConnectedFiberNumberedCoverClass (X := TopCat.of ThricePuncturedSphere) basePt n) :
     (τ • C).triple = τ • C.triple :=
-  Quotient.inductionOn C fun c => c.connectedTriple_smul τ
+  ind (fun c => by rw [smul_mk, triple_mk, triple_mk]; exact c.connectedTriple_smul τ) C
 
 /-- **A numbered cover of `ℂ ∖ {0, 1}` is determined up to isomorphism by its triple.** -/
 theorem triple_injective :
     Function.Injective
       (triple : ConnectedFiberNumberedCoverClass (X := TopCat.of ThricePuncturedSphere) basePt n →
-        ConnectedTriple n) := fun C C' =>
-  Quotient.inductionOn₂ C C' fun _ _ h =>
-    Quotient.sound (ConnectedFiberNumberedCover.connectedTriple_eq_connectedTriple_iff.1 h)
+        ConnectedTriple n) := fun C C' h => by
+  obtain ⟨c, rfl⟩ := mk_surjective C
+  obtain ⟨c', rfl⟩ := mk_surjective C'
+  rw [triple_mk, triple_mk] at h
+  exact mk_eq_mk_iff.2 (ConnectedFiberNumberedCover.connectedTriple_eq_connectedTriple_iff.1 h)
 
 /-- Two numbered classes whose triples are relabelings of each other are relabelings of each
 other. -/

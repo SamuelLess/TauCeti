@@ -254,9 +254,9 @@ structure AdditiveInvariant (G : Type*) [AddCommGroup G] where
   map_distTriang : ∀ ⦃T : Triangle C⦄, T ∈ distTriang C → obj T.obj₂ = obj T.obj₁ + obj T.obj₃
 
 omit [EssentiallySmall.{w} C] in
-/-- **An additive invariant takes equal values on isomorphic objects.** The contractible triangle
-on `0` makes the value at `0` vanish, and an isomorphism `X ≅ Y` is the first map of a
-distinguished triangle `X ⟶ Y ⟶ 0 ⟶ X⟦1⟧`. -/
+/-- **An additive invariant takes equal values on isomorphic objects.** Additivity on distinguished
+triangles alone forces invariance under isomorphisms of objects, which is the invariance the
+presentation of triangulated `K₀` requires. -/
 theorem AdditiveInvariant.map_iso (a : AdditiveInvariant C G) ⦃X Y : C⦄ (e : X ≅ Y) :
     a.obj X = a.obj Y := by
   have h0 : a.obj (0 : C) = 0 := by

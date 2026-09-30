@@ -155,49 +155,6 @@ private theorem coe_fiberEquiv_apply {p q : ConnectedCoveringSpace X} (f : p ≅
     (e : ⇑p.proj ⁻¹' {x}) : (fiberEquiv f e : (q : TopCat)) = f.hom.hom.left e.1 :=
   rfl
 
-/- The pointwise laws isolate how the cover-category wrappers act on total-space points. -/
-private theorem coverMap_id_apply (p : ConnectedCoveringSpace X) (e : (p : TopCat)) :
-    (Iso.refl p).hom.hom.left e = e :=
-  rfl
-
-private theorem coverMap_comp_apply {p q r : ConnectedCoveringSpace X}
-    (f : p ⟶ q) (g : q ⟶ r) (e : (p : TopCat)) :
-    (f ≫ g).hom.left e = g.hom.left (f.hom.left e) :=
-  rfl
-
-private theorem coverMap_inv_apply {p q : ConnectedCoveringSpace X}
-    (f : p ≅ q) (e : (q : TopCat)) :
-    f.hom.hom.left (f.inv.hom.left e) = e := by
-  rw [← coverMap_comp_apply f.inv f.hom e, f.inv_hom_id]
-  exact coverMap_id_apply q e
-
-private theorem fiberEquiv_refl (p : ConnectedCoveringSpace X) :
-    fiberEquiv (x := x) (Iso.refl p) = Equiv.refl _ := by
-  apply Equiv.ext
-  intro e
-  apply Subtype.ext
-  rw [coe_fiberEquiv_apply]
-  exact coverMap_id_apply p e.1
-
-private theorem fiberEquiv_symm {p q : ConnectedCoveringSpace X} (f : p ≅ q) :
-    fiberEquiv (x := x) f.symm = (fiberEquiv f).symm := by
-  apply Equiv.ext
-  intro e
-  apply (fiberEquiv f).injective
-  rw [Equiv.apply_symm_apply]
-  apply Subtype.ext
-  rw [coe_fiberEquiv_apply, coe_fiberEquiv_apply]
-  exact coverMap_inv_apply f e.1
-
-private theorem fiberEquiv_trans {p q r : ConnectedCoveringSpace X} (f : p ≅ q) (g : q ≅ r) :
-    fiberEquiv (x := x) (f ≪≫ g) = (fiberEquiv f).trans (fiberEquiv g) := by
-  apply Equiv.ext
-  intro e
-  apply Subtype.ext
-  rw [coe_fiberEquiv_apply, Equiv.trans_apply, coe_fiberEquiv_apply,
-    coe_fiberEquiv_apply]
-  exact coverMap_comp_apply f.hom g.hom e.1
-
 /-! ### Isomorphisms -/
 
 /-- Isomorphism of fibre-numbered covers: an isomorphism of the underlying covers which carries
@@ -224,48 +181,27 @@ theorem connectedPointedCoverIso_iff_exists {c c' : ConnectedPointedCover x n} :
       ∃ f : c.cover ≅ c'.cover, f.hom.hom.left c.e.1 = c'.e.1 :=
   Iff.rfl
 
-/-- A numbered isomorphism is an isomorphism of covers whose bijection of fibres intertwines the
-numberings. -/
-private theorem connectedFiberNumberedCoverIso_iff_fiberEquiv
-    {c c' : ConnectedFiberNumberedCover x n} :
-    ConnectedFiberNumberedCoverIso c c' ↔
-      ∃ f : c.cover ≅ c'.cover, (fiberEquiv f).trans c'.ν = c.ν := by
-  refine exists_congr fun f => ⟨fun h => ?_, fun h i => ?_⟩
-  · refine Equiv.ext fun e => ?_
-    obtain ⟨i, rfl⟩ := c.ν.symm.surjective e
-    rw [Equiv.trans_apply, Equiv.apply_symm_apply, ← Equiv.eq_symm_apply, Subtype.ext_iff,
-      coe_fiberEquiv_apply, h i]
-  · have hi : c.ν.symm i = (fiberEquiv f).symm (c'.ν.symm i) := by
-      rw [← h]
-      rfl
-    rw [← coe_fiberEquiv_apply, hi, apply_symm_apply]
-
-private theorem connectedPointedCoverIso_iff_fiberEquiv {c c' : ConnectedPointedCover x n} :
-    ConnectedPointedCoverIso c c' ↔ ∃ f : c.cover ≅ c'.cover, fiberEquiv f c.e = c'.e :=
-  exists_congr fun f => by rw [Subtype.ext_iff, coe_fiberEquiv_apply]
-
 namespace ConnectedFiberNumberedCoverIso
 
 @[refl]
 theorem refl (c : ConnectedFiberNumberedCover x n) : ConnectedFiberNumberedCoverIso c c :=
-  connectedFiberNumberedCoverIso_iff_fiberEquiv.2
-    ⟨Iso.refl _, by rw [fiberEquiv_refl, Equiv.refl_trans]⟩
+  ⟨Iso.refl _, fun _ => rfl⟩
 
 @[symm]
 theorem symm {c c' : ConnectedFiberNumberedCover x n} (h : ConnectedFiberNumberedCoverIso c c') :
     ConnectedFiberNumberedCoverIso c' c := by
-  obtain ⟨f, hf⟩ := connectedFiberNumberedCoverIso_iff_fiberEquiv.1 h
-  refine connectedFiberNumberedCoverIso_iff_fiberEquiv.2 ⟨f.symm, ?_⟩
-  rw [fiberEquiv_symm, ← hf, ← Equiv.trans_assoc, Equiv.symm_trans_self, Equiv.refl_trans]
+  obtain ⟨f, hf⟩ := h
+  refine ⟨f.symm, fun i => ?_⟩
+  rw [← hf i]
+  exact congrArg (fun g => g.hom.left (c.ν.symm i).1) f.hom_inv_id
 
 @[trans]
 theorem trans {c c' c'' : ConnectedFiberNumberedCover x n}
     (h : ConnectedFiberNumberedCoverIso c c') (h' : ConnectedFiberNumberedCoverIso c' c'') :
     ConnectedFiberNumberedCoverIso c c'' := by
-  obtain ⟨f, hf⟩ := connectedFiberNumberedCoverIso_iff_fiberEquiv.1 h
-  obtain ⟨g, hg⟩ := connectedFiberNumberedCoverIso_iff_fiberEquiv.1 h'
-  refine connectedFiberNumberedCoverIso_iff_fiberEquiv.2 ⟨f ≪≫ g, ?_⟩
-  rw [fiberEquiv_trans, Equiv.trans_assoc, hg, hf]
+  obtain ⟨f, hf⟩ := h
+  obtain ⟨g, hg⟩ := h'
+  exact ⟨f ≪≫ g, fun i => (congrArg (fun e => g.hom.hom.left e) (hf i)).trans (hg i)⟩
 
 end ConnectedFiberNumberedCoverIso
 
@@ -273,23 +209,22 @@ namespace ConnectedPointedCoverIso
 
 @[refl]
 theorem refl (c : ConnectedPointedCover x n) : ConnectedPointedCoverIso c c :=
-  connectedPointedCoverIso_iff_fiberEquiv.2
-    ⟨Iso.refl _, by rw [fiberEquiv_refl, Equiv.refl_apply]⟩
+  ⟨Iso.refl _, rfl⟩
 
 @[symm]
 theorem symm {c c' : ConnectedPointedCover x n} (h : ConnectedPointedCoverIso c c') :
     ConnectedPointedCoverIso c' c := by
-  obtain ⟨f, hf⟩ := connectedPointedCoverIso_iff_fiberEquiv.1 h
-  exact connectedPointedCoverIso_iff_fiberEquiv.2
-    ⟨f.symm, by rw [fiberEquiv_symm, ← hf, symm_apply_apply]⟩
+  obtain ⟨f, hf⟩ := h
+  refine ⟨f.symm, ?_⟩
+  rw [← hf]
+  exact congrArg (fun g => g.hom.left c.e.1) f.hom_inv_id
 
 @[trans]
 theorem trans {c c' c'' : ConnectedPointedCover x n} (h : ConnectedPointedCoverIso c c')
     (h' : ConnectedPointedCoverIso c' c'') : ConnectedPointedCoverIso c c'' := by
-  obtain ⟨f, hf⟩ := connectedPointedCoverIso_iff_fiberEquiv.1 h
-  obtain ⟨g, hg⟩ := connectedPointedCoverIso_iff_fiberEquiv.1 h'
-  exact connectedPointedCoverIso_iff_fiberEquiv.2
-    ⟨f ≪≫ g, by rw [fiberEquiv_trans, Equiv.trans_apply, hf, hg]⟩
+  obtain ⟨f, hf⟩ := h
+  obtain ⟨g, hg⟩ := h'
+  exact ⟨f ≪≫ g, (congrArg (fun e => g.hom.hom.left e) hf).trans hg⟩
 
 end ConnectedPointedCoverIso
 
@@ -539,7 +474,7 @@ private theorem exists_smul_iso_of_iso {c c' : ConnectedFiberNumberedCover x n}
     ∃ τ : Perm (Fin n), ConnectedFiberNumberedCoverIso (τ • c) c' ∧
       ∀ i, τ i = c'.ν (fiberEquiv f (c.ν.symm i)) :=
   ⟨(c.ν.symm.trans (fiberEquiv f)).trans c'.ν,
-    connectedFiberNumberedCoverIso_iff_fiberEquiv.2 ⟨f, by ext; simp⟩, fun _ => rfl⟩
+    ⟨f, fun i => by rw [← coe_fiberEquiv_apply]; simp⟩, fun _ => rfl⟩
 
 end ConnectedFiberNumberedCover
 

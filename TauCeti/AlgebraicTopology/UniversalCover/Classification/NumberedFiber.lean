@@ -629,16 +629,10 @@ the numbered classes. -/
 noncomputable def orbitRelQuotientEquiv :
     MulAction.orbitRel.Quotient (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) ≃
       ConnectedCoverClass x n :=
-  Equiv.ofBijective
-    (Quotient.lift forgetNumbering fun _ _ ⟨τ, hτ⟩ =>
-      (forgetNumbering_eq_forgetNumbering_iff.2 ⟨τ, hτ⟩).symm)
-    ⟨fun C C' => Quotient.inductionOn₂ C C' fun _ _ h =>
-        Quotient.sound (by
-          obtain ⟨τ, hτ⟩ := forgetNumbering_eq_forgetNumbering_iff.1 h
-          exact ⟨τ⁻¹, inv_smul_eq_iff.2 hτ.symm⟩),
-      fun C => by
-        obtain ⟨N, h⟩ := forgetNumbering_surjective C
-        exact ⟨Quotient.mk _ N, h⟩⟩
+  (Quotient.congrRight fun _ _ => by
+    rw [MulAction.orbitRel_apply, MulAction.mem_orbit_iff, Setoid.ker_def, eq_comm,
+      forgetNumbering_eq_forgetNumbering_iff]).trans
+    (Setoid.quotientKerEquivOfSurjective _ forgetNumbering_surjective)
 
 @[simp]
 theorem orbitRelQuotientEquiv_mk (C : ConnectedFiberNumberedCoverClass x n) :
@@ -650,18 +644,14 @@ diagonal relabelling action on numbered classes with a marked label. -/
 noncomputable def markedOrbitRelQuotientEquiv :
     MulAction.orbitRel.Quotient (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n × Fin n) ≃
       ConnectedPointedCoverClass x n :=
-  Equiv.ofBijective
-    (Quotient.lift (fun Ci => Ci.1.markLabel Ci.2) fun _ _ ⟨τ, hτ⟩ =>
-      (markLabel_eq_markLabel_iff.2 ⟨τ, congrArg Prod.fst hτ, congrArg Prod.snd hτ⟩).symm)
-    ⟨fun C C' => Quotient.inductionOn₂ C C' fun _ _ h =>
-        Quotient.sound (by
-          obtain ⟨τ, hτ, hτi⟩ := markLabel_eq_markLabel_iff.1 h
-          refine ⟨τ⁻¹, Prod.ext ?_ ?_⟩
-          · exact inv_smul_eq_iff.2 hτ.symm
-          · simp [← hτi]),
-      fun C => by
-        obtain ⟨N, i, h⟩ := C.exists_markLabel_eq
-        exact ⟨Quotient.mk _ (N, i), h⟩⟩
+  (Quotient.congrRight fun ⟨C, i⟩ ⟨C', j⟩ => by
+    rw [MulAction.orbitRel_apply, MulAction.mem_orbit_iff, Setoid.ker_def]
+    dsimp only
+    rw [eq_comm, markLabel_eq_markLabel_iff]
+    simp [Prod.ext_iff, Perm.smul_def]).trans
+    (Setoid.quotientKerEquivOfSurjective (fun Ci => Ci.1.markLabel Ci.2) fun C =>
+      let ⟨N, i, h⟩ := C.exists_markLabel_eq
+      ⟨(N, i), h⟩)
 
 @[simp]
 theorem markedOrbitRelQuotientEquiv_mk (C : ConnectedFiberNumberedCoverClass x n) (i : Fin n) :

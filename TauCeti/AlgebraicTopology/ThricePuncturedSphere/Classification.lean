@@ -176,7 +176,7 @@ end ConnectedCoverClass
 theorem ConnectedFiberNumberedCoverClass.isoClass_forgetNumbering
     (C : ConnectedFiberNumberedCoverClass (X := TopCat.of ThricePuncturedSphere) basePt n) :
     C.forgetNumbering.isoClass = ConnectedIsoClass.mk C.triple := by
-  rw [ConnectedCoverClass.isoClass, ← orbitRelQuotientEquiv_mk, symm_apply_apply]
+  rw [ConnectedCoverClass.isoClass, orbitRelQuotientEquiv_symm_forgetNumbering]
   exact Quotient.map'_mk'' _ _ C
 
 /-- **A connected cover of `ℂ ∖ {0, 1}` is determined up to isomorphism by the isomorphism class of
@@ -228,7 +228,7 @@ theorem ConnectedFiberNumberedCoverClass.markedClass_markLabel
     (C : ConnectedFiberNumberedCoverClass (X := TopCat.of ThricePuncturedSphere) basePt n)
     (i : Fin n) :
     (C.markLabel i).markedClass = MarkedIsoClass.mk C.triple i := by
-  rw [ConnectedPointedCoverClass.markedClass, ← markedOrbitRelQuotientEquiv_mk, symm_apply_apply]
+  rw [ConnectedPointedCoverClass.markedClass, markedOrbitRelQuotientEquiv_symm_markLabel]
   rfl
 
 /-- Forgetting the chosen point of a cover is forgetting the marked label of its marked class. -/

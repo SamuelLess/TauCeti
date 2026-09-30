@@ -604,6 +604,12 @@ theorem orbitRelQuotientEquiv_mk (C : ConnectedFiberNumberedCoverClass x n) :
     orbitRelQuotientEquiv (Quotient.mk _ C) = C.forgetNumbering :=
   (rfl)
 
+/-- The inverse of `orbitRelQuotientEquiv` sends the bare class of a numbered class to its orbit. -/
+@[simp]
+theorem orbitRelQuotientEquiv_symm_forgetNumbering (C : ConnectedFiberNumberedCoverClass x n) :
+    orbitRelQuotientEquiv.symm C.forgetNumbering = Quotient.mk _ C :=
+  orbitRelQuotientEquiv.symm_apply_eq.2 (orbitRelQuotientEquiv_mk C).symm
+
 /-- The pointed isomorphism classes of connected covers of degree `n` are the orbits of the
 diagonal relabelling action on numbered classes with a marked label. -/
 noncomputable def markedOrbitRelQuotientEquiv :
@@ -622,6 +628,13 @@ noncomputable def markedOrbitRelQuotientEquiv :
 theorem markedOrbitRelQuotientEquiv_mk (C : ConnectedFiberNumberedCoverClass x n) (i : Fin n) :
     markedOrbitRelQuotientEquiv (Quotient.mk _ (C, i)) = C.markLabel i :=
   (rfl)
+
+/-- The inverse of `markedOrbitRelQuotientEquiv` sends the pointed class obtained by marking the
+label `i` of a numbered class to the orbit of that class and label. -/
+@[simp]
+theorem markedOrbitRelQuotientEquiv_symm_markLabel (C : ConnectedFiberNumberedCoverClass x n)
+    (i : Fin n) : markedOrbitRelQuotientEquiv.symm (C.markLabel i) = Quotient.mk _ (C, i) :=
+  markedOrbitRelQuotientEquiv.symm_apply_eq.2 (markedOrbitRelQuotientEquiv_mk C i).symm
 
 end ConnectedFiberNumberedCoverClass
 

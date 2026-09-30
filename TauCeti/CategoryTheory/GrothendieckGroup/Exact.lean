@@ -288,9 +288,9 @@ structure AdditiveInvariant (G : Type*) [AddCommGroup G] where
   map_conflation : ∀ ⦃S : ShortComplex C⦄, E.Conflation S → obj S.X₂ = obj S.X₁ + obj S.X₃
 
 omit [EssentiallySmall.{w} C] in
-/-- **An additive invariant takes equal values on isomorphic objects.** Every exact structure
-contains the split conflations: `0 ↪ 0 ↠ 0` makes the value at `0` vanish, and an isomorphism
-`X ≅ Y` is the inflation of the split conflation `X ↪ Y ↠ 0`. -/
+/-- **An additive invariant takes equal values on isomorphic objects.** Additivity on conflations
+alone forces invariance under isomorphisms of objects, which is the invariance the presentation of
+exact `K₀` requires. -/
 theorem AdditiveInvariant.map_iso (a : AdditiveInvariant E G) ⦃X Y : C⦄ (e : X ≅ Y) :
     a.obj X = a.obj Y := by
   have h0 : a.obj (0 : C) = 0 := by

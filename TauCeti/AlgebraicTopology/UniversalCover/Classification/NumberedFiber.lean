@@ -659,36 +659,41 @@ theorem ConnectedPointedCoverClass.forgetPoint_surjective (hn : n ≠ 0) :
 
 /-! ### Numbered monodromy -/
 
+/-- **Isomorphic numbered covers have the same numbered monodromy.** A label-preserving
+isomorphism of covers identifies their monodromy representations `π₁(X, x) →* Equiv.Perm (Fin n)`
+read through the numberings; this direction needs no hypothesis on the base. -/
+theorem ConnectedFiberNumberedCoverIso.permCongrHom_comp_monodromyPerm_eq
+    {c c' : ConnectedFiberNumberedCover x n} (h : ConnectedFiberNumberedCoverIso c c') :
+    c.ν.permCongrHom.toMonoidHom.comp (c.cover.isCoveringMap_proj.monodromyPerm x) =
+      c'.ν.permCongrHom.toMonoidHom.comp (c'.cover.isCoveringMap_proj.monodromyPerm x) := by
+  obtain ⟨f, hf⟩ := connectedFiberNumberedCoverIso_iff_exists.1 h
+  refine (c.cover.isCoveringMap_proj.permutationRepresentation_eq_of_fiberMap
+    c'.cover.isCoveringMap_proj x c.ν c'.ν f.hom.hom.left.hom
+    (CoveringSpace.proj_hom_comp_hom_left_hom ((ConnectedCoveringSpace.forget X).map f.hom))
+    fun e => ?_).symm
+  rw [← c'.ν.apply_symm_apply (c.ν e)]
+  refine congrArg c'.ν (Subtype.ext ?_)
+  rw [Function.fiberMap_apply_coe, ← hf, symm_apply_apply]
+
 section Monodromy
 
 variable [PathConnectedSpace X] [LocallyPathConnectedSpace X]
 
-/-- **A numbered connected cover is determined by its numbered monodromy.** Two numbered covers
-are isomorphic, by an isomorphism preserving every label, exactly when their monodromy
-representations `π₁(X, x) →* Equiv.Perm (Fin n)`, read through the numberings, agree. -/
-theorem connectedFiberNumberedCoverIso_iff_permCongrHom_comp_monodromyPerm_eq
-    {c c' : ConnectedFiberNumberedCover x n} :
-    ConnectedFiberNumberedCoverIso c c' ↔
-      c.ν.permCongrHom.toMonoidHom.comp (c.cover.isCoveringMap_proj.monodromyPerm x) =
-        c'.ν.permCongrHom.toMonoidHom.comp (c'.cover.isCoveringMap_proj.monodromyPerm x) := by
-  refine ⟨fun h => ?_, fun h => ?_⟩
-  · obtain ⟨f, hf⟩ := connectedFiberNumberedCoverIso_iff_exists.1 h
-    refine (c.cover.isCoveringMap_proj.permutationRepresentation_eq_of_fiberMap
-      c'.cover.isCoveringMap_proj x c.ν c'.ν f.hom.hom.left.hom
-      (CoveringSpace.proj_hom_comp_hom_left_hom ((ConnectedCoveringSpace.forget X).map f.hom))
-      fun e => ?_).symm
-    rw [← c'.ν.apply_symm_apply (c.ν e)]
-    refine congrArg c'.ν (Subtype.ext ?_)
-    rw [Function.fiberMap_apply_coe, ← hf, symm_apply_apply]
+/-- **Numbered covers with the same numbered monodromy are isomorphic**, over a path-connected,
+locally path-connected base: the relabelling of fibres is `π₁(X, x)`-equivariant, and taking the
+fibre with its monodromy action is fully faithful. -/
+theorem ConnectedFiberNumberedCoverIso.of_permCongrHom_comp_monodromyPerm_eq
+    {c c' : ConnectedFiberNumberedCover x n}
+    (h : c.ν.permCongrHom.toMonoidHom.comp (c.cover.isCoveringMap_proj.monodromyPerm x) =
+      c'.ν.permCongrHom.toMonoidHom.comp (c'.cover.isCoveringMap_proj.monodromyPerm x)) :
+    ConnectedFiberNumberedCoverIso c c' := by
   -- The relabelling `c.ν.trans c'.ν.symm` of fibres is `π₁(X, x)`-equivariant; the fibre-action
   -- functor is fully faithful, so it is the fibre map of an isomorphism of covers.
   have hcomm : ∀ (γ : FundamentalGroup X x) e,
       (c.ν.trans c'.ν.symm) (c.cover.isCoveringMap_proj.monodromy γ e) =
         c'.cover.isCoveringMap_proj.monodromy γ ((c.ν.trans c'.ν.symm) e) := fun γ e => by
-    have := DFunLike.congr_fun (DFunLike.congr_fun h γ) (c.ν e)
-    simp only [MonoidHom.comp_apply, MulEquiv.coe_toMonoidHom, permCongrHom_coe,
-      permCongr_apply, symm_apply_apply, IsCoveringMap.coe_monodromyPerm] at this
-    simp only [trans_apply, this, symm_apply_apply]
+    simpa [permCongr_apply, symm_apply_eq] using
+      DFunLike.congr_fun (DFunLike.congr_fun h γ) (c.ν e)
   let F := ConnectedCoveringSpace.forget X ⋙ CoveringSpace.fiberActionFunctor x
   let φ : F.obj c.cover ≅ F.obj c'.cover :=
     Action.mkIso (Equiv.toIso (c.ν.trans c'.ν.symm)) fun γ => by
@@ -705,6 +710,17 @@ theorem connectedFiberNumberedCoverIso_iff_permCongrHom_comp_monodromyPerm_eq
   exact (Function.fiberMap_apply_coe _ (CoveringSpace.proj_hom_comp_hom_left_hom
     ((ConnectedCoveringSpace.forget X).map (F.preimage φ.hom))) x (c.ν.symm i)).symm.trans
     (congrArg Subtype.val hi)
+
+/-- **A numbered connected cover is determined by its numbered monodromy.** Two numbered covers
+are isomorphic, by an isomorphism preserving every label, exactly when their monodromy
+representations `π₁(X, x) →* Equiv.Perm (Fin n)`, read through the numberings, agree. -/
+theorem connectedFiberNumberedCoverIso_iff_permCongrHom_comp_monodromyPerm_eq
+    {c c' : ConnectedFiberNumberedCover x n} :
+    ConnectedFiberNumberedCoverIso c c' ↔
+      c.ν.permCongrHom.toMonoidHom.comp (c.cover.isCoveringMap_proj.monodromyPerm x) =
+        c'.ν.permCongrHom.toMonoidHom.comp (c'.cover.isCoveringMap_proj.monodromyPerm x) :=
+  ⟨ConnectedFiberNumberedCoverIso.permCongrHom_comp_monodromyPerm_eq,
+    ConnectedFiberNumberedCoverIso.of_permCongrHom_comp_monodromyPerm_eq⟩
 
 end Monodromy
 

@@ -534,9 +534,10 @@ end ConnectedFiberNumberedCover
 /-- Relabelling both sides preserves label-preserving isomorphism. -/
 theorem ConnectedFiberNumberedCoverIso.smul {c c' : ConnectedFiberNumberedCover x n}
     (h : ConnectedFiberNumberedCoverIso c c') (τ : Perm (Fin n)) :
-    ConnectedFiberNumberedCoverIso (τ • c) (τ • c') :=
-  let ⟨f, hf⟩ := h
-  ⟨f, fun i => hf (τ.symm i)⟩
+    ConnectedFiberNumberedCoverIso (τ • c) (τ • c') := by
+  obtain ⟨f, hf⟩ := h
+  refine Exists.intro f fun i => ?_
+  simpa only [ConnectedFiberNumberedCover.smul_ν, Equiv.symm_trans_apply] using hf (τ.symm i)
 
 namespace ConnectedFiberNumberedCoverClass
 

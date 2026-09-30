@@ -9,6 +9,7 @@ public import TauCeti.AlgebraicTopology.UniversalCover.Classification.Fundamenta
 public import TauCeti.AlgebraicTopology.UniversalCover.Deck.Fiber.Transport
 public import TauCeti.Topology.Covering.Monodromy.Transitive
 public import TauCeti.Topology.Homotopy.Monodromy.Functoriality
+import TauCeti.Topology.Covering.Clopen
 
 /-!
 # Numbered, pointed and bare connected covers of degree `n`
@@ -77,7 +78,8 @@ representations into an isomorphism of `π₁(X, x)`-sets preserving the labels.
 * `TauCeti.ConnectedFiberNumberedCoverClass.markLabel_eq_markLabel_iff` and
   `TauCeti.ConnectedFiberNumberedCoverClass.markedOrbitRelQuotientEquiv`: pointed classes are
   diagonal orbits of marked numbered classes.
-* `TauCeti.ConnectedCover.nonempty_equiv_fin_of`: a path transports the degree between fibres;
+* `TauCeti.ConnectedCover.nonempty_equiv_fin_of_mem_connectedComponent`: the degree is the same
+  over the whole connected component of the base point;
   `TauCeti.ConnectedCover.ne_zero`: over a preconnected base the degree is positive.
 * `TauCeti.connectedFiberNumberedCoverIso_iff_permCongrHom_comp_monodromyPerm_eq`: two numbered
   covers are isomorphic exactly when their numbered monodromy representations agree.
@@ -621,11 +623,12 @@ end ConnectedFiberNumberedCoverClass
 
 namespace ConnectedCover
 
-/-- A path from `x` to `y` identifies their fibres, so the degree agrees at the two points. -/
-theorem nonempty_equiv_fin_of (c : ConnectedCover x n) {y : X} (γ : Path x y) :
-    Nonempty (⇑c.cover.proj ⁻¹' {y} ≃ Fin n) :=
-  c.nonempty_equiv_fin.map fun ν => (coveringFiberEquiv c.cover.isCoveringMap_proj
-    (Path.Homotopic.Quotient.mk γ)).symm.trans ν
+/-- The degree is the same over every point of the connected component of `x`: the number of
+points in a fibre of a covering map is locally constant. -/
+theorem nonempty_equiv_fin_of_mem_connectedComponent (c : ConnectedCover x n) {y : X}
+    (hy : y ∈ connectedComponent x) : Nonempty (⇑c.cover.proj ⁻¹' {y} ≃ Fin n) :=
+  (c.cover.isCoveringMap_proj.isClopen_setOf_nonempty_fiber_equiv (Fin n)).connectedComponent_subset
+    c.nonempty_equiv_fin hy
 
 variable [PreconnectedSpace X]
 

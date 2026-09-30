@@ -27,8 +27,12 @@ This is a code-level presentation: `PDCode` neither imposes planarity nor provid
 realization, so these must be supplied separately. Keeping the code finite and explicit avoids
 choosing a privileged geometric embedding.
 
-The PD-code encoding follows M. Mastin, *Links and Planar Diagram Codes*, Definitions 2--3,
-which develops the Bar-Natan/KnotTheory PD convention. The diagram and crossing-sign conventions
+The PD-code encoding adapts M. Mastin, *Links and Planar Diagram Codes*, Definitions 2--3,
+which develops the Bar-Natan/KnotTheory PD convention. Mastin lists, at each crossing, the labels of
+the four incident arcs counterclockwise from the incoming under-edge. Here `halfEdge` labels
+half-edges rather than arcs, the four slots of a crossing are read counterclockwise from any
+starting slot, the over-strand is recorded by the separate bit `overPair`, and crossing-free
+components are counted separately. The diagram and crossing-sign conventions
 follow W. B. R. Lickorish, *An Introduction to Knot Theory*, GTM 175, Chapter 1. The framing
 convention follows R. Gompf and A. Stipsicz, *4-Manifolds and Kirby Calculus*, GSM 20, Section 4.5,
 especially Proposition 4.5.8.
@@ -131,11 +135,11 @@ namespace TauCeti
 
 /-- A finite unoriented PD-code with `n` crossings.
 
-The `4 * n` half-edges are grouped into four slots for each crossing by `halfEdge`. The perfect
-matching `edgePair` joins the two visits of each arc. Slots `0` and `2` form one local strand,
-while slots `1` and `3` form the other. `crossinglessComponentCount` counts circle components
-with no crossing visits. `overPair i = false` selects the `0`-`2` strand as over, while `true`
-selects the `1`-`3` strand. -/
+The `4 * n` half-edges are grouped into four slots for each crossing by `halfEdge`, listed
+counterclockwise around the crossing. The perfect matching `edgePair` joins the two visits of each
+arc. Slots `0` and `2` form one local strand, while slots `1` and `3` form the other.
+`crossinglessComponentCount` counts circle components with no crossing visits.
+`overPair i = false` selects the `0`-`2` strand as over, while `true` selects the `1`-`3` strand. -/
 @[ext]
 structure PDCode (n : ℕ) where
   /-- The half-edge labels occupying the four slots of each crossing. -/
@@ -194,7 +198,7 @@ namespace PDCode
 
 variable {n : ℕ}
 
-/-- The four half-edge labels at a crossing, in cyclic order. -/
+/-- The four half-edge labels at a crossing, in counterclockwise cyclic order. -/
 def crossing (D : PDCode n) (i : Fin n) (slot : Fin 4) : Fin (4 * n) :=
   D.halfEdge (crossingSlotEquiv n (i, slot))
 

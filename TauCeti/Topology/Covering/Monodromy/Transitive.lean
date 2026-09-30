@@ -142,17 +142,12 @@ namespace ConnectedCoveringSpace
 
 variable {X : TopCat.{u}}
 
-/-- Over a preconnected base, every fibre of a connected covering space is nonempty: the fibre
-over the image of a point of the total space is nonempty, and fibre cardinality is locally
-constant. -/
+/-- Over a preconnected base, every fibre of a connected covering space is nonempty: its
+projection is surjective (`IsCoveringMap.surjective`). -/
 theorem nonempty_fiber [PreconnectedSpace X] (p : ConnectedCoveringSpace X) (x : X) :
-    Nonempty (⇑p.proj ⁻¹' {x}) := by
-  obtain ⟨e⟩ := (inferInstance : Nonempty (p : TopCat))
-  obtain ⟨ν⟩ := (p.isCoveringMap_proj.isClopen_setOf_nonempty_fiber_equiv
-    (⇑p.proj ⁻¹' {p.proj e})).connectedComponent_subset (x := p.proj e) ⟨Equiv.refl _⟩
-    (show x ∈ connectedComponent (p.proj e) by
-      rw [PreconnectedSpace.connectedComponent_eq_univ]; trivial)
-  exact ⟨ν.symm ⟨e, rfl⟩⟩
+    Nonempty (⇑p.proj ⁻¹' {x}) :=
+  let ⟨e, he⟩ := p.isCoveringMap_proj.surjective x
+  ⟨⟨e, he⟩⟩
 
 /-- The ordinary monodromy functor of a connected cover over a path-connected base is transitive
 on every fibre. -/

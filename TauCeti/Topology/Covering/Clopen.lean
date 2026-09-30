@@ -32,6 +32,9 @@ whose fibre is in bijection with `α` is clopen.
   subspace with the subspace inclusion is a covering map.
 * `IsCoveringMap.isClopen_setOf_nonempty_fiber_equiv`: the points whose fibre is in bijection
   with a given type form a clopen set.
+* `IsCoveringMap.nonempty_fiber_equiv`: over a preconnected base all fibres are in bijection, and
+  `IsCoveringMap.surjective`: a covering map from a nonempty space onto a preconnected space is
+  surjective.
 -/
 
 public section
@@ -69,5 +72,21 @@ theorem _root_.IsCoveringMap.isClopen_setOf_nonempty_fiber_equiv {p : E → X} (
     exact ⟨U, fun z hz ⟨ν⟩ => hy ⟨(hUy z hz).some.symm.trans ν⟩, hU, hyU⟩
   · obtain ⟨U, hyU, hU, hUy⟩ := key y
     exact ⟨U, fun z hz => ⟨(hUy z hz).some.trans ν⟩, hU, hyU⟩
+
+/-- **Over a preconnected base, all fibres of a covering map are in bijection.** The points whose
+fibre is in bijection with the fibre over `y` form a clopen set containing `y`, hence everything. -/
+theorem _root_.IsCoveringMap.nonempty_fiber_equiv [PreconnectedSpace X] {p : E → X}
+    (hp : IsCoveringMap p) (x y : X) : Nonempty (p ⁻¹' {x} ≃ p ⁻¹' {y}) :=
+  (hp.isClopen_setOf_nonempty_fiber_equiv (p ⁻¹' {y})).connectedComponent_subset
+    (x := y) ⟨Equiv.refl _⟩
+    (by simp only [PreconnectedSpace.connectedComponent_eq_univ, Set.mem_univ])
+
+/-- **A covering map from a nonempty space onto a preconnected space is surjective:** every fibre
+is in bijection with the fibre through a given point. -/
+theorem _root_.IsCoveringMap.surjective [PreconnectedSpace X] [Nonempty E] {p : E → X}
+    (hp : IsCoveringMap p) : Function.Surjective p := fun x => by
+  obtain ⟨e⟩ := ‹Nonempty E›
+  obtain ⟨ν⟩ := hp.nonempty_fiber_equiv x (p e)
+  exact ⟨(ν.symm ⟨e, rfl⟩).1, (ν.symm ⟨e, rfl⟩).2⟩
 
 end TauCeti

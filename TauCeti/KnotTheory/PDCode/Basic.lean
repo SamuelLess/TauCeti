@@ -70,7 +70,7 @@ def crossingSlotEquiv (n : ℕ) : Fin n × Fin 4 ≃ Fin (4 * n) :=
 
 /-- The crossing-slot equivalence numbers slot `s` at crossing `i` by `s + 4 * i`. -/
 @[simp]
-theorem crossingSlotEquiv_apply (n : ℕ) (i : Fin n) (slot : Fin 4) :
+theorem crossingSlotEquiv_apply_val (n : ℕ) (i : Fin n) (slot : Fin 4) :
     (crossingSlotEquiv n (i, slot)).val = slot.val + 4 * i.val := by
   simp only [crossingSlotEquiv.eq_1, Equiv.trans_apply, finCongr_apply]
   rfl
@@ -87,7 +87,7 @@ theorem crossingSlotEquiv_succ_castSucc {n : ℕ} (i : Fin n) (slot : Fin 4) :
     crossingSlotEquiv (n + 1) (i.castSucc, slot) =
       halfEdgeSuccEquiv n (.inl (crossingSlotEquiv n (i, slot))) := by
   ext
-  simp only [crossingSlotEquiv_apply, Fin.val_castSucc, halfEdgeSuccEquiv, Equiv.trans_apply,
+  simp only [crossingSlotEquiv_apply_val, Fin.val_castSucc, halfEdgeSuccEquiv, Equiv.trans_apply,
     finCongr_apply, Fin.val_cast, finSumFinEquiv_apply_left, Fin.val_castAdd]
 
 /-- The slots of the last crossing occupy the last four half-edge positions. -/
@@ -95,7 +95,7 @@ theorem crossingSlotEquiv_succ_castSucc {n : ℕ} (i : Fin n) (slot : Fin 4) :
 theorem crossingSlotEquiv_succ_last {n : ℕ} (slot : Fin 4) :
     crossingSlotEquiv (n + 1) (Fin.last n, slot) = halfEdgeSuccEquiv n (.inr slot) := by
   ext
-  simp only [crossingSlotEquiv_apply, Fin.val_last, halfEdgeSuccEquiv, Equiv.trans_apply,
+  simp only [crossingSlotEquiv_apply_val, Fin.val_last, halfEdgeSuccEquiv, Equiv.trans_apply,
     finCongr_apply, Fin.val_cast, finSumFinEquiv_apply_right, Fin.val_natAdd]
   omega
 

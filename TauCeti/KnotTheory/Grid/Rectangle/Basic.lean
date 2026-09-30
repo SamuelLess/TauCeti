@@ -57,8 +57,9 @@ covered squares further for the gradings.
   for a grid state, quantified over the columns strictly inside it, and
   `TauCeti.GridRectangleBetween.isEmpty_iff_forall_notMem_cIoo`, its form for an oriented
   rectangle and its source state.
-* `TauCeti.GridRectangleBetween.isEmpty_of_right_eq_finRotate`: a rectangle one column wide is
-  empty.
+* `TauCeti.GridRectangleBetween.isEmpty_of_right_eq_finRotate`,
+  `TauCeti.GridRectangleBetween.isEmpty_of_top_eq_finRotate`: a rectangle one column wide, or one
+  row tall, is empty.
 * `TauCeti.GridRectangle.avoidsMarkings_iff_forall`: marking avoidance tested column by column.
 * `TauCeti.GridRectangleBetween.toGridRectangle_eq`: the toroidal rectangle underlying an
   oriented rectangle, in terms of its two side columns.
@@ -303,6 +304,13 @@ theorem isEmptyFor_of_right_eq_finRotate (x : GridState n) (h : R.right = finRot
     R.IsEmptyFor x := by
   rw [isEmptyFor_iff_forall_notMem_cIoo, h, Grid.cIoo_finRotate_eq_empty]
   exact fun c hc => absurd hc (Finset.notMem_empty c)
+
+/-- A rectangle whose top side is the cyclic successor of its bottom side is empty for every grid
+state: no row lies strictly between two cyclically consecutive ones. -/
+theorem isEmptyFor_of_top_eq_finRotate (x : GridState n) (h : R.top = finRotate n R.bottom) :
+    R.IsEmptyFor x := by
+  rw [isEmptyFor_iff_forall_notMem_cIoo, h, Grid.cIoo_finRotate_eq_empty]
+  exact fun c _ => Finset.notMem_empty (x c)
 
 /-- In a grid of size at most two, every toroidal rectangle is empty for every grid state. -/
 theorem isEmptyFor_of_le_two (hn : n ≤ 2) (R : GridRectangle n) (x : GridState n) :
@@ -782,6 +790,11 @@ theorem isEmpty_iff_forall_notMem_cIoo :
 is empty: no column lies strictly between two cyclically consecutive ones. -/
 theorem isEmpty_of_right_eq_finRotate (h : R.right = finRotate n R.left) : R.IsEmpty :=
   R.toGridRectangle.isEmptyFor_of_right_eq_finRotate x h
+
+/-- A rectangle between states whose top side is the cyclic successor of its bottom side is empty:
+no row lies strictly between two cyclically consecutive ones. -/
+theorem isEmpty_of_top_eq_finRotate (h : R.top = finRotate n R.bottom) : R.IsEmpty :=
+  R.toGridRectangle.isEmptyFor_of_top_eq_finRotate x h
 
 /-- A rectangle between states is empty exactly when no target-state point lies in its
 interior. -/

@@ -310,7 +310,7 @@ theorem toOrientedPDCode_empty :
       OrientedPDCode.eq_unlink _
     _ = OrientedPDCode.unlink {true} := by simp
     _ = OrientedPDCode.unknot true := by
-      simpa only [OrientedPDCode.unknot_crossinglessComponents] using
+      simpa only [OrientedPDCode.crossinglessComponents_unknot] using
         (OrientedPDCode.eq_unlink (OrientedPDCode.unknot true)).symm
 
 private theorem toOrientedPDCode_edgePair_outgoing_aux (D : BasedOrientedGaussCode n)

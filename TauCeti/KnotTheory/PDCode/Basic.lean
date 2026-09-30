@@ -769,7 +769,7 @@ def unlink (orientations : Multiset Bool) : OrientedPDCode 0 where
 
 /-- The unlink constructor retains exactly its component-orientation multiset. -/
 @[simp]
-theorem unlink_crossinglessComponents (orientations : Multiset Bool) :
+theorem crossinglessComponents_unlink (orientations : Multiset Bool) :
     (unlink orientations).crossinglessComponents = orientations := by
   simp [unlink]
 
@@ -794,7 +794,7 @@ theorem eq_unlink (D : OrientedPDCode 0) :
 def unlinkEquiv : Multiset Bool ≃ OrientedPDCode 0 where
   toFun := unlink
   invFun := OrientedPDCode.crossinglessComponents
-  left_inv := unlink_crossinglessComponents
+  left_inv := crossinglessComponents_unlink
   right_inv := fun D => (eq_unlink D).symm
 
 /-- The empty oriented PD-code. -/
@@ -806,7 +806,7 @@ def unknot (orientation : Bool) : OrientedPDCode 0 :=
 
 /-- The oriented unknot retains its specified component orientation. -/
 @[simp]
-theorem unknot_crossinglessComponents (orientation : Bool) :
+theorem crossinglessComponents_unknot (orientation : Bool) :
     (unknot orientation).crossinglessComponents = {orientation} := by
   simp [unknot]
 

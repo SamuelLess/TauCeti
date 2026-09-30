@@ -679,9 +679,10 @@ section Monodromy
 
 variable [PathConnectedSpace X] [LocallyPathConnectedSpace X]
 
-/-- **Numbered covers with the same numbered monodromy are isomorphic**, over a path-connected,
-locally path-connected base: the relabelling of fibres is `π₁(X, x)`-equivariant, and taking the
-fibre with its monodromy action is fully faithful. -/
+/-- **Numbered covers with the same numbered monodromy are isomorphic.** Over a path-connected,
+locally path-connected base, if the monodromy representations `π₁(X, x) →* Equiv.Perm (Fin n)` of
+two numbered covers, read through their numberings, agree, then some isomorphism of the covers
+preserves every label. -/
 theorem ConnectedFiberNumberedCoverIso.of_permCongrHom_comp_monodromyPerm_eq
     {c c' : ConnectedFiberNumberedCover x n}
     (h : c.ν.permCongrHom.toMonoidHom.comp (c.cover.isCoveringMap_proj.monodromyPerm x) =

@@ -375,7 +375,7 @@ theorem relabel_isOver (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
 
 /-- Relabelling by identity permutations does nothing. -/
 @[simp]
-theorem relabel_one (D : PDCode n) : D.relabel 1 1 = D := by
+theorem relabel_one_one (D : PDCode n) : D.relabel 1 1 = D := by
   apply PDCode.ext
   · rw [relabel_halfEdge, crossingBlockPerm_one]
     ext x
@@ -554,9 +554,9 @@ theorem relabel_crossingSign (D : OrientedPDCode n)
 
 /-- Relabelling by identity permutations does nothing. -/
 @[simp]
-theorem relabel_one (D : OrientedPDCode n) : D.relabel 1 1 = D := by
+theorem relabel_one_one (D : OrientedPDCode n) : D.relabel 1 1 = D := by
   apply OrientedPDCode.ext
-  · exact PDCode.relabel_one D.toPDCode
+  · exact PDCode.relabel_one_one D.toPDCode
   · funext h
     simp [Equiv.Perm.one_def]
   · simp
@@ -651,7 +651,7 @@ def relabel (D : FramedOrientedPDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (half : Equiv.Perm (Fin (4 * n))) (cross : Equiv.Perm (Fin n)) :
     (D.relabel half cross).crossinglessFramings = D.crossinglessFramings := by simp [relabel]
 /-- Relabelling by identity permutations does nothing to a framed oriented code. -/
-@[simp] theorem relabel_one (D : FramedOrientedPDCode n) : D.relabel 1 1 = D := by
+@[simp] theorem relabel_one_one (D : FramedOrientedPDCode n) : D.relabel 1 1 = D := by
   apply FramedOrientedPDCode.ext
   · simp
   · funext h

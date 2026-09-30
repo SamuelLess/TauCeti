@@ -273,12 +273,12 @@ def mirror (D : PDCode n) : PDCode n where
 @[simp] theorem mirror_overPair (D : PDCode n) (i : Fin n) :
     D.mirror.overPair i = !D.overPair i := by simp [mirror]
 /-- Reflection leaves every labelled crossing slot unchanged. -/
-theorem mirror_crossing (D : PDCode n) (i : Fin n) (slot : Fin 4) :
+theorem crossing_mirror (D : PDCode n) (i : Fin n) (slot : Fin 4) :
     D.mirror.crossing i slot = D.crossing i slot := by simp [mirror, crossing]
 
 /-- Reflection interchanges over- and under-slots. -/
 @[simp]
-theorem mirror_isOver (D : PDCode n) (i : Fin n) (slot : Fin 4) :
+theorem isOver_mirror (D : PDCode n) (i : Fin n) (slot : Fin 4) :
     D.mirror.isOver i slot = !D.isOver i slot := by
   fin_cases slot <;> simp [mirror, isOver]
 
@@ -365,14 +365,14 @@ def relabel (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (D.relabel half cross).overPair i = D.overPair (cross.symm i) := by simp [relabel]
 
 /-- Relabelling transports every crossing block together with its slot order. -/
-theorem relabel_crossing (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
+theorem crossing_relabel (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (cross : Equiv.Perm (Fin n)) (i : Fin n) (slot : Fin 4) :
     (D.relabel half cross).crossing i slot = half (D.crossing (cross.symm i) slot) := by
   simp [relabel, crossing]
 
 /-- The over/under status after relabelling is read at the old crossing name. -/
 @[simp]
-theorem relabel_isOver (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
+theorem isOver_relabel (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (cross : Equiv.Perm (Fin n)) (i : Fin n) (slot : Fin 4) :
     (D.relabel half cross).isOver i slot = D.isOver (cross.symm i) slot := by
   simp [isOver]
@@ -473,7 +473,7 @@ def reverse (D : OrientedPDCode n) : OrientedPDCode n where
 @[simp] theorem reverse_crossinglessComponents (D : OrientedPDCode n) :
     D.reverse.crossinglessComponents = D.crossinglessComponents.map (!·) := by simp [reverse]
 /-- Reversing every component orientation preserves each crossing sign. -/
-@[simp] theorem reverse_crossingSign (D : OrientedPDCode n) (i : Fin n) :
+@[simp] theorem crossingSign_reverse (D : OrientedPDCode n) (i : Fin n) :
     D.reverse.crossingSign i = D.crossingSign i := by
   simp [crossingSign]
 /-- Reversing every component orientation twice gives the original code. -/
@@ -505,10 +505,10 @@ def mirror (D : OrientedPDCode n) : OrientedPDCode n where
 
 /-- Reflection reverses the sign of every crossing. -/
 @[simp]
-theorem mirror_crossingSign (D : OrientedPDCode n) (i : Fin n) :
+theorem crossingSign_mirror (D : OrientedPDCode n) (i : Fin n) :
     D.mirror.crossingSign i = -D.crossingSign i := by
   rw [crossingSign, crossingSign]
-  simp only [mirror_orientation, mirror_toPDCode, PDCode.mirror_crossing, PDCode.mirror_overPair]
+  simp only [mirror_orientation, mirror_toPDCode, PDCode.crossing_mirror, PDCode.mirror_overPair]
   generalize Bool.xor (D.orientation (D.crossing i 0))
     (D.orientation (D.crossing i 1)) = parity
   generalize D.overPair i = ov
@@ -551,7 +551,7 @@ def relabel (D : OrientedPDCode n) (half : Equiv.Perm (Fin (4 * n)))
 
 /-- The crossing sign after relabelling is read at the old crossing name. -/
 @[simp]
-theorem relabel_crossingSign (D : OrientedPDCode n)
+theorem crossingSign_relabel (D : OrientedPDCode n)
     (half : Equiv.Perm (Fin (4 * n))) (cross : Equiv.Perm (Fin n)) (i : Fin n) :
     (D.relabel half cross).crossingSign i = D.crossingSign (cross.symm i) := by
   simp [crossingSign]
@@ -589,7 +589,7 @@ theorem relabel_relabel (D : OrientedPDCode n)
 /-- Relabelling permutes the crossings, so it preserves the writhe. -/
 @[simp] theorem writhe_relabel (D : OrientedPDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (cross : Equiv.Perm (Fin n)) : (D.relabel half cross).writhe = D.writhe := by
-  simp only [writhe_def, relabel_crossingSign]
+  simp only [writhe_def, crossingSign_relabel]
   exact Equiv.sum_comp cross.symm D.crossingSign
 
 end OrientedPDCode

@@ -53,7 +53,7 @@ especially Proposition 4.5.8.
 * `TauCeti.OrientedPDCode.crossingSign_eq_one_iff` and
   `crossingSign_eq_neg_one_iff` characterize the two possible crossing signs.
 * `TauCeti.PDCode.mirror_mirror` and `relabel_relabel` give the basic operation laws.
-* `TauCeti.orientedPDCodeUnlinkEquiv` classifies zero-crossing oriented PD-codes.
+* `TauCeti.OrientedPDCode.unlinkEquiv` classifies zero-crossing oriented PD-codes.
 -/
 
 public section
@@ -751,9 +751,11 @@ theorem reverse_relabel (D : FramedOrientedPDCode n) (half : Equiv.Perm (Fin (4 
   ext <;> simp
 end FramedOrientedPDCode
 
+namespace OrientedPDCode
+
 /-- A zero-crossing oriented PD-code consisting of crossing-free circles with the specified
 orientations. Multiplicity records distinct components without imposing an ordering on them. -/
-def orientedPDCodeUnlink (orientations : Multiset Bool) : OrientedPDCode 0 where
+def unlink (orientations : Multiset Bool) : OrientedPDCode 0 where
   halfEdge := Equiv.refl _
   edgePair := PerfectMatching.mk (Equiv.refl _) (by intro h; exact rfl)
     (by intro h; exact Fin.elim0 h)
@@ -767,13 +769,13 @@ def orientedPDCodeUnlink (orientations : Multiset Bool) : OrientedPDCode 0 where
 
 /-- The unlink constructor retains exactly its component-orientation multiset. -/
 @[simp]
-theorem orientedPDCodeUnlink_crossinglessComponents (orientations : Multiset Bool) :
-    (orientedPDCodeUnlink orientations).crossinglessComponents = orientations := by
-  simp [orientedPDCodeUnlink]
+theorem unlink_crossinglessComponents (orientations : Multiset Bool) :
+    (unlink orientations).crossinglessComponents = orientations := by
+  simp [unlink]
 
 /-- Every zero-crossing oriented PD-code is its canonical crossing-free unlink code. -/
-theorem orientedPDCode_eq_unlink (D : OrientedPDCode 0) :
-    D = orientedPDCodeUnlink D.crossinglessComponents := by
+theorem eq_unlink (D : OrientedPDCode 0) :
+    D = unlink D.crossinglessComponents := by
   apply OrientedPDCode.ext
   · apply PDCode.ext
     · ext h
@@ -789,38 +791,38 @@ theorem orientedPDCode_eq_unlink (D : OrientedPDCode 0) :
   · exact rfl
 
 /-- Multisets of orientations are equivalent to zero-crossing oriented PD-codes. -/
-def orientedPDCodeUnlinkEquiv : Multiset Bool ≃ OrientedPDCode 0 where
-  toFun := orientedPDCodeUnlink
+def unlinkEquiv : Multiset Bool ≃ OrientedPDCode 0 where
+  toFun := unlink
   invFun := OrientedPDCode.crossinglessComponents
-  left_inv := orientedPDCodeUnlink_crossinglessComponents
-  right_inv := fun D => (orientedPDCode_eq_unlink D).symm
+  left_inv := unlink_crossinglessComponents
+  right_inv := fun D => (eq_unlink D).symm
 
 /-- The empty oriented PD-code. -/
-def orientedPDCodeEmpty : OrientedPDCode 0 := orientedPDCodeUnlink 0
+def empty : OrientedPDCode 0 := unlink 0
 
 /-- A crossing-free oriented unknot with the specified choice of orientation. -/
-def orientedPDCodeUnknot (orientation : Bool) : OrientedPDCode 0 :=
-  orientedPDCodeUnlink {orientation}
+def unknot (orientation : Bool) : OrientedPDCode 0 :=
+  unlink {orientation}
 
 /-- The oriented unknot retains its specified component orientation. -/
 @[simp]
-theorem orientedPDCodeUnknot_crossinglessComponents (orientation : Bool) :
-    (orientedPDCodeUnknot orientation).crossinglessComponents = {orientation} := by
-  simp [orientedPDCodeUnknot]
+theorem unknot_crossinglessComponents (orientation : Bool) :
+    (unknot orientation).crossinglessComponents = {orientation} := by
+  simp [unknot]
 
 /-- A crossing-free oriented circle is distinct from the empty diagram. -/
-theorem orientedPDCodeUnknot_ne_empty (orientation : Bool) :
-    orientedPDCodeUnknot orientation ≠ orientedPDCodeEmpty :=
-  orientedPDCodeUnlinkEquiv.injective.ne (Multiset.singleton_ne_zero orientation)
+theorem unknot_ne_empty (orientation : Bool) :
+    unknot orientation ≠ empty :=
+  unlinkEquiv.injective.ne (Multiset.singleton_ne_zero orientation)
 
 /-- The two explicit orientation choices give distinct crossing-free circle presentations. -/
-theorem orientedPDCodeUnknot_true_ne_false :
-    orientedPDCodeUnknot true ≠ orientedPDCodeUnknot false :=
-  orientedPDCodeUnlinkEquiv.injective.ne (by simp)
+theorem unknot_true_ne_false :
+    unknot true ≠ unknot false :=
+  unlinkEquiv.injective.ne (by simp)
 
 /-- Reflection fixes every zero-crossing oriented PD-code. -/
 @[simp]
-theorem OrientedPDCode.mirror_eq_self_of_zero_crossings (D : OrientedPDCode 0) :
+theorem mirror_eq_self_of_zero_crossings (D : OrientedPDCode 0) :
     D.mirror = D :=
   OrientedPDCode.ext (by simp) (by simp) (by simp)
 
@@ -828,7 +830,7 @@ theorem OrientedPDCode.mirror_eq_self_of_zero_crossings (D : OrientedPDCode 0) :
 
 This concrete code is a semantic witness that the presentation permits a genuine positive
 crossing, not only crossing-free links. -/
-def orientedPDCodeOneCrossingPositive : OrientedPDCode 1 where
+def positiveKink : OrientedPDCode 1 where
   halfEdge := Equiv.refl _
   edgePair := PerfectMatching.mk (Equiv.swap 0 1 * Equiv.swap 2 3)
     (by intro h; fin_cases h <;> simp [Equiv.swap_apply_def])
@@ -846,10 +848,12 @@ def orientedPDCodeOneCrossingPositive : OrientedPDCode 1 where
   crossinglessComponents := 0
   crossinglessComponents_card := rfl
 
-/-- The distinguished crossing of `orientedPDCodeOneCrossingPositive` has positive sign. -/
+/-- The distinguished crossing of `positiveKink` has positive sign. -/
 @[simp]
-theorem orientedPDCodeOneCrossingPositive_crossingSign :
-    orientedPDCodeOneCrossingPositive.crossingSign 0 = 1 := by
+theorem crossingSign_positiveKink :
+    positiveKink.crossingSign 0 = 1 := by
   decide
+
+end OrientedPDCode
 
 end TauCeti

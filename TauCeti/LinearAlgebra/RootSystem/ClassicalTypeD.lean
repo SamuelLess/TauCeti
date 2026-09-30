@@ -296,8 +296,7 @@ private def typeDSimpleRawIndex (n : ℕ) (hn : 4 ≤ n) (i : Fin n) : TypeDRawI
   else
     (0, ⟨(⟨n - 1, by omega⟩, ⟨n - 2, by omega⟩), by simp [Fin.ext_iff]; omega⟩)
 
-private lemma typeDPairFinEquiv_chain (hn : 2 ≤ n) (i : Fin n)
-    (hi : (i : ℕ) + 1 < n) :
+private lemma typeDPairFinEquiv_chain (i : Fin n) (hi : (i : ℕ) + 1 < n) :
     typeDPairFinEquiv n
         ⟨(i, ⟨(i : ℕ) + 1, hi⟩), by simp [Fin.ext_iff]⟩ =
       ⟨i, lt_of_lt_of_le i.isLt (Nat.le_mul_of_pos_right n (by omega))⟩ := by
@@ -338,7 +337,7 @@ private lemma typeDRawFinEquiv_simple (hn : 4 ≤ n) (i : Fin n) :
   split_ifs with hi
   all_goals simp only [typeDRawFinEquiv, typeDBourbakiPairEquiv, Equiv.trans_apply,
     Equiv.prodCongr_apply, Equiv.refl_apply, Prod.map_apply]
-  · rw [typeDPairFinEquiv_chain (by omega) i hi, Equiv.swap_apply_of_ne_of_ne]
+  · rw [typeDPairFinEquiv_chain i hi, Equiv.swap_apply_of_ne_of_ne]
     · rfl
     all_goals simp [Fin.ext_iff, typeDChainEndIndex, typeDForkOldIndex]; omega
   · rw [typeDPairFinEquiv_fork (by omega), Equiv.swap_apply_right]

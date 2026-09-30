@@ -155,11 +155,10 @@ lemma conjMulEquivRefl :
   -- goal `↑((conjMulEquiv (Homeomorph.refl E) _) φ) e = ↑φ e` holds by definition.
   rfl
 
+-- Not `@[simp]`: the left-hand side does not simplify with the lemma itself (`simpNF`), so the
+-- attribute would never fire.
 /-- Conjugating along a composite over-base homeomorphism is the composite of the two
-conjugation equivalences.
-
-Not a `simp` lemma: its left-hand side does not simplify with the lemma itself (`simpNF`), so as
-a `simp` lemma it would never fire. -/
+conjugation equivalences. -/
 lemma conjMulEquivTrans (h : E ≃ₜ F) (k : F ≃ₜ G)
     (hpq : ∀ e, q (h e) = p e) (hqr : ∀ f, r (k f) = q f) :
     conjMulEquiv (h.trans k) (fun e => by rw [Homeomorph.trans_apply, hqr, hpq]) =

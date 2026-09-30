@@ -49,7 +49,6 @@ covered squares further for the gradings.
   `x.transpose` to `y.transpose`.
 * `TauCeti.GridRectangleBetween.transposeEquiv`: the diagonal reflection packaged as an involutive
   equivalence with oriented rectangles from `x.transpose` to `y.transpose`.
-* `TauCeti.GridRectangleBetween.all`: all oriented rectangles from `x` to `y`.
 * `TauCeti.GridRectangleBetween.emptyRectangles`: the empty rectangles from `x` to `y`.
 
 ## Main results
@@ -506,15 +505,6 @@ instance : Fintype (GridRectangleBetween x y) :=
       left_inv _ := rfl
       right_inv _ := rfl }
 
-/-- The finite set of all oriented rectangles from `x` to `y`. -/
-def all (x y : GridState n) : Finset (GridRectangleBetween x y) :=
-  Finset.univ
-
-/-- Membership in `GridRectangleBetween.all` is automatic. -/
-@[simp]
-theorem mem_all (R : GridRectangleBetween x y) : R ∈ all x y :=
-  Finset.mem_univ R
-
 variable (R : GridRectangleBetween x y)
 
 /-- The row of `x` on the initial side. -/
@@ -663,11 +653,8 @@ theorem source_ne_target (R : GridRectangleBetween x y) : x ≠ y := by
   exact R.left_ne_right (x.toPerm.injective (by simpa [bottom, top] using R.map_left))
 
 /-- There are no rectangles from a grid state to itself. -/
-@[simp]
-theorem all_self (x : GridState n) : all x x = ∅ := by
-  classical
-  ext R
-  exact R.source_ne_target rfl |>.elim
+instance (x : GridState n) : IsEmpty (GridRectangleBetween x x) :=
+  ⟨fun R => R.source_ne_target rfl⟩
 
 /-- The initial lower corner is a point of the source state. -/
 theorem left_bottom_mem_source : (R.left, R.bottom) ∈ x.pointSet := by
@@ -716,11 +703,6 @@ theorem symm_right_bottom_mem_target (R : GridRectangleBetween x y) :
     (R.symm.right, R.symm.bottom) ∈ x.pointSet := by
   simpa only [symm_right, symm_bottom] using R.left_bottom_mem_source
 
-/-- There are as many oriented rectangles from `x` to `y` as from `y` to `x`. -/
-theorem card_all_comm (x y : GridState n) : (all x y).card = (all y x).card := by
-  classical
-  simp [all, Fintype.card_congr (symmEquiv x y)]
-
 /-- Away from the two side columns, membership in the source and target states is identical. -/
 theorem mem_target_pointSet_iff_of_ne {p : Fin n × Fin n}
     (hleft : p.1 ≠ R.left) (hright : p.1 ≠ R.right) :
@@ -740,7 +722,7 @@ theorem isEmpty_iff_toGridRectangle_isEmptyFor :
 /-- The finite set of empty oriented rectangles from `x` to `y`. -/
 noncomputable def emptyRectangles (x y : GridState n) : Finset (GridRectangleBetween x y) := by
   classical
-  exact (all x y).filter fun R => R.IsEmpty
+  exact Finset.univ.filter fun R => R.IsEmpty
 
 /-- Membership in the finite set of empty rectangles is exactly the emptiness predicate. -/
 @[simp]
@@ -758,19 +740,12 @@ theorem isEmpty_of_mem_emptyRectangles {R : GridRectangleBetween x y}
 theorem isEmpty_of_le_two (hn : n ≤ 2) (R : GridRectangleBetween x y) : R.IsEmpty :=
   R.toGridRectangle.isEmptyFor_of_le_two hn x
 
-/-- Empty rectangles are a subset of all rectangles between the same two states. -/
-theorem emptyRectangles_subset_all (x y : GridState n) :
-    emptyRectangles x y ⊆ all x y := by
-  classical
-  intro R hR
-  simp [emptyRectangles] at hR ⊢
-
 /-- In grid size at most two, the empty rectangles are all oriented rectangles. -/
-theorem emptyRectangles_eq_all_of_le_two (hn : n ≤ 2) (x y : GridState n) :
-    emptyRectangles x y = all x y := by
+theorem emptyRectangles_eq_univ_of_le_two (hn : n ≤ 2) (x y : GridState n) :
+    emptyRectangles x y = Finset.univ := by
   ext R
-  simp only [mem_emptyRectangles, mem_all]
-  exact ⟨fun _ => trivial, fun _ => isEmpty_of_le_two hn R⟩
+  simp only [mem_emptyRectangles, Finset.mem_univ, iff_true]
+  exact isEmpty_of_le_two hn R
 
 /-- There are no empty rectangles from a grid state to itself. -/
 @[simp]
@@ -812,22 +787,15 @@ theorem isEmpty_of_right_eq_finRotate (h : R.right = finRotate n R.left) : R.IsE
 interior. -/
 theorem isEmpty_iff_target :
     R.IsEmpty ↔ ∀ p ∈ y.pointSet, p ∉ R.toGridRectangle.interior := by
-  rw [R.isEmpty_iff]
-  constructor
-  · intro h p hp
-    by_cases hleft : p.1 = R.left
-    · exact R.toGridRectangle.notMem_interior_of_fst_eq_left hleft
-    by_cases hright : p.1 = R.right
-    · exact R.toGridRectangle.notMem_interior_of_fst_eq_right hright
-    exact h p ((R.mem_target_pointSet_iff_of_ne hleft hright).mp hp)
-  · intro h p hp hpR
-    have hleft : p.1 ≠ R.left := by
-      intro hcol
-      exact R.toGridRectangle.notMem_interior_of_fst_eq_left hcol hpR
-    have hright : p.1 ≠ R.right := by
-      intro hcol
-      exact R.toGridRectangle.notMem_interior_of_fst_eq_right hcol hpR
-    exact h p ((R.mem_target_pointSet_iff_of_ne hleft hright).mpr hp) hpR
+  have hl (c : Fin n) : (R.left, c) ∉ R.toGridRectangle.interior :=
+    R.toGridRectangle.notMem_interior_of_fst_eq_left rfl
+  have hr (c : Fin n) : (R.right, c) ∉ R.toGridRectangle.interior :=
+    R.toGridRectangle.notMem_interior_of_fst_eq_right rfl
+  rw [← GridRectangle.isEmptyFor_iff]
+  exact ⟨R.toGridRectangle.isEmptyFor_of_eq_away R.left R.right (hl _) (hr _)
+      fun _ hleft hright => (R.mem_target_pointSet_iff_of_ne hleft hright).mp,
+    R.toGridRectangle.isEmptyFor_of_eq_away R.left R.right (hl _) (hr _)
+      fun _ hleft hright => (R.mem_target_pointSet_iff_of_ne hleft hright).mpr⟩
 
 /-- The target state has no point in the interior of an empty rectangle between states. -/
 theorem notMem_interior_target_of_isEmpty (h : R.IsEmpty) {p : Fin n × Fin n}

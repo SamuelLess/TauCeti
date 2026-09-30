@@ -30,9 +30,9 @@ carrier, and they are proved here to be a `ℤ`-basis of it.  Consequently the G
 checkerboard lattice in that basis is exactly `CartanMatrix.D n`, which is what makes the name
 "type `Dₙ` root lattice" a theorem rather than a convention.
 
-Spanning comes from the classical expansion: every integer vector of even coordinate sum is an
-explicit `ℤ`-combination of the simple roots, by
-`TauCeti.DynkinType.sum_smul_typeDSimpleRootCoordinates`.
+Spanning comes from the classical expansion: the integral span of the simple roots is exactly the
+lattice of integer vectors of even coordinate sum
+(`TauCeti.DynkinType.mem_span_range_typeDSimpleRoot_iff`).
 
 Two numerical consequences close the loop with the discriminant computation of the base file.  The
 basis-free signed determinant of the checkerboard lattice is the determinant of the Cartan matrix,
@@ -111,13 +111,9 @@ private theorem ratOfIntVec_injective : Function.Injective (ratOfIntVec n) := by
 /-- Every simple root lies in the checkerboard carrier: its coordinates are integers and their
 sum is `0` or `2`. -/
 theorem checkerboardSimpleRoot_mem_checkerboardCarrier (hn : 4 ≤ n) (i : Fin n) :
-    checkerboardSimpleRoot n hn i ∈ checkerboardCarrier n := by
-  refine mem_checkerboardCarrier_of (DynkinType.typeDSimpleRoot n hn i)
-    (checkerboardSimpleRoot_apply hn i) ?_
-  rw [DynkinType.sum_typeDSimpleRoot hn i]
-  split_ifs
-  · exact ⟨0, by ring⟩
-  · exact ⟨1, by ring⟩
+    checkerboardSimpleRoot n hn i ∈ checkerboardCarrier n :=
+  mem_checkerboardCarrier_of (DynkinType.typeDSimpleRoot n hn i)
+    (checkerboardSimpleRoot_apply hn i) (DynkinType.even_sum_typeDSimpleRoot hn i)
 
 /-! ## The Gram matrix -/
 
@@ -166,8 +162,7 @@ theorem span_range_checkerboardSimpleRoot (hn : 4 ≤ n) :
       rw [hsum]
       exact even_two_mul m
     have hmem := Submodule.mem_map_of_mem (f := ratOfIntVec n)
-      ((Submodule.mem_span_range_iff_exists_fun ℤ).2
-        ⟨_, DynkinType.sum_smul_typeDSimpleRootCoordinates hn heven⟩)
+      ((DynkinType.mem_span_range_typeDSimpleRoot_iff hn).2 heven)
     rw [map_span_typeDSimpleRoot hn] at hmem
     rwa [hxw]
 

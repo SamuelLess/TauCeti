@@ -41,6 +41,8 @@ squared-length-two vectors and proved involutive.
   `TauCeti.DynkinType.typeDSimpleRootCoordinates_eq_of_sum_smul_eq` says the expansion is unique.
   By `TauCeti.DynkinType.typeDSimpleRootCoordinates_nonneg_or_nonpos` the coefficients of a root
   have one sign.
+* `TauCeti.DynkinType.mem_span_range_typeDSimpleRoot_iff`: their integral span is the lattice of
+  integral vectors of even coordinate sum.
 * `TauCeti.DynkinType.sum_typeDSimpleRoot` gives their coordinate sums and
   `TauCeti.DynkinType.typeDSimpleRoot_dotProduct_typeDSimpleRoot` their Gram matrix, the Cartan
   matrix `CartanMatrix.D n`.
@@ -397,6 +399,21 @@ theorem sum_typeDSimpleRoot (hn : 4 ≤ n) (i : Fin n) :
     rw [Finset.sum_add_distrib, Fintype.sum_pi_single', Fintype.sum_pi_single']
     norm_num
 
+/-- Every simple root has even coordinate sum. -/
+theorem even_sum_typeDSimpleRoot (hn : 4 ≤ n) (i : Fin n) :
+    Even (∑ j : Fin n, typeDSimpleRoot n hn i j) := by
+  rw [sum_typeDSimpleRoot hn i]
+  split_ifs <;> simp
+
+/-- Every integral combination of the simple roots has even coordinate sum. -/
+theorem even_sum_sum_smul_typeDSimpleRoot (hn : 4 ≤ n) (c : Fin n → ℤ) :
+    Even (∑ j : Fin n, (∑ i : Fin n, c i • typeDSimpleRoot n hn i) j) := by
+  simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
+  rw [Finset.sum_comm]
+  exact Finset.even_sum _ fun i _ => by
+    rw [← Finset.mul_sum]
+    exact (even_sum_typeDSimpleRoot hn i).mul_left (c i)
+
 /-! ## The Gram matrix of the Bourbaki simple roots -/
 
 /-- **The simple roots of type `Dₙ` have the Cartan matrix as Gram matrix.** Type `Dₙ` is simply
@@ -603,17 +620,20 @@ vector in the simple roots has the coefficients `typeDSimpleRootCoordinates`. -/
 theorem typeDSimpleRootCoordinates_eq_of_sum_smul_eq (hn : 4 ≤ n) {v c : Fin n → ℤ}
     (h : ∑ i, c i • typeDSimpleRoot n hn i = v) :
     typeDSimpleRootCoordinates n hn v = c := by
-  -- Each simple root has coordinate sum `0` or `2`, so every integral combination of them has an
-  -- even coordinate sum.
   have hv : Even (∑ j : Fin n, v j) := by
-    subst h
-    simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
-    rw [Finset.sum_comm]
-    refine Finset.even_sum _ fun i _ => ?_
-    rw [← Finset.mul_sum, sum_typeDSimpleRoot hn i]
-    split_ifs <;> simp
+    rw [← h]
+    exact even_sum_sum_smul_typeDSimpleRoot hn c
   exact funext <| Fintype.linearIndependent_iffₛ.mp (linearIndependent_typeDSimpleRoot hn) _ _
     ((sum_smul_typeDSimpleRootCoordinates hn hv).trans h.symm)
+
+/-- **The integral span of the simple roots is the lattice of integral vectors of even coordinate
+sum.** -/
+theorem mem_span_range_typeDSimpleRoot_iff (hn : 4 ≤ n) {v : Fin n → ℤ} :
+    v ∈ span ℤ (range (typeDSimpleRoot n hn)) ↔ Even (∑ i : Fin n, v i) := by
+  rw [mem_span_range_iff_exists_fun]
+  refine ⟨?_, fun hv => ⟨_, sum_smul_typeDSimpleRootCoordinates hn hv⟩⟩
+  rintro ⟨c, rfl⟩
+  exact even_sum_sum_smul_typeDSimpleRoot hn c
 
 /-- The coordinates of the `i`-th simple root are the `i`-th standard basis vector. -/
 @[simp] theorem typeDSimpleRootCoordinates_typeDSimpleRoot (hn : 4 ≤ n) (i : Fin n) :

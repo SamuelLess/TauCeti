@@ -49,8 +49,8 @@ their simultaneous-conjugacy classes (`TauCeti.ConnectedIsoClass`) and to marked
 the diagonal action: a classification of numbered covers that is equivariant for relabelling
 therefore descends to the other two rigidifications.
 
-Over a path-connected base the degree does not depend on the basepoint, and a connected cover has
-positive degree.
+Over a path-connected base the degree does not depend on the basepoint, and over a preconnected
+base a connected cover has positive degree.
 
 Over a path-connected, locally path-connected base, a numbered cover is determined up to
 isomorphism by its monodromy representation read through the numbering,
@@ -78,7 +78,7 @@ representations into an isomorphism of `π₁(X, x)`-sets preserving the labels.
   `TauCeti.ConnectedFiberNumberedCoverClass.markedOrbitRelQuotientEquiv`: pointed classes are
   diagonal orbits of marked numbered classes.
 * `TauCeti.ConnectedCover.nonempty_equiv_fin_of`: a path transports the degree between fibres;
-  `TauCeti.ConnectedCover.ne_zero`: over a path-connected base the degree is positive.
+  `TauCeti.ConnectedCover.ne_zero`: over a preconnected base the degree is positive.
 * `TauCeti.connectedFiberNumberedCoverIso_iff_permCongrHom_comp_monodromyPerm_eq`: two numbered
   covers are isomorphic exactly when their numbered monodromy representations agree.
 
@@ -611,9 +611,9 @@ theorem nonempty_equiv_fin_of (c : ConnectedCover x n) {y : X} (γ : Path x y) :
   c.nonempty_equiv_fin.map fun ν => (coveringFiberEquiv c.cover.isCoveringMap_proj
     (Path.Homotopic.Quotient.mk γ)).symm.trans ν
 
-variable [PathConnectedSpace X]
+variable [PreconnectedSpace X]
 
-/-- A connected cover of a path-connected space has positive degree. -/
+/-- A connected cover of a preconnected space has positive degree. -/
 theorem ne_zero (c : ConnectedCover x n) : n ≠ 0 := by
   rintro rfl
   obtain ⟨ν⟩ := c.nonempty_equiv_fin

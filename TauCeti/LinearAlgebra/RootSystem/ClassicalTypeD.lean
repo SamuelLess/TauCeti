@@ -6,7 +6,7 @@ Authors: The Tau Ceti contributors
 module
 
 public import TauCeti.LinearAlgebra.RootSystem.DynkinType
-import Mathlib.LinearAlgebra.Matrix.Dual
+import TauCeti.LinearAlgebra.Matrix.Dual
 import TauCeti.LinearAlgebra.Matrix.Gram
 
 /-!
@@ -547,15 +547,16 @@ private lemma typeDDoubleCoweight_dotProduct_sum_smul (hn : 4 ≤ n) (c : Fin n 
     Fin.val_inj, mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
   ring
 
-/-- **The Bourbaki simple roots of type `Dₙ` are linearly independent.** Pairing a relation with a
-doubled fundamental coweight isolates twice one coefficient, and `ℤ` is torsion free. -/
+/-- **The Bourbaki simple roots of type `Dₙ` are linearly independent.** The doubled fundamental
+coweights pair with them diagonally, by `2`, and `2` is regular in `ℤ`. -/
 theorem linearIndependent_typeDSimpleRoot (hn : 4 ≤ n) :
-    LinearIndependent ℤ (typeDSimpleRoot n hn) := by
-  rw [Fintype.linearIndependent_iff]
-  intro g hg k
-  have h := typeDDoubleCoweight_dotProduct_sum_smul hn g k
-  rw [hg, dotProduct_zero] at h
-  omega
+    LinearIndependent ℤ (typeDSimpleRoot n hn) :=
+  linearIndependent_of_dotProduct_diagonal (c := fun _ => 2) (w := typeDDoubleCoweight n)
+    (fun _ => (IsRegular.of_ne_zero (by norm_num)).right)
+    (fun i => by rw [dotProduct_comm, typeDDoubleCoweight_dotProduct_typeDSimpleRoot]; simp)
+    (fun i j hij => by
+      rw [dotProduct_comm, typeDDoubleCoweight_dotProduct_typeDSimpleRoot]
+      simp [Fin.val_inj, Ne.symm hij])
 
 /-- Twice the coefficients of a root in the Bourbaki simple-root basis are the dot products with
 the doubled fundamental coweights. -/

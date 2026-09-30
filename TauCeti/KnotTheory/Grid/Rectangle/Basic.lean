@@ -186,12 +186,6 @@ theorem notMem_interior_of_fst_eq_right {p : Fin n × Fin n} (hp : p.1 = R.right
     p ∉ R.interior :=
   fun h ↦ R.right_notMem_columnInterior (hp ▸ ((R.mem_interior p).1 h).1)
 
-/-- A coordinate pair lies in the rectangle interior exactly when its column and row lie in
-the corresponding open cyclic intervals. -/
-theorem mk_mem_interior (c r : Fin n) :
-    (c, r) ∈ R.interior ↔ c ∈ R.columnInterior ∧ r ∈ R.rowInterior := by
-  simp
-
 /-- A rectangle has empty interior if its two column sides coincide. -/
 @[simp]
 theorem interior_eq_empty_of_left_eq_right (h : R.left = R.right) : R.interior = ∅ := by
@@ -731,11 +725,6 @@ theorem mem_emptyRectangles (R : GridRectangleBetween x y) :
     R ∈ emptyRectangles x y ↔ R.IsEmpty := by
   classical
   simp [emptyRectangles]
-
-/-- Every rectangle in `emptyRectangles` is empty. -/
-theorem isEmpty_of_mem_emptyRectangles {R : GridRectangleBetween x y}
-    (hR : R ∈ emptyRectangles x y) : R.IsEmpty :=
-  (mem_emptyRectangles R).mp hR
 
 /-- In grid size at most two, every oriented rectangle between grid states is empty. -/
 theorem isEmpty_of_le_two (hn : n ≤ 2) (R : GridRectangleBetween x y) : R.IsEmpty :=

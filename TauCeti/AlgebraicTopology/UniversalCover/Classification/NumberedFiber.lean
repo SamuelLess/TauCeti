@@ -185,14 +185,12 @@ def ConnectedPointedCoverIso (c c' : ConnectedPointedCover x n) : Prop :=
   ∃ f : c.cover ≅ c'.cover, f.hom.hom.left c.e.1 = c'.e.1
 
 /-- A numbered isomorphism consists of a cover isomorphism preserving every fibre label. -/
-@[simp]
 theorem connectedFiberNumberedCoverIso_iff_exists {c c' : ConnectedFiberNumberedCover x n} :
     ConnectedFiberNumberedCoverIso c c' ↔
       ∃ f : c.cover ≅ c'.cover, ∀ i, f.hom.hom.left (c.ν.symm i).1 = (c'.ν.symm i).1 :=
   Iff.rfl
 
 /-- A pointed isomorphism consists of a cover isomorphism preserving the chosen point. -/
-@[simp]
 theorem connectedPointedCoverIso_iff_exists {c c' : ConnectedPointedCover x n} :
     ConnectedPointedCoverIso c c' ↔
       ∃ f : c.cover ≅ c'.cover, f.hom.hom.left c.e.1 = c'.e.1 :=
@@ -556,7 +554,6 @@ theorem markLabel_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCoverClass
 
 /-- **Forgetting the numbering is passing to the relabelling orbit.** Two numbered classes have
 the same underlying cover exactly when a relabelling carries one to the other. -/
-@[simp]
 theorem forgetNumbering_eq_forgetNumbering_iff {C C' : ConnectedFiberNumberedCoverClass x n} :
     C.forgetNumbering = C'.forgetNumbering ↔ ∃ τ : Perm (Fin n), τ • C' = C := by
   refine ⟨fun h => ?_, ?_⟩
@@ -572,7 +569,6 @@ theorem forgetNumbering_eq_forgetNumbering_iff {C C' : ConnectedFiberNumberedCov
 /-- **Marking a label is passing to the diagonal relabelling orbit.** Two numbered classes with
 marked labels give the same pointed class exactly when a relabelling carries the second class to
 the first and the second label to the first. -/
-@[simp]
 theorem markLabel_eq_markLabel_iff {C C' : ConnectedFiberNumberedCoverClass x n} {i j : Fin n} :
     C.markLabel i = C'.markLabel j ↔ ∃ τ : Perm (Fin n), τ • C' = C ∧ τ j = i := by
   refine ⟨fun h => ?_, ?_⟩

@@ -441,17 +441,9 @@ theorem fromSplit_unique (f : SplitK0 C →+ TriangulatedK0 C)
 /-- The canonical comparison out of split `K₀` is surjective: the classes of objects generate
 triangulated `K₀`, so triangulated `K₀` is a quotient of split `K₀`. -/
 theorem fromSplit_surjective : Function.Surjective (fromSplit C) := by
-  intro x
-  induction x using TriangulatedK0.induction_on with
-  | zero => exact ⟨0, map_zero _⟩
-  | of X => exact ⟨SplitK0.of X, fromSplit_of X⟩
-  | add a b ha hb =>
-    obtain ⟨a', rfl⟩ := ha
-    obtain ⟨b', rfl⟩ := hb
-    exact ⟨a' + b', map_add _ _ _⟩
-  | neg a ha =>
-    obtain ⟨a', rfl⟩ := ha
-    exact ⟨-a', map_neg _ _⟩
+  rw [← AddMonoidHom.range_eq_top, eq_top_iff, ← closure_range_of, AddSubgroup.closure_le]
+  rintro _ ⟨X, rfl⟩
+  exact ⟨SplitK0.of X, fromSplit_of X⟩
 
 /-- **Naturality of the comparison out of split `K₀`** in a triangulated functor, which is in
 particular additive and so also acts on split `K₀`. -/

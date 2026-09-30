@@ -470,12 +470,13 @@ theorem det_cartanMatrixD_eq_det_typeDSimpleRoot_sq (hn : 4 ≤ n) :
     (CartanMatrix.D n).det = (Matrix.of (typeDSimpleRoot n hn)).det ^ 2 := by
   rw [← typeDSimpleRoot_mul_transpose_self hn, Matrix.det_mul, Matrix.det_transpose, sq]
 
-/-- The simple-root matrix of type `Dₙ` has determinant `2`: subtracting the last chain root from
-the fork root leaves an upper-triangular matrix with diagonal `1, …, 1, 2`. -/
+/-- The simple-root matrix of type `Dₙ` has determinant `2`. -/
+@[simp]
 theorem det_typeDSimpleRoot_eq_two (hn : 4 ≤ n) : (Matrix.of (typeDSimpleRoot n hn)).det = 2 := by
   set A := Matrix.of (typeDSimpleRoot n hn)
   have hlp : (⟨n - 1, by omega⟩ : Fin n) ≠ ⟨n - 2, by omega⟩ := by simp [Fin.ext_iff]; omega
-  -- Subtracting the chain row `e_(n-2) - e_(n-1)` from the fork row leaves `2 e_(n-1)`.
+  -- Subtracting the chain row `e_(n-2) - e_(n-1)` from the fork row leaves `2 e_(n-1)`, so the
+  -- matrix becomes upper triangular with diagonal `1, …, 1, 2`.
   have key : ∀ i j : Fin n, A.updateRow ⟨n - 1, by omega⟩
       (A ⟨n - 1, by omega⟩ + (-1 : ℤ) • A ⟨n - 2, by omega⟩) i j =
         if (j : ℕ) = i then (if (i : ℕ) + 1 < n then 1 else 2)
@@ -483,11 +484,11 @@ theorem det_typeDSimpleRoot_eq_two (hn : 4 ≤ n) : (Matrix.of (typeDSimpleRoot 
     intro i j
     by_cases hi : (i : ℕ) + 1 < n
     · rw [Matrix.updateRow_ne (by simp [Fin.ext_iff]; omega)]
-      change typeDSimpleRoot n hn i j = _
+      simp only [A, Matrix.of_apply]
       rw [typeDSimpleRoot_of_add_one_lt hn hi]
       simp only [Pi.sub_apply, Pi.single_apply, Fin.ext_iff]; grind
     · rw [show i = ⟨n - 1, by omega⟩ from Fin.ext (by simp; omega), Matrix.updateRow_self]
-      change typeDSimpleRoot n hn _ j + -1 * typeDSimpleRoot n hn _ j = _
+      simp only [A, Pi.add_apply, Pi.smul_apply, Matrix.of_apply, smul_eq_mul]
       rw [typeDSimpleRoot_of_not_add_one_lt hn (by simp; omega),
         typeDSimpleRoot_of_add_one_lt hn (by simp; omega)]
       simp only [Pi.add_apply, Pi.sub_apply, Pi.single_apply, Fin.ext_iff]; grind

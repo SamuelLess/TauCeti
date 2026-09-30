@@ -43,8 +43,8 @@ available for every root, and `2 e_{n-1} = α_{n-1} - α_{n-2}`.
 Two numerical consequences close the loop with the discriminant computation of the base file.  The
 basis-free signed determinant of the checkerboard lattice is the determinant of the Cartan matrix,
 and, since the discriminant group has order four and the Cartan matrix is a Gram matrix of a
-positive form, `(CartanMatrix.D n).det = 4`.  The determinant of `CartanMatrix.D` is not otherwise
-available: this deduces it from the lattice, rather than the other way round.
+positive form, `(CartanMatrix.D n).det = 4`.  This derives the determinant of `CartanMatrix.D` from
+the lattice.
 
 ## Main declarations
 

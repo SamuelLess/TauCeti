@@ -487,7 +487,8 @@ theorem det_typeDSimpleRoot_eq_two (hn : 4 ≤ n) : (Matrix.of (typeDSimpleRoot 
       simp only [A, Matrix.of_apply]
       rw [typeDSimpleRoot_of_add_one_lt hn hi]
       simp only [Pi.sub_apply, Pi.single_apply, Fin.ext_iff]; grind
-    · rw [show i = ⟨n - 1, by omega⟩ from Fin.ext (by simp; omega), Matrix.updateRow_self]
+    · have hi_last : i = ⟨n - 1, by omega⟩ := Fin.ext (by simp; omega)
+      rw [hi_last, Matrix.updateRow_self]
       simp only [A, Pi.add_apply, Pi.smul_apply, Matrix.of_apply, smul_eq_mul]
       rw [typeDSimpleRoot_of_not_add_one_lt hn (by simp; omega),
         typeDSimpleRoot_of_add_one_lt hn (by simp; omega)]

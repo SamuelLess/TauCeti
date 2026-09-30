@@ -139,8 +139,7 @@ theorem oppositeCrossingSlot_apply_oppositeCrossingSlot (slot : Fin 4) :
 slot of the pair indicated is joined to the slot preceding it in the counterclockwise order.
 Applied to `D.overPair i` it is therefore the `A`-smoothing at crossing `i`, the one turning left
 off the over-strand, and applied to `!D.overPair i` the `B`-smoothing. -/
--- Exposed so that `decide` can evaluate it on the four slots in the files that use it.
-@[expose] def slotSmoothing (b : Bool) : Equiv.Perm (Fin 4) :=
+def slotSmoothing (b : Bool) : Equiv.Perm (Fin 4) :=
   if b then Equiv.swap 0 1 * Equiv.swap 2 3 else Equiv.swap 0 3 * Equiv.swap 1 2
 
 /-- The `true` smoothing pairs slots `0`-`1` and `2`-`3`. -/

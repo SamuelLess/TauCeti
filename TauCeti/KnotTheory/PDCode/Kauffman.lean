@@ -100,13 +100,14 @@ theorem slotSmoothing_ne_oppositeCrossingSlot (b : Bool) (slot : Fin 4) :
     slotSmoothing b slot ≠ oppositeCrossingSlot slot := by
   have key : ∀ (c : Bool) (t : Fin 4), (slotSmoothing c t).val ≠ (t + 2).val := by
     intro c
-    cases c <;> decide
+    cases c <;> simp only [slotSmoothing_false, slotSmoothing_true] <;> decide
   intro h
   exact key b slot (by rw [h, oppositeCrossingSlot_apply])
 
 /-- The two local smoothings at a crossing are distinct. -/
 theorem slotSmoothing_ne_slotSmoothing_not (b : Bool) : slotSmoothing b ≠ slotSmoothing !b := by
-  cases b <;> decide
+  cases b <;> simp only [Bool.not_false, Bool.not_true, slotSmoothing_false, slotSmoothing_true] <;>
+    decide
 
 /-- Smooth every crossing of a PD-code, using at crossing `i` the local smoothing
 `slotSmoothing (b i)`. This is the smoothing counterpart of `TauCeti.PDCode.crossingTurn`, which
@@ -396,7 +397,7 @@ private theorem oppositeCrossingSlot_mul_slotSmoothing_true :
     oppositeCrossingSlot * slotSmoothing true = Equiv.swap (0 : Fin 4) 3 * Equiv.swap 1 2 := by
   refine Equiv.ext fun t ↦ ?_
   rw [← Fin.val_inj]
-  simp only [Equiv.Perm.mul_apply, oppositeCrossingSlot_apply]
+  simp only [Equiv.Perm.mul_apply, oppositeCrossingSlot_apply, slotSmoothing_true]
   revert t
   decide
 
@@ -450,6 +451,7 @@ theorem stateLoopCount_kink_false : kink.stateLoopCount (fun _ ↦ false) = 1 :=
   have hperm : (Equiv.prodCongrRight fun _ : Fin 1 ↦ slotSmoothing false * slotSmoothing true)
       = Equiv.swap ((0 : Fin 1), (1 : Fin 4)) (0, 3) * Equiv.swap ((0 : Fin 1), (0 : Fin 4))
         (0, 2) := by
+    simp only [slotSmoothing_false, slotSmoothing_true]
     decide
   have hcard : Nat.card (Fin 1 × Fin 4) = 4 := by simp
   have h₁ := orbitCount_mul_swap_add_one

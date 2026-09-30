@@ -44,6 +44,8 @@ especially Proposition 4.5.8.
 * `TauCeti.FramedOrientedPDCode`: a framing decoration of an oriented PD-code.
 * `TauCeti.PDCode.halfEdgeSuccEquiv`: the half-edge positions of a code with one crossing more.
 * `TauCeti.PDCode.mirror` and `TauCeti.PDCode.relabel`: reflection and relabelling.
+* `TauCeti.PDCode.kink`: the one-crossing kink diagram, and `TauCeti.OrientedPDCode.positiveKink`,
+  its orientation with a positive crossing.
 * `TauCeti.OrientedPDCode.reverse`: reversal of every component orientation.
 * `TauCeti.OrientedPDCode.crossingSign`: the sign derived from the local oriented crossing data.
 * `TauCeti.OrientedPDCode.writhe`: the sum of the crossing signs.
@@ -414,6 +416,31 @@ theorem mirror_relabel (D : PDCode n) (half : Equiv.Perm (Fin (4 * n)))
     (cross : Equiv.Perm (Fin n)) :
     (D.relabel half cross).mirror = D.mirror.relabel half cross := by
   ext <;> simp
+
+/-- The one-crossing knot diagram: a single kink. Its single crossing has the slot pair `1`-`3`
+as its over-strand, and its two arcs join slot `0` to slot `1` and slot `2` to slot `3`, so the
+strand doubles back on itself, as in the first Reidemeister move. -/
+def kink : PDCode 1 where
+  halfEdge := 1
+  edgePair := PerfectMatching.mk (Equiv.swap 0 1 * Equiv.swap 2 3)
+    (by intro h; fin_cases h <;> simp [Equiv.swap_apply_def])
+    (by intro h; fin_cases h <;> simp [Equiv.swap_apply_def])
+  crossinglessComponentCount := 0
+  overPair := fun _ ↦ true
+
+/-- The kink numbers its half-edges by their crossing slots. -/
+@[simp] theorem kink_halfEdge : kink.halfEdge = 1 := by simp [kink]
+
+/-- The two arcs of the kink join slot `0` to slot `1` and slot `2` to slot `3`. -/
+theorem kink_edgePair_val : kink.edgePair.val = Equiv.swap 0 1 * Equiv.swap 2 3 := by
+  simp [kink, PerfectMatching.val_mk]
+
+/-- The kink has no crossing-free component. -/
+@[simp] theorem kink_crossinglessComponentCount : kink.crossinglessComponentCount = 0 := by
+  simp [kink]
+
+/-- The over-strand of the kink is the slot pair `1`-`3`. -/
+@[simp] theorem kink_overPair (i : Fin 1) : kink.overPair i = true := by simp [kink]
 
 end PDCode
 
@@ -832,21 +859,16 @@ theorem mirror_eq_self_of_zero_crossings (D : OrientedPDCode 0) :
     D.mirror = D :=
   OrientedPDCode.ext (by simp) (by simp) (by simp)
 
-/-- A one-crossing positive PD-code whose two exterior arcs join adjacent crossing visits.
+/-- The kink `TauCeti.PDCode.kink`, oriented so that its crossing is positive.
 
 This concrete code is a semantic witness that the presentation permits a genuine positive
 crossing, not only crossing-free links. -/
 def positiveKink : OrientedPDCode 1 where
-  halfEdge := Equiv.refl _
-  edgePair := PerfectMatching.mk (Equiv.swap 0 1 * Equiv.swap 2 3)
-    (by intro h; fin_cases h <;> simp [Equiv.swap_apply_def])
-    (by intro h; fin_cases h <;> simp [Equiv.swap_apply_def])
-  crossinglessComponentCount := 0
-  overPair := fun _ => true
+  toPDCode := PDCode.kink
   orientation := fun h => decide (h = 1 ∨ h = 2)
   orientation_edgePair := by
     intro h
-    fin_cases h <;> simp [Equiv.swap_apply_def]
+    fin_cases h <;> simp [PDCode.kink_edgePair_val, Equiv.swap_apply_def]
   orientation_oppositeCrossingSlot := by
     intro i slot
     fin_cases i

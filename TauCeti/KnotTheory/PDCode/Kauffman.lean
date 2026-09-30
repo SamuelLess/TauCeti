@@ -58,7 +58,6 @@ Jones polynomial from the bracket.
 * `TauCeti.PDCode.stateLoopCount`: the number of circles of the smoothed diagram.
 * `TauCeti.PDCode.stateWeight`: the weight `a ^ (A(s) - B(s))` of a state.
 * `TauCeti.PDCode.kauffmanBracket`: the Kauffman bracket state sum.
-* `TauCeti.PDCode.kink`: the one-crossing kink diagram.
 * `TauCeti.OrientedPDCode.normalizedKauffmanBracket`: the writhe-normalized bracket.
 
 ## Main results
@@ -405,26 +404,6 @@ theorem kauffmanBracket_eq_jonesDelta_pow (D : PDCode 0) (a : Rˣ) :
   rw [kauffmanBracket, Fintype.sum_unique]
   simp [stateWeight]
 
-/-- The one-crossing knot diagram: a single kink. Its single crossing has the slot pair `1`-`3`
-as its over-strand, and its two arcs join slot `0` to slot `1` and slot `2` to slot `3`, so the
-strand doubles back on itself, as in the first Reidemeister move. -/
-def kink : PDCode 1 where
-  halfEdge := 1
-  edgePair := PerfectMatching.congr (crossingSlotEquiv 1)
-    (PerfectMatching.mk (Equiv.prodCongrRight fun _ ↦ slotSmoothing true) (by decide) (by decide))
-  crossinglessComponentCount := 0
-  overPair := fun _ ↦ true
-
-/-- The kink numbers its half-edges by their crossing slots. -/
-@[simp] theorem kink_halfEdge : kink.halfEdge = 1 := by simp [kink]
-
-/-- The kink has no crossing-free component. -/
-@[simp] theorem kink_crossinglessComponentCount : kink.crossinglessComponentCount = 0 := by
-  simp [kink]
-
-/-- The over-strand of the kink is the slot pair `1`-`3`. -/
-@[simp] theorem kink_overPair (i : Fin 1) : kink.overPair i = true := by simp [kink]
-
 /-- The half-edge of the kink in a given crossing slot is that slot. -/
 theorem kink_crossing (i : Fin 1) (t : Fin 4) :
     kink.crossing i t = crossingSlotEquiv 1 (i, t) := by
@@ -435,7 +414,10 @@ theorem kink_crossing (i : Fin 1) (t : Fin 4) :
 @[simp] theorem kink_edgePair_apply (i : Fin 1) (t : Fin 4) :
     kink.edgePair.val (crossingSlotEquiv 1 (i, t))
       = crossingSlotEquiv 1 (i, slotSmoothing true t) := by
-  simp [kink, PerfectMatching.congr_val, PerfectMatching.val_mk]
+  have hc (s : Fin 4) : crossingSlotEquiv 1 (i, s) = s :=
+    Fin.ext (by rw [crossingSlotEquiv_apply_val]; simp)
+  rw [kink_edgePair_val, hc, hc]
+  fin_cases t <;> decide
 
 /-- Smoothing the kink reconnects its slots by the chosen local smoothing. -/
 @[simp] theorem kink_smoothingTurn (b : Fin 1 → Bool) (i : Fin 1) (t : Fin 4) :

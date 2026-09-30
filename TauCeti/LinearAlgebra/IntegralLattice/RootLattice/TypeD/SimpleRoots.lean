@@ -338,7 +338,8 @@ variable {n : ℕ}
 /-- The determinant of the integral type-D simple-root matrix squares to `4`. -/
 theorem det_typeDSimpleRoot_sq (n : ℕ) (hn : 4 ≤ n) :
     (Matrix.of (typeDSimpleRoot n hn)).det ^ 2 = 4 := by
-  rw [← det_cartanMatrixD_eq_det_typeDSimpleRoot_sq hn, CartanMatrix.D_det (by omega)]
+  rw [det_typeDSimpleRoot_eq_two hn]
+  norm_num
 
 /-! ## Scalar extension of the simple-root independence -/
 

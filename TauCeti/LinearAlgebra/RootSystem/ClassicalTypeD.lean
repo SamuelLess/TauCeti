@@ -42,6 +42,7 @@ constructed directly on the set of squared-length-two vectors and proved involut
   matrix `CartanMatrix.D n`.
 * `TauCeti.DynkinType.typeDSimpleRoot_mul_transpose_self` packages that Gram identity as a matrix
   product for determinant and scalar-extension arguments.
+* `TauCeti.DynkinType.det_typeDSimpleRoot_eq_two`: the simple-root matrix has determinant `2`.
 * `TauCeti.DynkinType.linearIndependent_typeDSimpleRoot` says that basis is linearly independent.
 * `TauCeti.DynkinType.typeDRootReflectionEquiv` is reflection in a root, acting on the coordinates
   by `TauCeti.DynkinType.typeDSimpleRootCoordinates_typeDRootReflection`.
@@ -468,6 +469,32 @@ theorem typeDSimpleRoot_mul_transpose_self (hn : 4 ≤ n) :
 theorem det_cartanMatrixD_eq_det_typeDSimpleRoot_sq (hn : 4 ≤ n) :
     (CartanMatrix.D n).det = (Matrix.of (typeDSimpleRoot n hn)).det ^ 2 := by
   rw [← typeDSimpleRoot_mul_transpose_self hn, Matrix.det_mul, Matrix.det_transpose, sq]
+
+/-- The simple-root matrix of type `Dₙ` has determinant `2`: subtracting the last chain root from
+the fork root leaves an upper-triangular matrix with diagonal `1, …, 1, 2`. -/
+theorem det_typeDSimpleRoot_eq_two (hn : 4 ≤ n) : (Matrix.of (typeDSimpleRoot n hn)).det = 2 := by
+  set A := Matrix.of (typeDSimpleRoot n hn)
+  have hlp : (⟨n - 1, by omega⟩ : Fin n) ≠ ⟨n - 2, by omega⟩ := by simp [Fin.ext_iff]; omega
+  -- Subtracting the chain row `e_(n-2) - e_(n-1)` from the fork row leaves `2 e_(n-1)`.
+  have key : ∀ i j : Fin n, A.updateRow ⟨n - 1, by omega⟩
+      (A ⟨n - 1, by omega⟩ + (-1 : ℤ) • A ⟨n - 2, by omega⟩) i j =
+        if (j : ℕ) = i then (if (i : ℕ) + 1 < n then 1 else 2)
+        else if (j : ℕ) = i + 1 then -1 else 0 := by
+    intro i j
+    by_cases hi : (i : ℕ) + 1 < n
+    · rw [Matrix.updateRow_ne (by simp [Fin.ext_iff]; omega)]
+      change typeDSimpleRoot n hn i j = _
+      rw [typeDSimpleRoot_of_add_one_lt hn hi]
+      simp only [Pi.sub_apply, Pi.single_apply, Fin.ext_iff]; grind
+    · rw [show i = ⟨n - 1, by omega⟩ from Fin.ext (by simp; omega), Matrix.updateRow_self]
+      change typeDSimpleRoot n hn _ j + -1 * typeDSimpleRoot n hn _ j = _
+      rw [typeDSimpleRoot_of_not_add_one_lt hn (by simp; omega),
+        typeDSimpleRoot_of_add_one_lt hn (by simp; omega)]
+      simp only [Pi.add_apply, Pi.sub_apply, Pi.single_apply, Fin.ext_iff]; grind
+  rw [← Matrix.det_updateRow_add_smul_self A hlp (-1), Matrix.det_of_isUpperTriangular
+    (fun i j (hij : j < i) => by rw [key]; grind), Finset.prod_eq_single ⟨n - 1, by omega⟩
+    (fun i _ hi => by rw [key]; grind) (by simp), key]
+  simp; omega
 
 /-- The first `n` entries of `typeDRootEquiv` are the Bourbaki-numbered simple roots. -/
 @[simp] theorem typeDRootEquiv_apply_typeDSimpleIndex (hn : 4 ≤ n) (i : Fin n) :

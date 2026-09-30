@@ -429,10 +429,15 @@ private noncomputable def leftInvariant : AdditiveInvariant E (ExactK0 E' →+ G
 noncomputable def bilift : ExactK0 E →+ ExactK0 E' →+ G :=
   lift a.leftInvariant
 
-/-- The two-variable descent evaluates on object classes as the original invariant. -/
+/-- The two-variable descent at an object class of the first variable is the one-sided descent in
+the second variable. -/
 @[simp]
+lemma bilift_of (X : C) : a.bilift (of X) = a.toRightAdditiveInvariant.rightLift X := by
+  rw [bilift, lift_of, leftInvariant]
+
+/-- The two-variable descent evaluates on object classes as the original invariant. -/
 lemma bilift_of_of (X : C) (Y : D) : a.bilift (of X) (of Y) = a.obj X Y := by
-  rw [bilift, lift_of, leftInvariant, RightAdditiveInvariant.rightLift_of]
+  rw [bilift_of, RightAdditiveInvariant.rightLift_of]
 
 /-- The two-variable descent is the unique biadditive map with the prescribed values on pairs of
 object classes. -/

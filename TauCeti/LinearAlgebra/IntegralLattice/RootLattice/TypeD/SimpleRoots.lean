@@ -62,8 +62,6 @@ the lattice.
 * `TauCeti.IntegralLattice.determinant_checkerboardLattice`: the signed determinant of the
   checkerboard lattice is `4`.
 * `CartanMatrix.D_det`: `(CartanMatrix.D n).det = 4` for `2 ≤ n`.
-* `TauCeti.DynkinType.linearIndependent_typeDSimpleRoot_cast`: scalar-extension independence over
-  a commutative domain where `2` is nonzero.
 
 ## References
 
@@ -326,36 +324,6 @@ theorem D_det (hn : 2 ≤ n) : (D n).det = 4 := by
   omega
 
 end CartanMatrix
-
-namespace TauCeti.DynkinType
-
-variable {n : ℕ}
-
-/-! ## Scalar extension of the simple-root independence -/
-
-/-- The Bourbaki simple roots remain linearly independent after scalar extension to a commutative
-domain in which `2` is nonzero. -/
-theorem linearIndependent_typeDSimpleRoot_cast {K : Type*} [CommRing K] [IsDomain K]
-    [NeZero (2 : K)]
-    (hn : 4 ≤ n) :
-    LinearIndependent K (fun i j => (typeDSimpleRoot n hn i j : K)) := by
-  let A : Matrix (Fin n) (Fin n) K := Matrix.of fun i j => (typeDSimpleRoot n hn i j : K)
-  have hA : A = (Matrix.of (typeDSimpleRoot n hn)).map (fun x : ℤ => (x : K)) := by
-    ext i j
-    simp [A]
-  have hdetcast : A.det = ((Matrix.of (typeDSimpleRoot n hn)).det : K) := by
-    rw [hA]
-    exact (Int.cast_det (R := K) (Matrix.of (typeDSimpleRoot n hn))).symm
-  have hdet : A.det ≠ 0 := by
-    rw [hdetcast, det_typeDSimpleRoot_eq_two hn, Int.cast_ofNat]
-    exact NeZero.ne 2
-  have hrows : LinearIndependent K (fun i => A i) :=
-    Matrix.linearIndependent_rows_of_det_ne_zero hdet
-  convert hrows using 1
-  funext i j
-  simp [A]
-
-end TauCeti.DynkinType
 
 namespace TauCeti
 

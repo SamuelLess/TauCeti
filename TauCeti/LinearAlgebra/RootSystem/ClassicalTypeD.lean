@@ -45,7 +45,9 @@ constructed directly on the set of squared-length-two vectors and proved involut
 * `TauCeti.DynkinType.typeDSimpleRoot_mul_transpose_self` packages that Gram identity as a matrix
   product for determinant and scalar-extension arguments.
 * `TauCeti.DynkinType.det_typeDSimpleRoot_eq_two`: the simple-root matrix has determinant `2`.
-* `TauCeti.DynkinType.linearIndependent_typeDSimpleRoot` says that basis is linearly independent.
+* `TauCeti.DynkinType.linearIndependent_typeDSimpleRoot_cast` says that basis stays linearly
+  independent over any ring in which `2` is right-regular; `linearIndependent_typeDSimpleRoot` is
+  its case `ℤ`.
 * `TauCeti.DynkinType.typeDRootReflectionEquiv` is reflection in a root, acting on the coordinates
   by `TauCeti.DynkinType.typeDSimpleRootCoordinates_typeDRootReflection`.
 
@@ -525,16 +527,25 @@ private lemma typeDDoubleCoweight_dotProduct_sum_smul (hn : 4 ≤ n) (c : Fin n 
     Fin.val_inj, mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
   ring
 
-/-- **The Bourbaki simple roots of type `Dₙ` are linearly independent.** The doubled fundamental
-coweights pair with them diagonally, by `2`, and `2` is regular in `ℤ`. -/
+/-- **The Bourbaki simple roots of type `Dₙ` are linearly independent over any ring in which `2`
+is right-regular.** The doubled fundamental coweights pair with them diagonally, by `2`. -/
+theorem linearIndependent_typeDSimpleRoot_cast {R : Type*} [Ring R] (h2 : IsRightRegular (2 : R))
+    (hn : 4 ≤ n) : LinearIndependent R (fun i j => (typeDSimpleRoot n hn i j : R)) := by
+  have hpair (i k : Fin n) :
+      (fun j => (typeDSimpleRoot n hn i j : R)) ⬝ᵥ (fun j => (typeDDoubleCoweight n k j : R)) =
+        ((if (k : ℕ) = (i : ℕ) then 2 else 0 : ℤ) : R) := by
+    rw [← typeDDoubleCoweight_dotProduct_typeDSimpleRoot hn k i,
+      dotProduct_comm (typeDDoubleCoweight n k)]
+    exact ((Int.castRingHom R).map_dotProduct _ _).symm
+  exact linearIndependent_of_dotProduct_diagonal (c := fun _ => 2)
+    (w := fun k j => (typeDDoubleCoweight n k j : R)) (fun _ => h2)
+    (fun i => by rw [hpair]; simp)
+    (fun i j hij => by rw [hpair]; simp [Fin.val_inj, Ne.symm hij])
+
+/-- **The Bourbaki simple roots of type `Dₙ` are linearly independent** over `ℤ`. -/
 theorem linearIndependent_typeDSimpleRoot (hn : 4 ≤ n) :
     LinearIndependent ℤ (typeDSimpleRoot n hn) :=
-  linearIndependent_of_dotProduct_diagonal (c := fun _ => 2) (w := typeDDoubleCoweight n)
-    (fun _ => (IsRegular.of_ne_zero (by norm_num)).right)
-    (fun i => by rw [dotProduct_comm, typeDDoubleCoweight_dotProduct_typeDSimpleRoot]; simp)
-    (fun i j hij => by
-      rw [dotProduct_comm, typeDDoubleCoweight_dotProduct_typeDSimpleRoot]
-      simp [Fin.val_inj, Ne.symm hij])
+  linearIndependent_typeDSimpleRoot_cast (IsRegular.of_ne_zero (by norm_num)).right hn
 
 /-- Twice the coefficients of a root in the Bourbaki simple-root basis are the dot products with
 the doubled fundamental coweights. -/

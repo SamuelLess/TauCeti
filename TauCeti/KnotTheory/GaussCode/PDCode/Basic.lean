@@ -303,15 +303,8 @@ theorem toOrientedPDCode_crossinglessComponents (D : BasedOrientedGaussCode n) :
 not to the empty link. -/
 @[simp]
 theorem toOrientedPDCode_empty :
-    (empty : BasedOrientedGaussCode 0).toOrientedPDCode = OrientedPDCode.unknot true := by
-  calc
-    _ = OrientedPDCode.unlink
-        (empty : BasedOrientedGaussCode 0).toOrientedPDCode.crossinglessComponents :=
-      OrientedPDCode.eq_unlink _
-    _ = OrientedPDCode.unlink {true} := by simp
-    _ = OrientedPDCode.unknot true := by
-      simpa only [OrientedPDCode.crossinglessComponents_unknot] using
-        (OrientedPDCode.eq_unlink (OrientedPDCode.unknot true)).symm
+    (empty : BasedOrientedGaussCode 0).toOrientedPDCode = OrientedPDCode.unknot true :=
+  OrientedPDCode.crossinglessComponents_injective (by simp)
 
 private theorem toOrientedPDCode_edgePair_outgoing_aux (D : BasedOrientedGaussCode n)
     (i : Fin (2 * n)) :

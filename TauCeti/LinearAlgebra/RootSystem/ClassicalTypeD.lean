@@ -484,27 +484,20 @@ theorem det_cartanMatrixD_eq_det_typeDSimpleRoot_sq (hn : 4 ≤ n) :
     simp [typeDSimpleRawIndex, typeDRawRoot, typeDRawVector, typeDPairVector,
       typeDSimpleRoot, hi, hlt]
 
-private lemma typeDRoot_sum (x : TypeDRoot n) :
-    (∑ i : Fin n, x.1 i) = -2 ∨ (∑ i : Fin n, x.1 i) = 0 ∨
-      (∑ i : Fin n, x.1 i) = 2 := by
-  let r := (typeDRawRootEquiv n).symm x
-  have hx : typeDRawRoot r = x :=
-    (typeDRawRootEquiv_apply r).symm.trans (Equiv.apply_symm_apply _ x)
-  have hxv : typeDRawVector r = x.1 := congrArg Subtype.val hx
-  rw [← hxv]
-  rcases r with ⟨s, p⟩
-  fin_cases s <;> by_cases hp : p.val.1 < p.val.2 <;>
-    simp [typeDRawVector, typeDPairVector, hp, Finset.sum_sub_distrib,
-      Finset.sum_add_distrib]
+/-- The coordinate sum of a squared-length-two integral vector is even: it differs from
+`x ⬝ᵥ x = 2` by a sum of products of consecutive integers. -/
+private lemma even_sum_typeDRoot (x : TypeDRoot n) : Even (∑ i : Fin n, x.1 i) := by
+  have h : ∑ i : Fin n, x.1 i = x.1 ⬝ᵥ x.1 - ∑ i : Fin n, x.1 i * (x.1 i - 1) := by
+    simp [dotProduct, mul_sub, Finset.sum_sub_distrib]
+  rw [h, x.2]
+  exact even_two.sub (Finset.even_sum _ fun i _ => Int.even_mul_pred_self _)
 
 /-- Half the sum of the classical coordinates. It is integral on type `Dₙ` roots. -/
-private def typeDHalfTotal (x : TypeDRoot n) : ℤ :=
-  if (∑ i : Fin n, x.1 i) = 2 then 1
-  else if (∑ i : Fin n, x.1 i) = -2 then -1 else 0
+private def typeDHalfTotal (x : TypeDRoot n) : ℤ := (∑ i : Fin n, x.1 i) / 2
 
 private lemma two_mul_typeDHalfTotal (x : TypeDRoot n) :
-    2 * typeDHalfTotal x = ∑ i : Fin n, x.1 i := by
-  rcases typeDRoot_sum x with h | h | h <;> simp [typeDHalfTotal, h]
+    2 * typeDHalfTotal x = ∑ i : Fin n, x.1 i :=
+  Int.two_mul_ediv_two_of_even (even_sum_typeDRoot x)
 
 /-- The coefficients of a type `Dₙ` root in the Bourbaki simple-root basis. -/
 def typeDSimpleRootCoordinates (n : ℕ) (hn : 4 ≤ n) (x : TypeDRoot n) : Fin n → ℤ := fun k =>

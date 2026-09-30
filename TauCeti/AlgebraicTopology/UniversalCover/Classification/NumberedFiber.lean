@@ -357,9 +357,24 @@ theorem ConnectedPointedCover.forgetPoint_cover (c : ConnectedPointedCover x n) 
     c.forgetPoint.cover = c.cover :=
   (rfl)
 
+/-- A cover with some numbering chosen. -/
+noncomputable def ConnectedCover.numbering (c : ConnectedCover x n) :
+    ConnectedFiberNumberedCover x n where
+  cover := c.cover
+  ν := c.nonempty_equiv_fin.some
+
+@[simp]
+theorem ConnectedCover.numbering_cover (c : ConnectedCover x n) : c.numbering.cover = c.cover :=
+  (rfl)
+
 @[simp]
 theorem ConnectedFiberNumberedCover.forgetPoint_markLabel (c : ConnectedFiberNumberedCover x n)
     (i : Fin n) : (c.markLabel i).forgetPoint = c.forgetNumbering :=
+  (rfl)
+
+@[simp]
+theorem ConnectedCover.forgetNumbering_numbering (c : ConnectedCover x n) :
+    c.numbering.forgetNumbering = c :=
   (rfl)
 
 /-- Forgetting the numbering, on isomorphism classes. -/
@@ -411,15 +426,15 @@ theorem ConnectedFiberNumberedCoverClass.forgetPoint_markLabel (i : Fin n)
 theorem ConnectedFiberNumberedCoverClass.forgetNumbering_surjective :
     Function.Surjective (forgetNumbering : ConnectedFiberNumberedCoverClass x n → _) := by
   rintro ⟨c⟩
-  obtain ⟨ν⟩ := c.nonempty_equiv_fin
-  exact ⟨mk ⟨c.cover, ν⟩, rfl⟩
+  exact ⟨mk c.numbering, rfl⟩
 
 /-- Every pointed class is obtained by marking a label in a numbered class. -/
 theorem ConnectedPointedCoverClass.exists_markLabel_eq (C : ConnectedPointedCoverClass x n) :
     ∃ (N : ConnectedFiberNumberedCoverClass x n) (i : Fin n), N.markLabel i = C := by
-  obtain ⟨⟨cover, e, ⟨ν⟩⟩, rfl⟩ := mk_surjective C
-  exact ⟨.mk ⟨cover, ν⟩, ν e,
-    congrArg mk (congrArg (fun e' => ConnectedPointedCover.mk cover e' ⟨ν⟩) (ν.symm_apply_apply e))⟩
+  obtain ⟨c, rfl⟩ := mk_surjective C
+  refine ⟨.mk c.forgetPoint.numbering, c.forgetPoint.numbering.ν c.e, congrArg mk ?_⟩
+  obtain ⟨cover, e, h⟩ := c
+  exact congrArg (fun e' => ConnectedPointedCover.mk cover e' h) (symm_apply_apply _ e)
 
 /-! ### Relabelling the fibre -/
 

@@ -156,8 +156,10 @@ lemma conjMulEquivRefl :
   rfl
 
 /-- Conjugating along a composite over-base homeomorphism is the composite of the two
-conjugation equivalences. -/
-@[simp]
+conjugation equivalences.
+
+Not a `simp` lemma: its left-hand side does not simplify with the lemma itself (`simpNF`), so as
+a `simp` lemma it would never fire. -/
 lemma conjMulEquivTrans (h : E ≃ₜ F) (k : F ≃ₜ G)
     (hpq : ∀ e, q (h e) = p e) (hqr : ∀ f, r (k f) = q f) :
     conjMulEquiv (h.trans k) (fun e => by rw [Homeomorph.trans_apply, hqr, hpq]) =

@@ -296,7 +296,8 @@ theorem AdditiveInvariant.map_iso (a : AdditiveInvariant E G) ⦃X Y : C⦄ (e :
   have h0 : a.obj (0 : C) = 0 := by
     simpa using a.map_conflation (E.conflation_id_zero (0 : C))
   have hY := a.map_conflation (E.conflation_of_splitting
-    (S := ShortComplex.mk e.hom (0 : Y ⟶ (0 : C)) (by simp)) { r := e.inv, s := 0 })
+    (S := ShortComplex.mk e.hom (0 : Y ⟶ (0 : C)) (by simp))
+    (ShortComplex.Splitting.ofIsIsoOfIsZero _ inferInstance (isZero_zero C)))
   simpa [h0] using hY.symm
 
 private noncomputable def AdditiveInvariant.toPresented (a : AdditiveInvariant E G) :

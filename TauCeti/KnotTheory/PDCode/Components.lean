@@ -183,6 +183,45 @@ theorem componentCount_pos (D : PDCode n) (hn : n ≠ 0) : 0 < D.componentCount 
   rw [kink_halfEdge] at h
   simpa using h
 
+/-- Traversing the kink alternates its arcs with the passage to the opposite slot. -/
+private theorem kink_componentPerm : kink.componentPerm = (crossingSlotEquiv 1).permCongr
+    (Equiv.prodCongrRight fun _ : Fin 1 ↦ oppositeCrossingSlot * slotSmoothing true) := by
+  refine Equiv.ext fun h ↦ ?_
+  obtain ⟨⟨i, slot⟩, rfl⟩ := (crossingSlotEquiv 1).surjective h
+  rw [componentPerm_apply, kink_edgePair_apply, kink_crossingTurn]
+  simp [Equiv.Perm.mul_apply]
+
+/-- Following an arc of the kink and then passing to the opposite slot pairs slot `0` with slot
+`3` and slot `1` with slot `2`. -/
+private theorem oppositeCrossingSlot_mul_slotSmoothing_true :
+    oppositeCrossingSlot * slotSmoothing true = Equiv.swap (0 : Fin 4) 3 * Equiv.swap 1 2 := by
+  refine Equiv.ext fun t ↦ ?_
+  rw [← Fin.val_inj]
+  simp only [Equiv.Perm.mul_apply, oppositeCrossingSlot_apply, slotSmoothing_true]
+  revert t
+  decide
+
+/-- **The kink is a diagram of a knot**: it has a single component. -/
+theorem crossingComponentCount_kink : kink.crossingComponentCount = 1 := by
+  have h : orbitCount kink.componentPerm = 2 := by
+    rw [kink_componentPerm, Equiv.orbitCount_permCongr,
+      oppositeCrossingSlot_mul_slotSmoothing_true]
+    have hperm : (Equiv.prodCongrRight fun _ : Fin 1 ↦ Equiv.swap (0 : Fin 4) 3 * Equiv.swap 1 2)
+        = Equiv.swap ((0 : Fin 1), (0 : Fin 4)) (0, 3) * Equiv.swap ((0 : Fin 1), (1 : Fin 4))
+          (0, 2) := by
+      decide
+    have hcard : Nat.card (Fin 1 × Fin 4) = 4 := by simp
+    have h₁ := orbitCount_mul_swap_add_one
+      (τ := (1 : Equiv.Perm (Fin 1 × Fin 4))) (p := ((0 : Fin 1), (3 : Fin 4)))
+      (a := (0, 0)) rfl (by decide)
+    have h₂ := orbitCount_mul_swap_add_one
+      (τ := Equiv.swap ((0 : Fin 1), (0 : Fin 4)) (0, 3)) (p := ((0 : Fin 1), (2 : Fin 4)))
+      (a := (0, 1)) (by decide) (by decide)
+    rw [one_mul, orbitCount_one] at h₁
+    rw [hperm]
+    omega
+  rw [crossingComponentCount_def, h]
+
 end PDCode
 
 namespace OrientedPDCode

@@ -920,18 +920,18 @@ def positiveKink : OrientedPDCode 1 where
 
 /-- The underlying PD-code of `positiveKink` is the kink. -/
 @[simp]
-theorem positiveKink_toPDCode : positiveKink.toPDCode = PDCode.kink :=
+theorem toPDCode_positiveKink : positiveKink.toPDCode = PDCode.kink :=
   (rfl)
 
 /-- The arcs of `positiveKink` point away from the crossing exactly at slots `1` and `2`. -/
 @[simp]
-theorem positiveKink_orientation (h : Fin (4 * 1)) :
+theorem orientation_positiveKink (h : Fin (4 * 1)) :
     positiveKink.orientation h = decide (h = 1 ∨ h = 2) :=
   (rfl)
 
 /-- The positive kink has no crossing-free components. -/
 @[simp]
-theorem positiveKink_crossinglessComponents : positiveKink.crossinglessComponents = 0 :=
+theorem crossinglessComponents_positiveKink : positiveKink.crossinglessComponents = 0 :=
   (rfl)
 
 /-- The distinguished crossing of `positiveKink` has positive sign. -/

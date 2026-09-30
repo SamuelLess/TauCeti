@@ -83,9 +83,8 @@ instance : Fintype (GridState n) :=
 
 /-- Equality of grid states is decidable: a grid state is determined by its underlying
 permutation, whose equality is decidable. This makes finite sets of grid states computable. -/
-instance : DecidableEq (GridState n) := fun x y =>
-  decidable_of_iff (x.toPerm = y.toPerm)
-    ⟨fun h => by cases x; cases y; cases h; rfl, fun h => by rw [h]⟩
+instance : DecidableEq (GridState n) :=
+  (equivPerm n).decidableEq
 
 /-- Apply a grid state to a column to get its occupied row. -/
 instance : CoeFun (GridState n) fun _ => Fin n → Fin n where

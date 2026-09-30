@@ -484,10 +484,12 @@ theorem forgetNumbering_smul (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCove
     (τ • c).forgetNumbering = c.forgetNumbering :=
   (rfl)
 
+/-- Relabelling by `τ` and then marking the label `i` marks the original label `τ.symm i`. -/
 @[simp]
 theorem markLabel_smul (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) (i : Fin n) :
-    (τ • c).markLabel i = c.markLabel (τ.symm i) :=
-  (rfl)
+    (τ • c).markLabel i = c.markLabel (τ.symm i) := by
+  have h : (τ • c).ν.symm i = c.ν.symm (τ.symm i) := by simp
+  exact congrArg (fun e => ConnectedPointedCover.mk c.cover e ⟨c.ν⟩) h
 
 /-- An isomorphism of the underlying covers makes two numbered covers isomorphic after the
 relabelling it induces on the fibre. -/
@@ -528,6 +530,8 @@ theorem forgetNumbering_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCove
     (τ • C).forgetNumbering = C.forgetNumbering :=
   Quotient.inductionOn C fun _ => rfl
 
+/-- Relabelling a class by `τ` and then marking the label `i` marks the original label
+`τ.symm i`. -/
 @[simp]
 theorem markLabel_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCoverClass x n)
     (i : Fin n) : (τ • C).markLabel i = C.markLabel (τ.symm i) :=

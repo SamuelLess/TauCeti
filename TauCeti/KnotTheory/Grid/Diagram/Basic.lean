@@ -438,10 +438,10 @@ theorem columnSwapNeighbors_eq_offDiag_image (x : GridState n) :
   ext y
   simp [columnSwapNeighbors, Finset.mem_offDiag]
 
-/-- If two nontrivial column swaps of the same grid state agree, then they swap the same
-unordered pair of columns. -/
+/-- If a nontrivial column swap of a grid state agrees with another column swap of it, then the two
+swap the same unordered pair of columns. -/
 theorem sym2_mk_eq_of_swapColumns_eq {x : GridState n} {a b c d : Fin n} (hab : a ≠ b)
-    (hcd : c ≠ d) (h : x.swapColumns a b = x.swapColumns c d) : s(a, b) = s(c, d) := by
+    (h : x.swapColumns a b = x.swapColumns c d) : s(a, b) = s(c, d) := by
   have hswap : Equiv.swap a b = Equiv.swap c d := by
     ext k
     apply congrArg Fin.val
@@ -473,10 +473,9 @@ private theorem injOn_sym2_lift_swapColumns_offDiag (x : GridState n) :
         Set (Sym2 (Fin n)))) := by
   intro z hz w hw hzw
   obtain ⟨⟨a, b⟩, hab, hgz⟩ := Finset.mem_image.mp hz
-  obtain ⟨⟨c, d⟩, hcd, hgw⟩ := Finset.mem_image.mp hw
+  obtain ⟨⟨c, d⟩, -, hgw⟩ := Finset.mem_image.mp hw
   rw [← hgz, ← hgw] at hzw ⊢
   exact sym2_mk_eq_of_swapColumns_eq (x := x) (by simpa [Finset.mem_offDiag] using hab)
-    (by simpa [Finset.mem_offDiag] using hcd)
     (by
       simpa using hzw)
 
@@ -612,9 +611,11 @@ theorem mem_pointSet_inter_swapColumns_iff (x : GridState n) {a b : Fin n} (h : 
 
 /-- The point set of a grid state is the shared part with a column swap, together with the two
 source-state grid points in the swapped columns. -/
-theorem pointSet_eq_insert_insert_inter_swapColumns (x : GridState n) {a b : Fin n} (h : a ≠ b) :
+theorem pointSet_eq_insert_insert_inter_swapColumns (x : GridState n) (a b : Fin n) :
     x.pointSet =
       insert (a, x a) (insert (b, x b) (x.pointSet ∩ (x.swapColumns a b).pointSet)) := by
+  rcases eq_or_ne a b with rfl | h
+  · simp [swapColumns]
   ext p
   simp only [Finset.mem_insert]
   constructor
@@ -637,9 +638,11 @@ theorem pointSet_eq_insert_insert_inter_swapColumns (x : GridState n) {a b : Fin
 
 /-- The point set after swapping columns `a` and `b` is the shared part with the source state,
 together with the two target-state grid points in the swapped columns. -/
-theorem swapColumns_pointSet_eq_insert_insert_inter (x : GridState n) {a b : Fin n} (h : a ≠ b) :
+theorem swapColumns_pointSet_eq_insert_insert_inter (x : GridState n) (a b : Fin n) :
     (x.swapColumns a b).pointSet =
       insert (a, x b) (insert (b, x a) (x.pointSet ∩ (x.swapColumns a b).pointSet)) := by
+  rcases eq_or_ne a b with rfl | h
+  · simp [swapColumns]
   ext p
   simp only [Finset.mem_insert]
   constructor
@@ -679,7 +682,7 @@ theorem card_pointSet_inter_swapColumns (x : GridState n) {a b : Fin n} (h : a �
     · exact absurd (congrArg Prod.fst hab) h
     · rw [mem_pointSet_inter_swapColumns_iff x h] at ha
       exact ha.2.1 rfl
-  have hcard := congrArg Finset.card (pointSet_eq_insert_insert_inter_swapColumns x h)
+  have hcard := congrArg Finset.card (pointSet_eq_insert_insert_inter_swapColumns x a b)
   rw [card_pointSet, Finset.card_insert_of_notMem hne',
     Finset.card_insert_of_notMem hne] at hcard
   omega

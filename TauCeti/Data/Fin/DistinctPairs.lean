@@ -19,12 +19,14 @@ source. The root systems of types `Aₙ` and `Dₙ` enumerate their roots this w
 
 ## Main definitions
 
-* `finDistinctPairsEquiv`: the equivalence, with the evaluation lemmas
-  `finDistinctPairsEquiv_apply_fst_val`, `finDistinctPairsEquiv_apply_snd` and
-  `finDistinctPairsEquiv_symm_apply_coe`.
+* `TauCeti.finDistinctPairsEquiv`: the equivalence, with the evaluation lemmas
+  `TauCeti.finDistinctPairsEquiv_apply_fst_val`, `TauCeti.finDistinctPairsEquiv_apply_snd` and
+  `TauCeti.finDistinctPairsEquiv_symm_apply_coe`.
 -/
 
 public section
+
+namespace TauCeti
 
 /-- The ordered pairs of distinct elements of `Fin n`, by their nonzero cyclic difference `b - a`
 shifted down to `Fin (n - 1)`, and their source `a`. -/
@@ -48,16 +50,17 @@ def finDistinctPairsEquiv (n : ℕ) : {p : Fin n × Fin n // p.1 ≠ p.2} ≃ Fi
     refine Subtype.ext (Prod.ext rfl ?_)
     have hx : (⟨((p.1.2 - p.1.1 : Fin n) : ℕ) - 1 + 1, by omega⟩ : Fin n) = p.1.2 - p.1.1 :=
       Fin.ext (by simp only; omega)
-    change p.1.1 + (⟨((p.1.2 - p.1.1 : Fin n) : ℕ) - 1 + 1, _⟩ : Fin n) = p.1.2
+    dsimp only
     rw [hx, add_sub_cancel]
   right_inv q := by
     have : NeZero n := ⟨by have := q.1.isLt; omega⟩
     refine Prod.ext (Fin.ext ?_) rfl
-    change ((q.2 + (⟨(q.1 : ℕ) + 1, _⟩ : Fin n) - q.2 : Fin n) : ℕ) - 1 = (q.1 : ℕ)
+    dsimp only
     rw [add_sub_cancel_left]
     simp
 
 /-- The first coordinate of `finDistinctPairsEquiv` is the cyclic difference minus one. -/
+@[simp]
 theorem finDistinctPairsEquiv_apply_fst_val {n : ℕ} (p : {p : Fin n × Fin n // p.1 ≠ p.2}) :
     ((finDistinctPairsEquiv n p).1 : ℕ) = ((p.1.2 - p.1.1 : Fin n) : ℕ) - 1 :=
   (rfl)
@@ -70,7 +73,10 @@ theorem finDistinctPairsEquiv_apply_snd {n : ℕ} (p : {p : Fin n × Fin n // p.
 
 /-- The inverse of `finDistinctPairsEquiv` sends a difference index `i` and a source `a` to the
 pair `(a, a + (i + 1))`. -/
+@[simp]
 theorem finDistinctPairsEquiv_symm_apply_coe {n : ℕ} (q : Fin (n - 1) × Fin n) :
     ((finDistinctPairsEquiv n).symm q : Fin n × Fin n) =
       (q.2, q.2 + (⟨(q.1 : ℕ) + 1, by omega⟩ : Fin n)) :=
   (rfl)
+
+end TauCeti

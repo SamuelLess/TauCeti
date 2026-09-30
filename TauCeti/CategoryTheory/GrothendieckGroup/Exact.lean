@@ -349,7 +349,7 @@ lemma liftEquiv_symm_apply_obj (f : ExactK0 E →+ G) (X : C) :
 /-- An object-level invariant on an indexing category and an exact category which is invariant
 under isomorphisms in the first variable and additive on conflations in the second variable.
 Additivity already makes it invariant under isomorphisms in the second variable
-(`TauCeti.ExactK0.AdditiveInvariant.map_iso`). -/
+(`TauCeti.ExactK0.RightAdditiveInvariant.map_iso₂`). -/
 @[ext]
 structure RightAdditiveInvariant (C : Type u) [Category.{v} C] (E' : ExactStructure D)
     (G : Type*) [AddCommGroup G] where
@@ -368,6 +368,13 @@ variable (a : RightAdditiveInvariant C E' G)
 private noncomputable def additiveInvariant (X : C) : AdditiveInvariant E' G where
   obj := a.obj X
   map_conflation := fun {_} hS ↦ a.map_conflation₂ X hS
+
+omit [Preadditive C] [HasZeroObject C] [HasBinaryBiproducts C] [EssentiallySmall.{w} C]
+  [EssentiallySmall.{w'} D] in
+/-- A right-additive invariant takes equal values on isomorphic objects in its second variable,
+since it is additive on conflations there. -/
+theorem map_iso₂ (X : C) {Y Y' : D} (e : Y ≅ Y') : a.obj X Y = a.obj X Y' :=
+  (a.additiveInvariant X).map_iso e
 
 /-- A right-additive invariant with its first argument fixed, descended through the exact
 Grothendieck group in its second variable. -/

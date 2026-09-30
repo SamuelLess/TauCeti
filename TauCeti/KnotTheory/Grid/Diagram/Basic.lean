@@ -848,21 +848,6 @@ theorem disjoint_OSet_XSet : Disjoint G.OSet G.XSet := by
   rw [OSet, XSet, GridState.disjoint_pointSet_iff]
   exact G.disjoint
 
-/-- No square contains both an `O` marking and an `X` marking. -/
-theorem not_mem_OSet_and_mem_XSet (p : Fin n × Fin n) : ¬ (p ∈ G.OSet ∧ p ∈ G.XSet) := by
-  intro hp
-  exact Finset.disjoint_left.mp G.disjoint_OSet_XSet hp.1 hp.2
-
-/-- A square with an `O` marking does not contain an `X` marking. -/
-theorem not_mem_XSet_of_mem_OSet {p : Fin n × Fin n} (hp : p ∈ G.OSet) : p ∉ G.XSet := by
-  intro hpX
-  exact G.not_mem_OSet_and_mem_XSet p ⟨hp, hpX⟩
-
-/-- A square with an `X` marking does not contain an `O` marking. -/
-theorem not_mem_OSet_of_mem_XSet {p : Fin n × Fin n} (hp : p ∈ G.XSet) : p ∉ G.OSet := by
-  intro hpO
-  exact G.not_mem_OSet_and_mem_XSet p ⟨hpO, hp⟩
-
 /-- Relabel the rows of a grid diagram by relabeling both marking states. -/
 def relabelRows (ρ : Equiv.Perm (Fin n)) (G : GridDiagram n) : GridDiagram n where
   O := G.O.relabelRows ρ

@@ -487,7 +487,7 @@ theorem map_comp {K : Type u''} [Category.{v''} K] [Preadditive K] [HasZeroObjec
 /-- Conflation-exact functors with isomorphic values on every object induce the same map. -/
 theorem map_congr {F' : C ⥤ D} [F'.Additive] (h : ∀ X : C, Nonempty (F.obj X ≅ F'.obj X))
     (hF : E.IsConflationExact E' F) (hF' : E.IsConflationExact E' F') : map F hF = map F' hF' :=
-  hom_ext fun X => by rw [map_of, map_of, of_congr (h X).some]
+  PresentedK0.map_congr h (mapsTo_exactRelations F hF) (mapsTo_exactRelations F' hF')
 
 /-- **Equivalence invariance of exact `K₀`**: an exact equivalence, that is an equivalence whose
 two functors are conflation-exact, induces an isomorphism of exact Grothendieck groups. -/

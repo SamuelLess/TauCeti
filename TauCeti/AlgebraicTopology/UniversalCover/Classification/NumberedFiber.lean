@@ -155,6 +155,23 @@ private theorem coe_fiberEquiv_apply {p q : ConnectedCoveringSpace X} (f : p ≅
     (e : ⇑p.proj ⁻¹' {x}) : (fiberEquiv f e : (q : TopCat)) = f.hom.hom.left e.1 :=
   rfl
 
+/-- The identity isomorphism of covers acts on total-space points as the identity. -/
+private theorem coverMap_id_apply (p : ConnectedCoveringSpace X) (e : (p : TopCat)) :
+    (Iso.refl p).hom.hom.left e = e :=
+  rfl
+
+/-- A composite of cover morphisms acts on total-space points as the composite of the maps. -/
+private theorem coverMap_comp_apply {p q r : ConnectedCoveringSpace X}
+    (f : p ⟶ q) (g : q ⟶ r) (e : (p : TopCat)) :
+    (f ≫ g).hom.left e = g.hom.left (f.hom.left e) :=
+  rfl
+
+/-- The two directions of an isomorphism of covers cancel on total-space points. -/
+private theorem coverMap_inv_apply {p q : ConnectedCoveringSpace X}
+    (f : p ≅ q) (e : (q : TopCat)) :
+    f.hom.hom.left (f.inv.hom.left e) = e :=
+  Iso.inv_hom_id_apply ((CoveringSpace.FullSubcategory.totalSpace X _).mapIso f) e
+
 /-! ### Isomorphisms -/
 
 /-- Isomorphism of fibre-numbered covers: an isomorphism of the underlying covers which carries
@@ -185,7 +202,7 @@ namespace ConnectedFiberNumberedCoverIso
 
 @[refl]
 theorem refl (c : ConnectedFiberNumberedCover x n) : ConnectedFiberNumberedCoverIso c c :=
-  ⟨Iso.refl _, fun _ => rfl⟩
+  ⟨Iso.refl _, fun _ => coverMap_id_apply _ _⟩
 
 @[symm]
 theorem symm {c c' : ConnectedFiberNumberedCover x n} (h : ConnectedFiberNumberedCoverIso c c') :
@@ -193,7 +210,7 @@ theorem symm {c c' : ConnectedFiberNumberedCover x n} (h : ConnectedFiberNumbere
   obtain ⟨f, hf⟩ := h
   refine ⟨f.symm, fun i => ?_⟩
   rw [← hf i]
-  exact congrArg (fun g => g.hom.left (c.ν.symm i).1) f.hom_inv_id
+  exact coverMap_inv_apply f.symm _
 
 @[trans]
 theorem trans {c c' c'' : ConnectedFiberNumberedCover x n}
@@ -201,7 +218,8 @@ theorem trans {c c' c'' : ConnectedFiberNumberedCover x n}
     ConnectedFiberNumberedCoverIso c c'' := by
   obtain ⟨f, hf⟩ := h
   obtain ⟨g, hg⟩ := h'
-  exact ⟨f ≪≫ g, fun i => (congrArg (fun e => g.hom.hom.left e) (hf i)).trans (hg i)⟩
+  refine ⟨f ≪≫ g, fun i => ?_⟩
+  rw [Iso.trans_hom, coverMap_comp_apply, hf i, hg i]
 
 end ConnectedFiberNumberedCoverIso
 
@@ -209,7 +227,7 @@ namespace ConnectedPointedCoverIso
 
 @[refl]
 theorem refl (c : ConnectedPointedCover x n) : ConnectedPointedCoverIso c c :=
-  ⟨Iso.refl _, rfl⟩
+  ⟨Iso.refl _, coverMap_id_apply _ _⟩
 
 @[symm]
 theorem symm {c c' : ConnectedPointedCover x n} (h : ConnectedPointedCoverIso c c') :
@@ -217,14 +235,15 @@ theorem symm {c c' : ConnectedPointedCover x n} (h : ConnectedPointedCoverIso c 
   obtain ⟨f, hf⟩ := h
   refine ⟨f.symm, ?_⟩
   rw [← hf]
-  exact congrArg (fun g => g.hom.left c.e.1) f.hom_inv_id
+  exact coverMap_inv_apply f.symm _
 
 @[trans]
 theorem trans {c c' c'' : ConnectedPointedCover x n} (h : ConnectedPointedCoverIso c c')
     (h' : ConnectedPointedCoverIso c' c'') : ConnectedPointedCoverIso c c'' := by
   obtain ⟨f, hf⟩ := h
   obtain ⟨g, hg⟩ := h'
-  exact ⟨f ≪≫ g, (congrArg (fun e => g.hom.hom.left e) hf).trans hg⟩
+  refine ⟨f ≪≫ g, ?_⟩
+  rw [Iso.trans_hom, coverMap_comp_apply, hf, hg]
 
 end ConnectedPointedCoverIso
 

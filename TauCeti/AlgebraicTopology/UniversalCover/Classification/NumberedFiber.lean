@@ -539,7 +539,7 @@ instance : SMul (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) where
 @[simp]
 theorem smul_mk (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) :
     τ • mk c = mk (τ • c) :=
-  (rfl)
+  lift_mk _ _ c
 
 instance : MulAction (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) :=
   mk_surjective.mulAction mk fun τ c => (smul_mk τ c).symm

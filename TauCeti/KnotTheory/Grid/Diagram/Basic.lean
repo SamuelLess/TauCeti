@@ -712,13 +712,13 @@ theorem transpose_apply (x : GridState n) (c : Fin n) : x.transpose c = x.toPerm
   rfl
 
 /-- The point of `x` in row `r` lies in column `x.transpose r`. -/
-theorem apply_transpose_apply (x : GridState n) (r : Fin n) : x (x.transpose r) = r :=
-  x.toPerm.apply_symm_apply r
+theorem apply_transpose_apply (x : GridState n) (r : Fin n) : x (x.transpose r) = r := by
+  simpa only [transpose_apply] using x.toPerm.apply_symm_apply r
 
 /-- The point of `x` in column `c` lies in row `x c`, so `x.transpose` sends that row back to
 `c`. -/
-theorem transpose_apply_apply (x : GridState n) (c : Fin n) : x.transpose (x c) = c :=
-  x.toPerm.symm_apply_apply c
+theorem transpose_apply_apply (x : GridState n) (c : Fin n) : x.transpose (x c) = c := by
+  simpa only [transpose_apply] using x.toPerm.symm_apply_apply c
 
 /-- The diagonal reflection is an involution on grid states. -/
 @[simp]

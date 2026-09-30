@@ -70,8 +70,8 @@ theorem componentPerm_def : G.componentPerm = G.X.toPerm⁻¹ * G.O.toPerm :=
 `X`-marking column. -/
 @[simp]
 theorem componentPerm_apply (c : Fin n) :
-    G.componentPerm c = G.X.transpose (G.O c) :=
-  (rfl)
+    G.componentPerm c = G.X.transpose (G.O c) := by
+  rw [componentPerm_def, Equiv.Perm.mul_apply, Equiv.Perm.inv_def, GridState.transpose_apply]
 
 /-- The `O`-marking in the row of the `X`-marking of column `componentPerm c` is the `O`-marking
 of column `c`: the component permutation walks from `O_c` along its row to that `X`-marking. -/

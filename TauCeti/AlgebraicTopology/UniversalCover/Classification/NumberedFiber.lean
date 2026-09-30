@@ -563,9 +563,8 @@ theorem smul_mk (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) :
     τ • mk c = mk (τ • c) :=
   (rfl)
 
-instance : MulAction (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) where
-  one_smul C := Quotient.inductionOn C fun c => congrArg mk (one_smul _ c)
-  mul_smul τ σ C := Quotient.inductionOn C fun c => congrArg mk (mul_smul τ σ c)
+instance : MulAction (Perm (Fin n)) (ConnectedFiberNumberedCoverClass x n) :=
+  mk_surjective.mulAction mk smul_mk
 
 @[simp]
 theorem forgetNumbering_smul (τ : Perm (Fin n)) (C : ConnectedFiberNumberedCoverClass x n) :

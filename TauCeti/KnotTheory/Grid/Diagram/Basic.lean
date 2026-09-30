@@ -347,13 +347,7 @@ grid points in those columns. -/
 theorem swapColumns_eq_swapRows (a b : Fin n) (x : GridState n) :
     x.swapColumns a b = x.swapRows (x a) (x b) := by
   ext c
-  rw [swapColumns_apply, swapRows_apply]
-  rcases eq_or_ne c a with rfl | hca
-  · simp
-  rcases eq_or_ne c b with rfl | hcb
-  · simp
-  rw [Equiv.swap_apply_of_ne_of_ne hca hcb,
-    Equiv.swap_apply_of_ne_of_ne (x.toPerm.injective.ne hca) (x.toPerm.injective.ne hcb)]
+  simp [x.toPerm.injective.swap_apply]
 
 /-- Swapping the same pair of columns twice is the identity on grid states. -/
 @[simp]
@@ -503,17 +497,12 @@ theorem card_columnSwapNeighbors (x : GridState n) :
       Finset.card_image_of_injOn hpairSwap_injOn
     _ = n.choose 2 := by rw [Sym2.card_image_offDiag, Finset.card_univ, Fintype.card_fin]
 
-/-- A grid state has at most `n.choose 2` column-swap neighbours. -/
-theorem card_columnSwapNeighbors_le (x : GridState n) :
-    x.columnSwapNeighbors.card ≤ n.choose 2 := by
-  rw [x.card_columnSwapNeighbors]
-
 /-- A grid state on a grid of size at most `1` has no column-swap neighbours. -/
 theorem columnSwapNeighbors_eq_empty_of_le_one (x : GridState n) (hn : n ≤ 1) :
     x.columnSwapNeighbors = ∅ := by
   have hchoose : n.choose 2 = 0 := Nat.choose_eq_zero_of_lt (Nat.lt_succ_of_le hn)
   apply Finset.card_eq_zero.mp
-  exact Nat.eq_zero_of_le_zero ((x.card_columnSwapNeighbors_le).trans (by rw [hchoose]))
+  rw [x.card_columnSwapNeighbors, hchoose]
 
 /-- A grid state on a grid of size `0` has no column-swap neighbours. -/
 @[simp]

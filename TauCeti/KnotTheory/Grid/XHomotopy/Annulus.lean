@@ -112,8 +112,10 @@ private theorem columnAnnulus_isEmpty (k : Fin n) (hk : k ≠ finRotate n k) :
 
 private theorem rowAnnulus_isEmpty (r : Fin n) (hr : r ≠ finRotate n r) :
     (rowAnnulus x r hr).first.IsEmpty ∧ (rowAnnulus x r hr).second.IsEmpty := by
-  exact ⟨(rowAnnulus x r hr).first.isEmpty_of_top_eq_finRotate (by simp [rowAnnulus]),
-    (rowAnnulus x r hr).second.isEmpty_of_top_eq_finRotate (by simp [rowAnnulus])⟩
+  exact ⟨(rowAnnulus x r hr).first.isEmpty_transpose.mp
+      ((rowAnnulus x r hr).first.transpose.isEmpty_of_right_eq_finRotate (by simp [rowAnnulus])),
+    (rowAnnulus x r hr).second.isEmpty_transpose.mp
+      ((rowAnnulus x r hr).second.transpose.isEmpty_of_right_eq_finRotate (by simp [rowAnnulus]))⟩
 
 private theorem columnAnnulus_ne_rowAnnulus (k : Fin n) (hk : k ≠ finRotate n k) (r : Fin n)
     (hr : r ≠ finRotate n r) : columnAnnulus x k hk ≠ rowAnnulus x r hr := by

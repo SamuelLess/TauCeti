@@ -797,11 +797,11 @@ def unlinkEquiv : Multiset Bool ≃ OrientedPDCode 0 where
   left_inv := crossinglessComponents_unlink
   right_inv := fun D => (eq_unlink D).symm
 
-/-- A zero-crossing oriented PD-code is determined by the orientations of its crossing-free
-components. -/
-theorem crossinglessComponents_injective :
-    Function.Injective (crossinglessComponents : OrientedPDCode 0 → Multiset Bool) :=
-  unlinkEquiv.symm.injective
+/-- The inverse of `unlinkEquiv` reads off the orientations of the crossing-free components. -/
+@[simp]
+theorem unlinkEquiv_symm_apply (D : OrientedPDCode 0) :
+    unlinkEquiv.symm D = D.crossinglessComponents :=
+  (rfl)
 
 /-- The empty oriented PD-code. -/
 def empty : OrientedPDCode 0 := unlink 0

@@ -304,7 +304,7 @@ not to the empty link. -/
 @[simp]
 theorem toOrientedPDCode_empty :
     (empty : BasedOrientedGaussCode 0).toOrientedPDCode = OrientedPDCode.unknot true :=
-  OrientedPDCode.crossinglessComponents_injective (by simp)
+  OrientedPDCode.unlinkEquiv.symm.injective (by simp)
 
 private theorem toOrientedPDCode_edgePair_outgoing_aux (D : BasedOrientedGaussCode n)
     (i : Fin (2 * n)) :

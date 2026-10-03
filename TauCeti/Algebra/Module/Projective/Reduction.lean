@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.Module.Projective
 public import Mathlib.RingTheory.Jacobson.Radical
 public import Mathlib.RingTheory.SimpleModule.Basic
+public import Mathlib.SetTheory.Cardinal.Finite
 import Mathlib.RingTheory.Artinian.Module
 import TauCeti.Algebra.Module.ProjectiveCover.Basic
 import TauCeti.RingTheory.Jacobson.Semiprimary

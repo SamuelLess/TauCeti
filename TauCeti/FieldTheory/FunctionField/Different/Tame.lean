@@ -7,6 +7,7 @@ module
 
 public import TauCeti.FieldTheory.FunctionField.Different.Divisor
 public import TauCeti.RingTheory.DedekindDomain.Different
+import Mathlib.RingTheory.Finiteness.Quotient
 
 /-!
 # The different exponent of a tame or wild place

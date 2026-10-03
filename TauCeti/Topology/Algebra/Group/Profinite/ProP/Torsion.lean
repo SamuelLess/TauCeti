@@ -8,6 +8,7 @@ module
 public import TauCeti.GroupTheory.SpecificGroups.Cyclic.ElementaryDivisors
 public import TauCeti.Topology.Algebra.Group.Profinite.ProP.StructureTheorem
 public import TauCeti.Topology.Algebra.Group.Torsion
+import Mathlib.Topology.Separation.Connected
 import TauCeti.NumberTheory.Padics.Module
 import TauCeti.Topology.Algebra.ContinuousMulEquiv
 

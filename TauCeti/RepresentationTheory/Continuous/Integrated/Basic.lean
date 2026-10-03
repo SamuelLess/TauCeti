@@ -11,6 +11,8 @@ public import Mathlib.MeasureTheory.Function.LpSpace.ContinuousCompMeasurePreser
 public import TauCeti.MeasureTheory.Integral.PeakFunction
 public import TauCeti.Order.Filter.SmallSets
 public import TauCeti.RepresentationTheory.Continuous.Unitary.Basic
+import Mathlib.MeasureTheory.Group.Integral
+import Mathlib.MeasureTheory.Integral.Prod
 
 /-!
 # The integrated form of a strongly continuous representation

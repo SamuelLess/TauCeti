@@ -10,6 +10,7 @@ public import TauCeti.Topology.Algebra.ContinuousMonoidHom
 public import TauCeti.Topology.Algebra.Group.Profinite.Limit
 public import TauCeti.Topology.Algebra.Group.Profinite.ProP.Basic
 public import TauCeti.Topology.Algebra.GroupAction.TypeTags
+import Mathlib.Topology.Separation.Connected
 
 /-!
 # Exponentiation of a pro-`p` group by the `p`-adic integers

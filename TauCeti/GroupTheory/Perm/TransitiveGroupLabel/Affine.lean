@@ -6,6 +6,7 @@ Authors: The Tau Ceti contributors
 module
 
 import TauCeti.Data.ZMod.FinEquiv
+import Mathlib.Algebra.Field.ZMod
 public import TauCeti.GroupTheory.Perm.TransitiveGroupLabel.Classification
 public import TauCeti.GroupTheory.SpecificGroups.Affine.Basic
 

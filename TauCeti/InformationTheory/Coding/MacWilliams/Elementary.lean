@@ -60,10 +60,8 @@ theorem aeval_weightEnumerator_repetitionCode (R ι : Type*) [Ring R] [Finite R]
 variable (F ι : Type*) [Field F] [Finite F] [DecidableEq F] [Fintype ι]
 
 /-- The MacWilliams substitution of the single-parity-check enumerator is its cardinality
-times the repetition enumerator.
-
-This runs before simplification turns `aeval` into `bind₁`, just as the repetition-code
-substitution lemma above runs before its enumerator is expanded. -/
+times the repetition enumerator. -/
+-- Run before simplification turns `aeval` into `bind₁`.
 @[simp↓]
 theorem aeval_weightEnumerator_singleParityCheckCode :
     aeval ![X 0 + (Nat.card F - 1 : MvPolynomial (Fin 2) ℤ) * X 1, X 0 - X 1]

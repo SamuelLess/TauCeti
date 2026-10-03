@@ -88,8 +88,8 @@ theorem coe_referenceSubgroupFiveTwoMulEquivAffineGroup_symm_apply (g : AffineGr
 @[simp]
 theorem referenceSubgroupFiveTwoMulEquivAffineGroup_smul (σ : referenceSubgroup 5 ⟨2, by simp⟩)
     (i : Fin 5) :
-    referenceSubgroupFiveTwoMulEquivAffineGroup σ • (i : ZMod 5) =
-      (((σ : Perm (Fin 5)) i) : ZMod 5) := by
+    referenceSubgroupFiveTwoMulEquivAffineGroup σ • (i.val : ZMod 5) =
+      (((σ : Perm (Fin 5)) i).val : ZMod 5) := by
   change referenceSubgroupFiveTwoMulEquivAffineGroup σ • ZMod.finEquiv 5 i =
     ZMod.finEquiv 5 ((σ : Perm (Fin 5)) i)
   conv_rhs => rw [← referenceSubgroupFiveTwoMulEquivAffineGroup.symm_apply_apply σ]

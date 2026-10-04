@@ -186,19 +186,6 @@ private def matrixProdModelTensorEquiv {R S T A B D : Type*} [CommSemiring R]
         AlgEquiv.prodCongr (matrixTensorByCoefficientEquiv m coeff)
           (matrixTensorByCoefficientEquiv m coeff)
 
-private theorem pow_half_sub_add_eight (n d : ℕ) (h : d ≤ n) :
-    2 ^ ((n + 8 - d) / 2) = 2 ^ ((n - d) / 2) * 16 := by
-  have hdiv : (n + 8 - d) / 2 = (n - d) / 2 + 4 := by omega
-  rw [hdiv, pow_add]
-  norm_num
-
-private theorem pow_half_sub_add_add_right (p q n d : ℕ) (h : d ≤ p + q) :
-    2 ^ ((p + q - d) / 2) * 2 ^ n =
-      2 ^ (((p + n) + (q + n) - d) / 2) := by
-  rw [← pow_add]
-  congr 1
-  omega
-
 private theorem pow_half_sub_mul_pow (n d s t : ℕ)
     (h : (n - d) / 2 + s = t / 2) :
     2 ^ ((n - d) / 2) * 2 ^ s = 2 ^ (t / 2) := by

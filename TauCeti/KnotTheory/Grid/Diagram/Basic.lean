@@ -449,6 +449,11 @@ theorem card_columnSwapNeighbors (x : GridState n) :
   obtain ⟨⟨c, d⟩, -, rfl⟩ := Finset.mem_image.mp hw
   exact sym2_mk_eq_of_swapColumns_eq (Finset.mem_offDiag.mp hab).2.2 hzw
 
+/-- Row swaps transport the point set by the row transposition. -/
+theorem mem_pointSet_swapRows (a b : Fin n) (x : GridState n) (p : Fin n × Fin n) :
+    p ∈ (x.swapRows a b).pointSet ↔ (p.1, Equiv.swap a b p.2) ∈ x.pointSet := by
+  simpa [swapRows] using GridState.mem_pointSet_relabelRows (Equiv.swap a b) x p
+
 /-- Column swaps transport the point set by the column transposition. -/
 theorem mem_pointSet_swapColumns (a b : Fin n) (x : GridState n) (p : Fin n × Fin n) :
     p ∈ (x.swapColumns a b).pointSet ↔ (Equiv.swap a b p.1, p.2) ∈ x.pointSet := by
@@ -807,6 +812,16 @@ theorem swapColumns_O (a b : Fin n) : (G.swapColumns a b).O = G.O.swapColumns a 
 theorem swapColumns_X (a b : Fin n) : (G.swapColumns a b).X = G.X.swapColumns a b :=
   rfl
 
+/-- Row swaps transport the `O` marking set by the row transposition. -/
+theorem mem_OSet_swapRows (a b : Fin n) (p : Fin n × Fin n) :
+    p ∈ (G.swapRows a b).OSet ↔ (p.1, Equiv.swap a b p.2) ∈ G.OSet := by
+  simpa [swapRows] using G.mem_OSet_relabelRows (Equiv.swap a b) p
+
+/-- Row swaps transport the `X` marking set by the row transposition. -/
+theorem mem_XSet_swapRows (a b : Fin n) (p : Fin n × Fin n) :
+    p ∈ (G.swapRows a b).XSet ↔ (p.1, Equiv.swap a b p.2) ∈ G.XSet := by
+  simpa [swapRows] using G.mem_XSet_relabelRows (Equiv.swap a b) p
+
 /-- Column swaps transport the `O` marking set by the column transposition. -/
 theorem mem_OSet_swapColumns (a b : Fin n) (p : Fin n × Fin n) :
     p ∈ (G.swapColumns a b).OSet ↔ (Equiv.swap a b p.1, p.2) ∈ G.OSet := by
@@ -848,6 +863,11 @@ theorem relabelRows_relabelRows (ρ σ : Equiv.Perm (Fin n)) :
 theorem relabelColumns_relabelColumns (κ τ : Equiv.Perm (Fin n)) :
     (G.relabelColumns κ).relabelColumns τ = G.relabelColumns (κ.trans τ) := by
   ext c <;> simp
+
+/-- Row and column relabeling commute on grid diagrams. -/
+theorem relabelRows_relabelColumns (ρ κ : Equiv.Perm (Fin n)) :
+    (G.relabelRows ρ).relabelColumns κ = (G.relabelColumns κ).relabelRows ρ := by
+  ext c <;> simp [GridState.relabelRows_relabelColumns]
 
 /-- The diagonal reflection of a grid diagram, reflecting both the `O` and `X` marking states.
 

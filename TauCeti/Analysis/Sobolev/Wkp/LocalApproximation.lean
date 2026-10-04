@@ -212,8 +212,7 @@ private theorem tendsto_restrict_localTest (hp : p ≠ ∞) (hU : U ≤ Omega)
       simpa only [value_zero] using value_restrict_localTest hp hU chi hchi (phi i) 0 u
   | one =>
       intro u
-      rw [W1p.tendsto_iff_value_gradient]
-      constructor
+      refine W1p.tendsto_iff_value_gradient.2 ⟨?_, ?_⟩
       · have h : Tendsto (fun i => localAverage hp (phi i) (value 1 u)) l
             (𝓝 (value 1 (restrictL hU 1 u))) :=
           Wkp.tendsto_mollified_value hp hU hphi 1 u

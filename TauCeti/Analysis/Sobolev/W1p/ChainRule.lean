@@ -206,9 +206,12 @@ private theorem hasWeakFDerivOn_comp_aux (hp : p ≠ ∞) (hF : ContDiff ℝ 1 F
     rw [← eLpNorm_one_eq_lintegral_enorm h1.aestronglyMeasurable]
     exact h1.ne
   -- approximation by test functions on `Ω`
-  obtain ⟨a, ha_mem, ha_tendsto⟩ := mem_closure_iff_seq_limit.mp
-    (by simpa only [Wkp.restrictL_one, Wkp.ofTestFunctionₗ_one] using
-      Wkp.restrictL_mem_closure_range_ofTestFunctionₗ hp hVc hVO 1 u)
+  have hmem : W1p.restrictL hVΩ u ∈
+      closure (Set.range fun psi => W1p.restrictL hVΩ (W1p.ofTestFunctionₗ mu Omega p psi)) := by
+    have h := Wkp.restrictL_mem_closure_range_ofTestFunctionₗ hp hVc hVO 1 u
+    simp only [Wkp.restrictL_one, Wkp.ofTestFunctionₗ_one] at h
+    exact h
+  obtain ⟨a, ha_mem, ha_tendsto⟩ := mem_closure_iff_seq_limit.mp hmem
   choose phi hphi using ha_mem
   have hval : Tendsto (fun n => W1p.value (a n)) atTop (𝓝 (W1p.value (W1p.restrictL hVΩ u))) := by
     simpa only [Function.comp_def, W1p.valueL_apply] using

@@ -86,8 +86,10 @@ private theorem exists_restrict_succ (hU : U ≤ Omega) : ∀ (k : ℕ)
   | zero =>
       intro u
       refine ⟨W1p.restrictL hU u, ?_, ?_, W1p.norm_restrictL_le hU u⟩
-      · simpa only [Nat.reduceAdd, value_one] using W1p.value_restrictL_ae hU u
-      · simpa only [iteratedGradient_zero] using W1p.gradient_restrictL_ae hU u
+      · simpa only [Nat.reduceAdd, value_one, value_one (W1p.restrictL hU u)] using
+          W1p.value_restrictL_ae hU u
+      · simpa only [iteratedGradient_zero, iteratedGradient_zero (W1p.restrictL hU u)] using
+          W1p.gradient_restrictL_ae hU u
   | succ k ih =>
       intro u
       obtain ⟨v, hv, hDv, hnorm⟩ := ih (lowerOrder (k + 1) u)
@@ -231,7 +233,7 @@ theorem restrictL_one (hU : U ≤ Omega) :
   apply ContinuousLinearMap.ext
   intro u
   apply W1p.ext_value
-  rw [W1p.value_restrictL hU u]
+  refine Eq.trans ?_ (W1p.value_restrictL hU u).symm
   simpa only [value_one] using value_restrictL hU 1 u
 
 end TauCeti.Wkp

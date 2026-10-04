@@ -116,8 +116,8 @@ theorem value_translate (h : E) : ∀ (k : ℕ) (u : Wkp mu ⊤ p k),
 /-- At order one, whole-space translation agrees with the existing local translation when
 the source and target domains are both the whole space. -/
 theorem translate_one_eq_W1p_translate (h : E) (u : Wkp mu ⊤ p 1) :
-    translate h 1 u = W1p.translate (h := h) (fun _ _ => by simp) u := by
-  simp only [translate, translated, translateOne]
+    translate h 1 u = W1p.translate (h := h) (fun _ _ => by simp) u :=
+  (rfl)
 
 private theorem translate_one_eq_translateOne (h : E) (u : Wkp mu ⊤ p 1) :
     translate h 1 u = translateOne h u := rfl
@@ -172,7 +172,7 @@ private theorem translate_one_eq_jet (h : E) (u : Wkp mu ⊤ p 1) :
   rw [translate_one_eq_translateOne]
   apply W1p.ext_value
   rw [← value_one (translateOne h u), value_translateOne, value_one u]
-  simp only [W1p.value_coe]
+  simp only [W1p.value_coe, W1p.value_coe u]
   exact (Sobolev1JetLp.value_translateLp h u.1).symm
 
 /-- For finite `p`, translation of a fixed whole-space Sobolev function varies continuously
@@ -185,7 +185,8 @@ theorem continuous_translate (hp : p ≠ ∞) :
           (⟨(mu.restrict ((⊤ : Opens E) : Set E)).translateLp p h u.1,
             Sobolev1JetLp.translateLp_mem_w1pSubmodule h u.2⟩ : Wkp mu ⊤ p 1)) :=
         (Measure.continuous_translateLp hp u.1).subtype_mk _
-      simpa only [← translate_one_eq_jet] using hcont
+      simp only [← translate_one_eq_jet] at hcont
+      exact hcont
   | k + 2, u => by
       have hprev : Continuous (fun h : E => lowerOrder (k + 1) (translate h (k + 2) u)) := by
         simpa only [lowerOrder_translate] using
@@ -214,7 +215,8 @@ theorem continuous_translate (hp : p ≠ ∞) :
             _ = _ := by
               congr 1
               simp only [WithLp.prodContinuousLinearEquiv_apply, lowerOrder_succ,
-                iteratedGradient_succ, WeakDerivStep.prev_coe, WeakDerivStep.weakFDeriv_coe]
+                iteratedGradient_succ, WeakDerivStep.prev_coe _ (translate h (k + 2) u),
+                WeakDerivStep.weakFDeriv_coe _ (translate h (k + 2) u)]
               exact Prod.ext (WithLp.ofLp_fst _) (WithLp.ofLp_snd _)
         rw [heq]
         exact (WithLp.prodContinuousLinearEquiv 2 ℝ _ _).symm.continuous.comp hpair

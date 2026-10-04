@@ -222,12 +222,6 @@ theorem pointSet_inj {x y : GridState n} : x.pointSet = y.pointSet ↔ x = y := 
   · intro h
     simp [h]
 
-/-- A grid point lies in both state point sets exactly when both state permutations send its
-column to its row. -/
-theorem mem_pointSet_inter (x y : GridState n) (p : Fin n × Fin n) :
-    p ∈ x.pointSet ∩ y.pointSet ↔ x p.1 = p.2 ∧ y p.1 = p.2 := by
-  simp
-
 /-- Two grid states have disjoint point sets exactly when they disagree in every column. -/
 theorem disjoint_pointSet_iff (x y : GridState n) :
     Disjoint x.pointSet y.pointSet ↔ ∀ c : Fin n, x c ≠ y c := by
@@ -454,39 +448,6 @@ theorem card_columnSwapNeighbors (x : GridState n) :
   obtain ⟨⟨a, b⟩, hab, rfl⟩ := Finset.mem_image.mp hz
   obtain ⟨⟨c, d⟩, -, rfl⟩ := Finset.mem_image.mp hw
   exact sym2_mk_eq_of_swapColumns_eq (Finset.mem_offDiag.mp hab).2.2 hzw
-
-/-- A grid state on a grid of size at most `1` has no column-swap neighbours. -/
-theorem columnSwapNeighbors_eq_empty_of_le_one (x : GridState n) (hn : n ≤ 1) :
-    x.columnSwapNeighbors = ∅ := by
-  have hchoose : n.choose 2 = 0 := Nat.choose_eq_zero_of_lt (Nat.lt_succ_of_le hn)
-  apply Finset.card_eq_zero.mp
-  rw [x.card_columnSwapNeighbors, hchoose]
-
-/-- A grid state on a grid of size `0` has no column-swap neighbours. -/
-@[simp]
-theorem columnSwapNeighbors_eq_empty_of_zero (x : GridState 0) :
-    x.columnSwapNeighbors = ∅ :=
-  x.columnSwapNeighbors_eq_empty_of_le_one (Nat.zero_le 1)
-
-/-- A grid state on a grid of size `1` has no column-swap neighbours. -/
-@[simp]
-theorem columnSwapNeighbors_eq_empty_of_one (x : GridState 1) :
-    x.columnSwapNeighbors = ∅ :=
-  x.columnSwapNeighbors_eq_empty_of_le_one le_rfl
-
-/-- A grid state is not a column-swap neighbour of itself: swapping two distinct columns moves the
-occupied row of either column, so the result differs from the original. -/
-theorem self_notMem_columnSwapNeighbors (x : GridState n) : x ∉ x.columnSwapNeighbors := by
-  rw [mem_columnSwapNeighbors]
-  rintro ⟨c, d, hcd, hx⟩
-  have hval := congrArg (fun z : GridState n => z c) hx
-  simp only [swapColumns_apply, Equiv.swap_apply_left] at hval
-  exact hcd (x.toPerm.injective hval)
-
-/-- Row swaps transport the point set by the row transposition. -/
-theorem mem_pointSet_swapRows (a b : Fin n) (x : GridState n) (p : Fin n × Fin n) :
-    p ∈ (x.swapRows a b).pointSet ↔ (p.1, Equiv.swap a b p.2) ∈ x.pointSet := by
-  simpa [swapRows] using GridState.mem_pointSet_relabelRows (Equiv.swap a b) x p
 
 /-- Column swaps transport the point set by the column transposition. -/
 theorem mem_pointSet_swapColumns (a b : Fin n) (x : GridState n) (p : Fin n × Fin n) :
@@ -846,16 +807,6 @@ theorem swapColumns_O (a b : Fin n) : (G.swapColumns a b).O = G.O.swapColumns a 
 theorem swapColumns_X (a b : Fin n) : (G.swapColumns a b).X = G.X.swapColumns a b :=
   rfl
 
-/-- Row swaps transport the `O` marking set by the row transposition. -/
-theorem mem_OSet_swapRows (a b : Fin n) (p : Fin n × Fin n) :
-    p ∈ (G.swapRows a b).OSet ↔ (p.1, Equiv.swap a b p.2) ∈ G.OSet := by
-  simpa [swapRows] using G.mem_OSet_relabelRows (Equiv.swap a b) p
-
-/-- Row swaps transport the `X` marking set by the row transposition. -/
-theorem mem_XSet_swapRows (a b : Fin n) (p : Fin n × Fin n) :
-    p ∈ (G.swapRows a b).XSet ↔ (p.1, Equiv.swap a b p.2) ∈ G.XSet := by
-  simpa [swapRows] using G.mem_XSet_relabelRows (Equiv.swap a b) p
-
 /-- Column swaps transport the `O` marking set by the column transposition. -/
 theorem mem_OSet_swapColumns (a b : Fin n) (p : Fin n × Fin n) :
     p ∈ (G.swapColumns a b).OSet ↔ (Equiv.swap a b p.1, p.2) ∈ G.OSet := by
@@ -897,11 +848,6 @@ theorem relabelRows_relabelRows (ρ σ : Equiv.Perm (Fin n)) :
 theorem relabelColumns_relabelColumns (κ τ : Equiv.Perm (Fin n)) :
     (G.relabelColumns κ).relabelColumns τ = G.relabelColumns (κ.trans τ) := by
   ext c <;> simp
-
-/-- Row and column relabeling commute on grid diagrams. -/
-theorem relabelRows_relabelColumns (ρ κ : Equiv.Perm (Fin n)) :
-    (G.relabelRows ρ).relabelColumns κ = (G.relabelColumns κ).relabelRows ρ := by
-  ext c <;> simp [GridState.relabelRows_relabelColumns]
 
 /-- The diagonal reflection of a grid diagram, reflecting both the `O` and `X` marking states.
 
@@ -959,20 +905,6 @@ theorem transpose_OSet : G.transpose.OSet = G.OSet.image Prod.swap := by
 theorem transpose_XSet : G.transpose.XSet = G.XSet.image Prod.swap := by
   rw [XSet, XSet, transpose_X, GridState.transpose_pointSet]
 
-/-- A square lies in the reflected diagram's `O`-marking set exactly when its diagonal
-reflection lies in the original `O`-marking set. -/
-theorem mem_OSet_transpose (p : Fin n × Fin n) :
-    p ∈ G.transpose.OSet ↔ Prod.swap p ∈ G.OSet := by
-  rw [OSet, OSet, transpose_O]
-  exact GridState.mem_pointSet_transpose G.O p
-
-/-- A square lies in the reflected diagram's `X`-marking set exactly when its diagonal
-reflection lies in the original `X`-marking set. -/
-theorem mem_XSet_transpose (p : Fin n × Fin n) :
-    p ∈ G.transpose.XSet ↔ Prod.swap p ∈ G.XSet := by
-  rw [XSet, XSet, transpose_X]
-  exact GridState.mem_pointSet_transpose G.X p
-
 /-- The marking swap of a grid diagram, obtained by exchanging the `O`- and `X`-marking states.
 
 The defining no-double-marking condition is symmetric in the two marking states, so the swap is
@@ -997,16 +929,6 @@ theorem swapMarkings_OSet : G.swapMarkings.OSet = G.XSet := rfl
 /-- The `X`-marking set of the marking swap is the original `O`-marking set. -/
 @[simp]
 theorem swapMarkings_XSet : G.swapMarkings.XSet = G.OSet := rfl
-
-/-- Membership in the marking swap's `O`-marking set is membership in the original
-`X`-marking set. -/
-theorem mem_OSet_swapMarkings (p : Fin n × Fin n) :
-    p ∈ G.swapMarkings.OSet ↔ p ∈ G.XSet := Iff.rfl
-
-/-- Membership in the marking swap's `X`-marking set is membership in the original
-`O`-marking set. -/
-theorem mem_XSet_swapMarkings (p : Fin n × Fin n) :
-    p ∈ G.swapMarkings.XSet ↔ p ∈ G.OSet := Iff.rfl
 
 /-- The marking swap is an involution. -/
 @[simp]

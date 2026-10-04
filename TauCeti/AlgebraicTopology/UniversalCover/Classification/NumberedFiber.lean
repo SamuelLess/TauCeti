@@ -538,7 +538,7 @@ instance : SMul (Perm (Fin n)) (ConnectedFiberNumberedCover x n) where
 @[simp]
 theorem smul_cover (τ : Perm (Fin n)) (c : ConnectedFiberNumberedCover x n) :
     (τ • c).cover = c.cover :=
-  rfl
+  (rfl)
 
 /-- Relabelling by `τ` composes the numbering with `τ`. -/
 @[simp]

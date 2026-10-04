@@ -517,14 +517,14 @@ theorem toGridRectangle_eq :
 
 /-- Membership in the interior of an oriented rectangle is membership in the open cyclic
 intervals between its side columns and the corresponding source-state rows. -/
-theorem mem_toGridRectangle_interior (p : Fin n × Fin n) :
+theorem mem_toGridRectangle_interior {p : Fin n × Fin n} :
     p ∈ R.toGridRectangle.interior ↔
       p.1 ∈ Grid.cIoo R.left R.right ∧ p.2 ∈ Grid.cIoo (x R.left) (x R.right) := by
   simp [bottom, top]
 
 /-- Membership in the covered squares of an oriented rectangle is membership in the half-open
 cyclic intervals between its side columns and the corresponding source-state rows. -/
-theorem mem_toGridRectangle_coveredSquares (p : Fin n × Fin n) :
+theorem mem_toGridRectangle_coveredSquares {p : Fin n × Fin n} :
     p ∈ R.toGridRectangle.coveredSquares ↔
       p.1 ∈ Grid.cIco R.left R.right ∧ p.2 ∈ Grid.cIco (x R.left) (x R.right) := by
   simp [bottom, top]
@@ -532,7 +532,7 @@ theorem mem_toGridRectangle_coveredSquares (p : Fin n × Fin n) :
 /-- The covered squares of an oriented rectangle, read through its target state: the rows it
 covers run from the target-state row at its terminal side to the target-state row at its initial
 side. -/
-theorem mem_toGridRectangle_coveredSquares_target (p : Fin n × Fin n) :
+theorem mem_toGridRectangle_coveredSquares_target {p : Fin n × Fin n} :
     p ∈ R.toGridRectangle.coveredSquares ↔
       p.1 ∈ Grid.cIco R.left R.right ∧ p.2 ∈ Grid.cIco (y R.right) (y R.left) := by
   rw [mem_toGridRectangle_coveredSquares, R.map_left, R.map_right]

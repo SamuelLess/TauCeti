@@ -278,12 +278,12 @@ private lemma typeDRootEquiv_apply (hn : 4 ≤ n) (k : Fin (2 * n * (n - 1))) :
 
 /-- There is room for the first `n` indices in the type `Dₙ` enumeration of `2 * n * (n - 1)`
 roots. -/
-private lemma typeD_le_two_mul_mul (hn : 4 ≤ n) : n ≤ 2 * n * (n - 1) :=
+private lemma typeD_le_two_mul_mul (hn : 2 ≤ n) : n ≤ 2 * n * (n - 1) :=
   (Nat.le_mul_of_pos_left n two_pos).trans (Nat.le_mul_of_pos_right _ (by omega))
 
 /-- The `i`-th simple root occupies root index `i`. -/
 def typeDSimpleIndex (n : ℕ) (hn : 4 ≤ n) (i : Fin n) : Fin (2 * n * (n - 1)) :=
-  Fin.castLE (typeD_le_two_mul_mul hn) i
+  Fin.castLE (typeD_le_two_mul_mul (by omega)) i
 
 /-- The root index of the `i`-th simple root has value `i`. -/
 @[simp] lemma typeDSimpleIndex_val (hn : 4 ≤ n) (i : Fin n) :
@@ -292,7 +292,7 @@ def typeDSimpleIndex (n : ℕ) (hn : 4 ≤ n) (i : Fin n) : Fin (2 * n * (n - 1)
 
 /-- Distinct simple roots occupy distinct root indices. -/
 lemma typeDSimpleIndex_injective (hn : 4 ≤ n) : Injective (typeDSimpleIndex n hn) :=
-  Fin.castLE_injective (typeD_le_two_mul_mul hn)
+  Fin.castLE_injective (typeD_le_two_mul_mul (by omega))
 
 private def typeDSimpleRawIndex (n : ℕ) (hn : 4 ≤ n) (i : Fin n) : TypeDRawIndex n :=
   if h : (i : ℕ) + 1 < n then
@@ -315,8 +315,9 @@ private lemma typeDPairFinEquiv_fork (hn : 2 ≤ n) :
   ext
   rw [typeDPairFinEquiv_val, Fin.coe_sub_iff_lt.mpr (by simp [Fin.lt_def]; omega)]
   simp only [typeDForkOldIndex]
-  rw [show n + (n - 2) - (n - 1) - 1 = n - 2 by omega, show n - 1 = n - 2 + 1 by omega,
-    Nat.mul_succ]
+  have hsub : n + (n - 2) - (n - 1) - 1 = n - 2 := by omega
+  have hpred : n - 1 = n - 2 + 1 := by omega
+  rw [hsub, hpred, Nat.mul_succ]
   omega
 
 private lemma typeDRawFinEquiv_simple (hn : 4 ≤ n) (i : Fin n) :
@@ -451,8 +452,9 @@ theorem det_typeDSimpleRoot_eq_two (hn : 4 ≤ n) : (Matrix.of (typeDSimpleRoot 
 @[simp] theorem typeDRootEquiv_apply_typeDSimpleIndex (hn : 4 ≤ n) (i : Fin n) :
     (typeDRootEquiv n hn (typeDSimpleIndex n hn i)).1 = typeDSimpleRoot n hn i := by
   rw [typeDRootEquiv_simple]
+  have hlast : ¬n - 1 < n - 2 := by omega
   by_cases hi : (i : ℕ) + 1 < n <;> simp [typeDSimpleRawIndex, typeDRawRoot, typeDRawVector,
-    typeDPairVector, hi, Fin.lt_def, show ¬n - 1 < n - 2 by omega]
+    typeDPairVector, hi, Fin.lt_def, hlast]
 
 /-! ## Coordinates in the simple-root basis -/
 
@@ -622,14 +624,11 @@ private lemma typeDAmbientReflection_apply (u : TypeDRoot n) (v : Fin n → ℤ)
   rw [typeDAmbientReflection]
   exact (Module.reflection_apply v _).trans (by rw [dotProductBilin_apply_apply, dotProduct_comm])
 
-private lemma typeDAmbientReflection_dotProduct_self (u : TypeDRoot n) (v : Fin n → ℤ) :
-    typeDAmbientReflection u v ⬝ᵥ typeDAmbientReflection u v = v ⬝ᵥ v := by
-  have h := reflect_vecMul_dotProduct_self Matrix.isSymm_one (u := u.1) (by simpa using u.2) v
-  simpa [typeDAmbientReflection_apply] using h
-
 /-- Reflection of a type `Dₙ` root `v` in the root `u`. -/
 def typeDRootReflection (u v : TypeDRoot n) : TypeDRoot n :=
-  ⟨typeDAmbientReflection u v.1, (typeDAmbientReflection_dotProduct_self u v.1).trans v.2⟩
+  ⟨typeDAmbientReflection u v.1, by
+    simpa [typeDAmbientReflection_apply, v.2] using
+      reflect_vecMul_dotProduct_self Matrix.isSymm_one (u := u.1) (by simpa using u.2) v.1⟩
 
 /-- Reflection in a root acts by the classical formula on coordinates. -/
 @[simp] lemma typeDRootReflection_val (u v : TypeDRoot n) :

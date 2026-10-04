@@ -449,6 +449,16 @@ theorem card_columnSwapNeighbors (x : GridState n) :
   obtain ⟨⟨c, d⟩, -, rfl⟩ := Finset.mem_image.mp hw
   exact sym2_mk_eq_of_swapColumns_eq (Finset.mem_offDiag.mp hab).2.2 hzw
 
+-- Not `@[simp]`: `mem_columnSwapNeighbors` already rewrites the left-hand side.
+/-- A grid state is not a column-swap neighbour of itself: swapping two distinct columns moves the
+occupied row of either column, so the result differs from the original. -/
+theorem self_notMem_columnSwapNeighbors (x : GridState n) : x ∉ x.columnSwapNeighbors := by
+  rw [mem_columnSwapNeighbors]
+  rintro ⟨c, d, hcd, hx⟩
+  have hval := congrArg (fun z : GridState n => z c) hx
+  simp only [swapColumns_apply, Equiv.swap_apply_left] at hval
+  exact hcd (x.toPerm.injective hval)
+
 /-- Row swaps transport the point set by the row transposition. -/
 theorem mem_pointSet_swapRows (a b : Fin n) (x : GridState n) (p : Fin n × Fin n) :
     p ∈ (x.swapRows a b).pointSet ↔ (p.1, Equiv.swap a b p.2) ∈ x.pointSet := by

@@ -271,10 +271,8 @@ private theorem IsRealCliffordClassified.of_tensor_matrix {p q p' q' : ℕ} (k :
   generalize hr : realCliffordResidue p q = r at h
   have hrlt : r < 8 := hr ▸ realCliffordResidue_lt_eight p q
   have hsize (d : ℕ) (hd : d ≤ p + q) :
-      2 ^ ((p + q - d) / 2) * 2 ^ k = 2 ^ ((p' + q' - d) / 2) := by
-    rw [← pow_add]
-    congr 1
-    omega
+      2 ^ ((p + q - d) / 2) * 2 ^ k = 2 ^ ((p' + q' - d) / 2) :=
+    pow_half_sub_mul_pow (p + q) d k (p' + q' - d) (by omega)
   interval_cases r <;> simp only at h ⊢
   all_goals obtain ⟨e⟩ := h
   all_goals simp only [realCliffordResidue] at hr

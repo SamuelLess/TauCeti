@@ -107,9 +107,8 @@ noncomputable def tensorSelfAlgEquivMatrix :
     tensorOpAlgEquivMatrix
 
 /-- **`ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℂ] Matrix (Fin 2) (Fin 2) ℂ`**: the complex numbers split the real quaternions
-at their degree `2`. `ℂ` is algebraically closed, so it splits every central simple `ℝ`-algebra
-(`TauCeti.Algebra.isSplittingField_of_isSepClosed`), and a splitting field splits a central simple
-algebra into matrices of size its degree. -/
+at their degree `2`, so after extending scalars to `ℂ` the quaternions become the full matrix
+algebra `M₂(ℂ)`. -/
 noncomputable def complexTensorAlgEquivMatrix :
     ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℂ] Matrix (Fin 2) (Fin 2) ℂ := by
   have hdeg : Algebra.deg ℝ ℍ[ℝ] = 2 :=

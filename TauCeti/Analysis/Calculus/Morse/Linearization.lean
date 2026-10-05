@@ -150,11 +150,17 @@ theorem isSelfAdjoint_hessianOperator (hf : ContDiffAt ℝ 2 f x) :
 the Hessian operator. -/
 theorem hasFDerivAt_gradient (hf : ContDiffAt ℝ 2 f x) :
     HasFDerivAt (∇ f) (hessianOperator f x) x := by
-  -- `∇ f` is the Riesz map composed with `fderiv ℝ f`, and the composed derivative is the
-  -- Hessian operator by its Riesz formula.
-  rw [hessianOperator_eq_continuousLinearMapOfBilin]
-  exact (InnerProductSpace.toDual ℝ E).symm.toContinuousLinearEquiv.hasFDerivAt.comp x
+  have h := (InnerProductSpace.toDual ℝ E).symm.toContinuousLinearEquiv.hasFDerivAt.comp x
     (hf.hasFDerivAt_fderiv le_rfl)
+  -- The composed function is the gradient, by the defining property `toDual_gradient` of `∇ f`.
+  have hfun : ⇑(InnerProductSpace.toDual ℝ E).symm.toContinuousLinearEquiv ∘ fderiv ℝ f = ∇ f := by
+    funext y
+    simp only [Function.comp_apply, LinearIsometryEquiv.coe_toContinuousLinearEquiv]
+    exact ((InnerProductSpace.toDual ℝ E).eq_symm_apply.2 toDual_gradient).symm
+  rw [hfun] at h
+  -- The derivative of the gradient is the Hessian operator by `fderiv_gradient`.
+  rw [← fderiv_gradient]
+  exact h.differentiableAt.hasFDerivAt
 
 /-- The negative-gradient vector field is differentiable at a twice continuously differentiable
 point, with derivative minus the Hessian operator. -/

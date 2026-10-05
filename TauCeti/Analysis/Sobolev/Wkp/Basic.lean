@@ -37,10 +37,13 @@ The bundled stage machinery `TauCeti.IteratedGradientModel`, `TauCeti.iteratedGr
 `0` and `1` boundary cases are recovered by unfolding it rather than by transport.
 `TauCeti.iteratedGradientModel`, `TauCeti.firstSobolevStage`, `TauCeti.SobolevStage.next`, and
 `TauCeti.Wkp` are reducible.  The recursion `TauCeti.sobolevStage` is exposed but semireducible,
-with equations `TauCeti.sobolevStage_zero` and `TauCeti.sobolevStage_succ`, so that at a concrete
-order instance search stops at `(sobolevStage j).Space` and finds the `TauCeti.SobolevStage`
-shortcut instances keyed there.  The shortcut instances are provided at both the bundled-stage and
-`Wkp` indexings so instance search need not rederive these structures through the recursion.
+so that at a concrete order instance search stops at `(sobolevStage j).Space` and finds the
+`TauCeti.SobolevStage` shortcut instances keyed there.  The shortcut instances are provided at both
+the bundled-stage and `Wkp` indexings so instance search need not rederive these structures
+through the recursion.  The identifications of `Wkp … 1` with `TauCeti.W1p` and of
+`Wkp … (k + 2)` with a `TauCeti.WeakDerivStep` are therefore definitional but not reducible: a
+lemma stated for `TauCeti.W1p` or `TauCeti.WeakDerivStep` must be given its argument explicitly
+when `rw` or `simp` applies it to such a term, since neither unfolds `TauCeti.sobolevStage`.
 The projections below are sealed instead, and are used through their characteristic equations
 `TauCeti.Wkp.lowerOrder_zero`, `TauCeti.Wkp.lowerOrder_succ`, `TauCeti.Wkp.iteratedGradient_zero`,
 `TauCeti.Wkp.iteratedGradient_succ`, `TauCeti.Wkp.value_zero`, and `TauCeti.Wkp.value_succ`.
@@ -209,16 +212,6 @@ its lower-order and highest-derivative projections. -/
   | 0 => firstSobolevStage
   | j + 1 => (sobolevStage j).next
 
-/-- The first iterated weak-derivative stage is the `W1p` stage. -/
-theorem sobolevStage_zero :
-    sobolevStage (mu := mu) (Omega := Omega) (p := p) 0 = firstSobolevStage :=
-  rfl
-
-/-- Each later iterated weak-derivative stage adjoins a weak derivative to the preceding one. -/
-theorem sobolevStage_succ (j : ℕ) :
-    sobolevStage (mu := mu) (Omega := Omega) (p := p) (j + 1) = (sobolevStage j).next :=
-  rfl
-
 @[instance_reducible, expose] noncomputable def SobolevStage.instNormedAddCommGroup
     (j : ℕ) : NormedAddCommGroup
       (sobolevStage (mu := mu) (Omega := Omega) (p := p) j).Space :=
@@ -302,6 +295,8 @@ theorem firstOrderL_apply (k : ℕ) (u : Wkp mu Omega p (k + 1)) :
 
 /-- The first-order part of a first-order Sobolev function is itself. -/
 @[simp] theorem firstOrder_zero (u : Wkp mu Omega p 1) : firstOrder 0 u = u :=
+  -- `firstOrderL 0` is the identity, and `Wkp … 1` unfolds to `W1p` because `sobolevStage 0`
+  -- is `firstSobolevStage`.
   (rfl)
 
 /-- Forgetting one derivative before taking the first-order part has no effect. -/
@@ -363,7 +358,9 @@ theorem value_succ (k : ℕ) (u : Wkp mu Omega p (k + 1)) :
 @[simp]
 theorem lowerOrder_zero (u : Wkp mu Omega p 1) : lowerOrder 0 u = W1p.value u :=
   by
-    -- `W1p.value` is sealed, so this boundary identification uses its application theorem.
+    -- `lowerOrderL 0` is `W1p.valueL`, and `exact` unfolds `Wkp … 1` to `W1p` (`sobolevStage 0`
+    -- is `firstSobolevStage`).  `W1p.value` is sealed, so the identification goes through its
+    -- application theorem.
     exact W1p.valueL_apply u
 
 /-- At first order, the generic value projection is the `W1p` value projection. -/
@@ -375,7 +372,9 @@ theorem value_one (u : Wkp mu Omega p 1) : value 1 u = W1p.value u := by
 theorem iteratedGradient_zero (u : Wkp mu Omega p 1) :
     iteratedGradient 0 u = W1p.gradient u :=
   by
-    -- `W1p.gradient` is sealed, so this boundary identification uses its application theorem.
+    -- `iteratedGradientL 0` is `W1p.gradientL`, and `exact` unfolds `Wkp … 1` to `W1p`
+    -- (`sobolevStage 0` is `firstSobolevStage`).  `W1p.gradient` is sealed, so the
+    -- identification goes through its application theorem.
     exact W1p.gradientL_apply u
 
 /-- Forgetting higher derivatives preserves the `Lᵖ` value. -/
@@ -412,6 +411,18 @@ theorem iteratedGradient_succ (k : ℕ) (u : Wkp mu Omega p (k + 2)) :
       (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u := by
   exact WeakDerivStep.weakFDerivL_apply
     (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u
+
+/-- Above first order, the lower-order projection is the first component of the underlying
+weak-derivative graph element. -/
+theorem lowerOrder_succ_coe (k : ℕ) (u : Wkp mu Omega p (k + 2)) :
+    lowerOrder (k + 1) u = WithLp.fst u.1 :=
+  (lowerOrder_succ k u).trans (WeakDerivStep.prev_coe _ u)
+
+/-- Above first order, the highest derivative is the second component of the underlying
+weak-derivative graph element. -/
+theorem iteratedGradient_succ_coe (k : ℕ) (u : Wkp mu Omega p (k + 2)) :
+    iteratedGradient (k + 1) u = WithLp.snd u.1 :=
+  (iteratedGradient_succ k u).trans (WeakDerivStep.weakFDeriv_coe _ u)
 
 /-- The first weak derivative identity, with the gradient identified with a linear functional
 through the real inner product. -/
@@ -542,14 +553,11 @@ theorem tendsto_iff_lowerOrder_iteratedGradient (k : ℕ) {I : Type*} {l : Filte
   | succ k =>
       -- Each later stage is a subtype of a `WithLp` product; its product equivalence recovers
       -- exactly the two characteristic projections, without a norm estimate.
-      simp only [lowerOrder_succ, iteratedGradient_succ]
+      simp only [lowerOrder_succ_coe, iteratedGradient_succ_coe]
       refine (tendsto_subtype_rng (f := v) (x := u)).trans ?_
       rw [(WithLp.prodContinuousLinearEquiv 2 ℝ _ _).toHomeomorph.isEmbedding.tendsto_nhds_iff]
-      -- Retype `v` and `u` at the graph step so that its projection lemmas apply to them.
-      dsimp only [Wkp, sobolevStage_succ] at v u
       simp only [Function.comp_def, ContinuousLinearEquiv.coe_toHomeomorph,
-        WithLp.prodContinuousLinearEquiv_apply, WeakDerivStep.prev_coe,
-        WeakDerivStep.weakFDeriv_coe]
+        WithLp.prodContinuousLinearEquiv_apply]
       exact Prod.tendsto_iff _ _
 
 end Wkp

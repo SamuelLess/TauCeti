@@ -288,4 +288,17 @@ theorem restrictL_mem_closure_range_ofTestFunctionₗ (hp : p ≠ ∞)
   obtain ⟨psi, hpsi⟩ := exists_testFunction_approximation_restrictL hp hcompact hclosure k u
   exact mem_closure_of_tendsto hpsi (Eventually.of_forall fun j => ⟨psi j, rfl⟩)
 
+/-- The restriction of a `W^{1,p}(Ω)` function to an open subdomain compactly contained in `Ω`
+is in the Sobolev-norm closure of restrictions of test functions on the larger domain. -/
+theorem _root_.TauCeti.W1p.restrictL_mem_closure_range_ofTestFunctionₗ (hp : p ≠ ∞)
+    (hcompact : IsCompact (closure (U : Set E)))
+    (hclosure : closure (U : Set E) ⊆ Omega) (u : W1p mu Omega p) :
+    W1p.restrictL (SetLike.coe_subset_coe.mp (subset_closure.trans hclosure)) u ∈
+      closure (Set.range (fun psi : 𝓓(Omega, ℝ) =>
+        W1p.restrictL (SetLike.coe_subset_coe.mp (subset_closure.trans hclosure))
+          (W1p.ofTestFunctionₗ mu Omega p psi))) := by
+  have h := Wkp.restrictL_mem_closure_range_ofTestFunctionₗ hp hcompact hclosure 1 u
+  simp only [Wkp.restrictL_one, Wkp.ofTestFunctionₗ_one] at h
+  exact h
+
 end TauCeti.Wkp

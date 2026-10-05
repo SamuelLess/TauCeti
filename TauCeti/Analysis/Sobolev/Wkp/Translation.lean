@@ -117,6 +117,8 @@ theorem value_translate (h : E) : ∀ (k : ℕ) (u : Wkp mu ⊤ p k),
 the source and target domains are both the whole space. -/
 theorem translate_one_eq_W1p_translate (h : E) (u : Wkp mu ⊤ p 1) :
     translate h 1 u = W1p.translate (h := h) (fun _ _ => by simp) u :=
+  -- `translate h 1 u` is `translateOne h u`, which is this `W1p.translate` once `Wkp … 1` is
+  -- unfolded to `W1p`.
   (rfl)
 
 private theorem translate_one_eq_translateOne (h : E) (u : Wkp mu ⊤ p 1) :
@@ -214,9 +216,8 @@ theorem continuous_translate (hp : p ≠ ∞) :
               ((WithLp.prodContinuousLinearEquiv 2 ℝ _ _).symm_apply_apply _).symm
             _ = _ := by
               congr 1
-              simp only [WithLp.prodContinuousLinearEquiv_apply, lowerOrder_succ,
-                iteratedGradient_succ, WeakDerivStep.prev_coe _ (translate h (k + 2) u),
-                WeakDerivStep.weakFDeriv_coe _ (translate h (k + 2) u)]
+              simp only [WithLp.prodContinuousLinearEquiv_apply, lowerOrder_succ_coe,
+                iteratedGradient_succ_coe]
               exact Prod.ext (WithLp.ofLp_fst _) (WithLp.ofLp_snd _)
         rw [heq]
         exact (WithLp.prodContinuousLinearEquiv 2 ℝ _ _).symm.continuous.comp hpair

@@ -95,6 +95,8 @@ theorem normedBumpL_zero (hp : p ≠ ∞) (phi : ContDiffBump (0 : E)) :
 @[simp]
 theorem normedBumpL_one (hp : p ≠ ∞) (phi : ContDiffBump (0 : E)) :
     normedBumpL (mu := mu) hp phi 1 = W1p.normedBumpL (mu := mu) hp phi := by
+  -- The right side names its measure because `Wkp … 1` is not reducibly `W1p`, so the
+  -- measure cannot be read off the left side's type.
   apply ContinuousLinearMap.ext
   intro u
   apply ext 1

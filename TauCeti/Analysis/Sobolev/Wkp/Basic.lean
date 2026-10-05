@@ -442,15 +442,28 @@ theorem norm_iteratedGradient_le (k : ℕ) (u : Wkp mu Omega p (k + 1)) :
         (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u
 
 /-- At order at least two, and for every exponent `p`, the squared graph norm is the sum of the
-squared norms of the lower-order component and the highest weak derivative.  At order one the norm
-is that of `TauCeti.W1p`, for which the corresponding identity holds only at `p = 2`
-(`TauCeti.W1p.norm_sq_eq_norm_value_sq_add_norm_gradient_sq`). -/
-theorem norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq (k : ℕ)
+squared norms of the lower-order component and the highest weak derivative. -/
+theorem norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_succ (k : ℕ)
     (u : Wkp mu Omega p (k + 2)) :
     ‖u‖ ^ 2 = ‖lowerOrder (k + 1) u‖ ^ 2 + ‖iteratedGradient (k + 1) u‖ ^ 2 := by
   rw [lowerOrder_succ, iteratedGradient_succ]
   exact WeakDerivStep.norm_sq_eq_norm_prev_sq_add_norm_weakFDeriv_sq
     (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u
+
+/-- At exponent two, the squared graph norm at every positive order is the sum of the squared
+norm of the lower-order component and the squared norm of the highest weak derivative.  The
+exponent matters only at order one, where the norm is that of `TauCeti.W1p`; from order two on the
+identity holds for every `p`
+(`TauCeti.Wkp.norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_succ`). -/
+theorem norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq (k : ℕ)
+    (u : Wkp mu Omega 2 (k + 1)) :
+    ‖u‖ ^ 2 = ‖lowerOrder k u‖ ^ 2 + ‖iteratedGradient k u‖ ^ 2 := by
+  cases k with
+  | zero =>
+      rw [lowerOrder_zero, iteratedGradient_zero]
+      exact W1p.norm_sq_eq_norm_value_sq_add_norm_gradient_sq u
+  | succ k =>
+      exact norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_succ k u
 
 /-- Convergence in a positive-order Sobolev norm is equivalent to convergence of the
 preceding Sobolev component and the highest weak derivative. -/

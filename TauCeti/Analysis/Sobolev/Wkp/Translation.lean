@@ -233,9 +233,9 @@ theorem norm_translate (h : E) : ∀ (k : ℕ) (u : Wkp mu ⊤ p k),
       rw [translate_one_eq_jet]
       exact (mu.restrict ((⊤ : Opens E) : Set E)).translateLp p h |>.norm_map u.1
   | k + 2, u => by
-      have hv := norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq k
+      have hv := norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_succ k
         (translate h (k + 2) u)
-      have hu := norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq k u
+      have hu := norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_succ k u
       rw [lowerOrder_translate, iteratedGradient_translate,
         norm_translate h (k + 1) (lowerOrder (k + 1) u),
         LinearIsometryEquiv.norm_map] at hv

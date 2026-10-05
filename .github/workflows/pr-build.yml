@@ -225,6 +225,33 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Building PR #$NUM @ $SHA from $REPO (author=${AUTHOR:-merge-group}, status -> $STATUS_SHA, bump delta vs merge-base $MB)"
 
+      # This is the commit that supplied the pull_request_target / merge_group workflow. All
+      # executable audit, watchdog, cache, and bump-validation tooling comes from here.
+      - name: Checkout workflow-pinned trusted build tooling
+        if: ${{ env.INFRA != '1' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: gate
+          persist-credentials: false
+          fetch-depth: 1
+
+      # Full history is intentional. lake cache get walks ancestors until it reaches a published
+      # main commit, then Lake's input hashes invalidate only changed modules and their downstream
+      # dependents. The cache step below limits how many ancestors it reads. The checkout is the
+      # immutable event head itself: no refs/pull/N/merge, no local merge, and no source/config
+      # overlay.
+      - name: Checkout the exact candidate head (untrusted contents, no credentials)
+        if: ${{ env.INFRA != '1' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.repo }}
+          ref: ${{ steps.pr.outputs.sha }}
+          path: pr
+          persist-credentials: false
+          fetch-depth: 0
+          allow-unsafe-pr-checkout: true
+
       - name: Scope guard — allow TauCeti sources and validated pins
         env:
           GH_TOKEN: "${{ github.token }}"
@@ -232,16 +259,18 @@ jobs:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_USER: ${{ github.event.pull_request.user.login }}
+          SCOPE_BASE: ${{ steps.pr.outputs.mergebase }}
+          SCOPE_HEAD: ${{ steps.pr.outputs.sha }}
         run: |
           if [ "${{ env.IS_BATCH }}" = "true" ]; then
-            # The whole batch's combined change set vs the trusted base (every batched PR).
-            files=$(gh api "repos/${{ github.repository }}/compare/${{ steps.pr.outputs.base_ref }}...${{ steps.pr.outputs.sha }}" --jq '.files[].filename')
-            # The compare endpoint caps `.files` at 300. If we hit that, the list may be truncated and
-            # could hide an out-of-scope path — fail closed (route to human); the queue then bisects the
-            # batch into smaller groups that fit under the cap. (Realistic batches are far under 300.)
-            if [ "$(printf '%s\n' "$files" | grep -c .)" -ge 300 ]; then
+            # Complete immutable batch diff, including removals, using workflow-pinned
+            # tooling and an isolated object reader. Missing objects/metadata or unsafe
+            # line-format filenames fail closed; no truncated API file list is accepted.
+            if [ "${MERGEBASE_EXACT:-0}" != "1" ] || ! files=$(python3 \
+                gate/scripts/lint_scope_files.py pr "$SCOPE_BASE" "$SCOPE_HEAD" --policy); then
+              files=""
               echo "INFRA=1" >> "$GITHUB_ENV"
-              echo "::warning::merge-group combined diff hit the compare 300-file cap — failing closed so the queue bisects"
+              echo "::warning::cannot determine the complete immutable batch scope — routing to human"
             fi
           else
             files=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.num }}/files" --jq '.[].filename')
@@ -307,7 +336,7 @@ jobs:
           # CURRENT head, while the statuses describe the head named by the event: a branch that
           # advances between the two makes the answer describe a different commit, and a branch
           # that advances and then comes back defeats the final head re-check as well. And the
-          # list is capped — 300 entries for a merge group, 3000 for a pull request — so a pin
+          # ordinary PR list is capped at 3000 entries, so a pin
           # file sitting past the end of it would read as no pin change at all.
           #
           # Comparing blob SHAs at two immutable commits has neither problem, and asking the
@@ -376,7 +405,7 @@ jobs:
       - name: Diff size guard — additions, deletions, and changed files each ≤ 2000 (trusted GitHub PR totals; Lake-pin bumps exempt from the line caps)
         # Per-PR cap, enforced when each PR is built on pull_request_target (its entry condition to the
         # queue). A merge_group batch is the sum of already-capped PRs, so we don't re-cap the combined
-        # size here. (The scope guard's 300-file compare cap still bounds the batch's file count.)
+        # size here. The combined batch scope uses a complete local Git diff.
         # A PR that moves the Lake pins (BUMP=1, set by the scope guard above) is exempt from the
         # two line caps: its diff is whatever the upstream Mathlib/Lean changes force, so splitting
         # it is not possible without an intermediate bump. Such a PR still has to pass the trusted
@@ -435,17 +464,6 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      # This is the commit that supplied the pull_request_target / merge_group workflow. All
-      # executable audit, watchdog, cache, and bump-validation tooling comes from here.
-      - name: Checkout workflow-pinned trusted build tooling
-        if: ${{ env.INFRA != '1' }}
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.workflow_sha }}
-          path: gate
-          persist-credentials: false
-          fetch-depth: 1
-
       - name: Checkout the PR merge base (trusted historical configuration)
         if: ${{ env.INFRA != '1' }}
         uses: actions/checkout@v4
@@ -454,22 +472,6 @@ jobs:
           path: mergebase
           persist-credentials: false
           fetch-depth: 1
-
-      # Full history is intentional. lake cache get walks ancestors until it reaches a published
-      # main commit, then Lake's input hashes invalidate only changed modules and their downstream
-      # dependents. The cache step below limits how many ancestors it reads. The checkout is the
-      # immutable event head itself: no refs/pull/N/merge, no local merge, and no source/config
-      # overlay.
-      - name: Checkout the exact candidate head (untrusted contents, no credentials)
-        if: ${{ env.INFRA != '1' }}
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ steps.pr.outputs.repo }}
-          ref: ${{ steps.pr.outputs.sha }}
-          path: pr
-          persist-credentials: false
-          fetch-depth: 0
-          allow-unsafe-pr-checkout: true
 
       # `.lake` sits inside a checkout whose contents the candidate controls, and a symlink
       # committed there gets followed by everything that later writes to that path, each of
@@ -855,6 +857,7 @@ jobs:
           BASE: ${{ env.IS_BATCH == 'true' && steps.pr.outputs.base_ref || steps.pr.outputs.base_sha }}
           HEAD: ${{ steps.pr.outputs.sha }}
           HEAD_REPO: ${{ steps.pr.outputs.repo }}
+          SCOPE_REPO: pr
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/lint-scope"
@@ -997,7 +1000,8 @@ jobs:
 
       # Which modules the environment lint covers: the TauCeti modules this change touches, or the
       # whole library for `full-lint`-labelled and lint-repair PRs (scripts/lint-scope.sh). Computed
-      # on the host from GitHub metadata only, and mounted read-only into the sandbox.
+      # on the host from GitHub metadata and immutable Git objects using trusted tooling,
+      # and mounted read-only into the sandbox.
       - name: Build exact candidate under bwrap with workflow-pinned audits, offline
         id: build
         if: ${{ env.INFRA != '1' }}

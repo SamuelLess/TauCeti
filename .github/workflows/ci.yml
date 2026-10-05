@@ -343,6 +343,7 @@ jobs:
           EVENT: push
           BASE: ${{ github.event.before }}
           HEAD: ${{ github.sha }}
+          SCOPE_REPO: .
         run: bash scripts/lint-scope.sh "$RUNNER_TEMP/lint-scope"
 
       - name: Environment lint (default linters + docstring scan vs grandfathered baseline)

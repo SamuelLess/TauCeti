@@ -71,17 +71,14 @@ checks it.
 * `TauCeti.Quaternion.tensorOpAlgEquivMatrix`:
   `ℍ[ℝ] ⊗[ℝ] ℍ[ℝ]ᵐᵒᵖ ≃ₐ[ℝ] Matrix (Fin 4) (Fin 4) ℝ`.
 * `TauCeti.Quaternion.tensorSelfAlgEquivMatrix`: `ℍ[ℝ] ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℝ] Matrix (Fin 4) (Fin 4) ℝ`,
-  the roadmap's worked example.
+  the splitting of the tensor square.
 * `TauCeti.Quaternion.complexTensorAlgEquivMatrix`:
   `ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℂ] Matrix (Fin 2) (Fin 2) ℂ`, the splitting of `ℍ[ℝ]` by `ℂ` at its degree.
 
 ## References
 
-This is the `ℍ[ℝ] ⊗_ℝ ℍ[ℝ] ≃ M₄(ℝ)` half of the Hamilton-quaternion worked example of the
-[semisimple algebras roadmap](https://github.com/TauCetiProject/TauCetiRoadmap/blob/main/TauCetiRoadmap/RepresentationTheory/SemisimpleAlgebras/README.md),
-pinned there as `quaternion_tensor_self`; the centrality half is
-`TauCeti/Algebra/Central/Quaternion.lean`. See P. Gille, T. Szamuely, *Central Simple Algebras and
-Galois Cohomology*, CUP (2006), §1.1 and §2.1.
+* P. Gille, T. Szamuely, *Central Simple Algebras and Galois Cohomology*, CUP (2006), §1.1 and
+  §2.1.
 -/
 
 public section

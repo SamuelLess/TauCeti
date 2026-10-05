@@ -342,6 +342,17 @@ class LintScopeTest(unittest.TestCase):
 
 
 class PrBuildWiringTest(unittest.TestCase):
+    def test_postmerge_scope_has_complete_git_history(self):
+        wf = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+        job = next(job for job in wf["jobs"].values() if any(
+            step.get("name") == "Decide the environment-lint scope" for step in job["steps"]))
+        checkout = next(step for step in job["steps"]
+                        if step.get("uses", "").startswith("actions/checkout@"))
+        self.assertEqual(checkout["with"]["fetch-depth"], 0)
+        scope = next(step for step in job["steps"]
+                     if step.get("name") == "Decide the environment-lint scope")
+        self.assertEqual(scope["env"]["SCOPE_REPO"], ".")
+
     def test_scope_is_decided_before_the_sandbox_and_mounted_read_only(self):
         wf = yaml.safe_load((ROOT / ".github" / "workflows" / "pr-build.yml").read_text())
         (job,) = [j for j in wf["jobs"].values()

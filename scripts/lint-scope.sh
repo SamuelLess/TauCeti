@@ -61,6 +61,7 @@ case "$EVENT" in
     prs=$(jq -r '.commits[].commit.message | split("\n")[0]' <<<"$compare" \
       | sed -nE 's/.*\(#([0-9]+)\)$/\1/p' | sort -u)
     ncommits=$(jq '.commits | length' <<<"$compare")
+    [ "$(jq '.total_commits' <<<"$compare")" = "$ncommits" ] || full "the compare API truncated the commit list"
     nprs=$(grep -c . <<<"$prs" || true)
     [ "$nprs" -eq "$ncommits" ] || full "$ncommits commit(s) but $nprs PR number(s) in their titles"
     [ "$(jq '.files | length' <<<"$compare")" -lt 300 ] || full "the compare API's 300-file cap"

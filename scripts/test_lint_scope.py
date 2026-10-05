@@ -109,7 +109,7 @@ class LintScopeTest(unittest.TestCase):
     BATCH_EVENTS = ("merge_group", "repository_dispatch", "push")
 
     def test_batches_read_prs_from_squash_titles(self):
-        compare = {"commits": [{"commit": {"message": "feat: x (#7)\n\nbody"}},
+        compare = {"total_commits": 2, "commits": [{"commit": {"message": "feat: x (#7)\n\nbody"}},
                                {"commit": {"message": "fix: y (#8)"}}],
                    "files": [f("modified", "TauCeti/X.lean")]}
         for event in self.BATCH_EVENTS:
@@ -125,15 +125,26 @@ class LintScopeTest(unittest.TestCase):
         for event in self.BATCH_EVENTS:
             for message in ("Merge branch main", "another commit (#7)"):
                 with self.subTest(event=event, message=message):
-                    compare = {"commits": [{"commit": {"message": "feat: x (#7)"}},
+                    compare = {"total_commits": 2, "commits": [{"commit": {"message": "feat: x (#7)"}},
                                            {"commit": {"message": message}}],
                                "files": [f("modified", "TauCeti/X.lean")]}
                     self.assertIsNone(self.run_scope(
                         {"EVENT": event, "BASE": SHA_A, "HEAD": SHA_B},
                         {f"repos/o/r/compare/{SHA_A}...{SHA_B}": compare}))
 
+    def test_truncated_or_missing_batch_commit_count_lints_everything(self):
+        for event in self.BATCH_EVENTS:
+            for count in (None, 251):
+                with self.subTest(event=event, count=count):
+                    compare = {"total_commits": count,
+                               "commits": [{"commit": {"message": "feat: x (#7)"}}],
+                               "files": [f("modified", "TauCeti/X.lean")]}
+                    self.assertIsNone(self.run_scope(
+                        {"EVENT": event, "BASE": SHA_A, "HEAD": SHA_B},
+                        {f"repos/o/r/compare/{SHA_A}...{SHA_B}": compare}))
+
     def test_batch_compare_cap_lints_everything(self):
-        compare = {"commits": [{"commit": {"message": "feat: x (#7)"}}],
+        compare = {"total_commits": 1, "commits": [{"commit": {"message": "feat: x (#7)"}}],
                    "files": [f("modified", f"TauCeti/M{i}.lean") for i in range(300)]}
         for event in self.BATCH_EVENTS:
             with self.subTest(event=event):

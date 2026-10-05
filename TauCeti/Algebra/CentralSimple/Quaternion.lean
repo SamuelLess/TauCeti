@@ -31,22 +31,31 @@ import Mathlib.Analysis.Complex.Polynomial.Basic
 import TauCeti.Algebra.CentralSimple.Splitting
 
 /-!
-# The tensor square of the real quaternions is `M₄(ℝ)`
+# Splitting the real quaternions
 
 The real quaternions `ℍ[ℝ]` are a central division algebra of dimension `4` over `ℝ`, hence a
-central simple `ℝ`-algebra of degree `2`. This file runs the opposite isomorphism of
-`TauCeti/Algebra/CentralSimple/Opposite.lean` on them, in the two forms
+central simple `ℝ`-algebra of degree `2`. They are not a matrix algebra over `ℝ`, but they become
+one in two ways: after tensoring with their opposite, or with themselves, over `ℝ`, and after
+extending scalars to `ℂ`.
+
+For the first, this file runs the opposite isomorphism of
+`TauCeti/Algebra/CentralSimple/Opposite.lean` on `ℍ[ℝ]`, in the two forms
 
 `ℍ[ℝ] ⊗[ℝ] ℍ[ℝ]ᵐᵒᵖ ≃ₐ[ℝ] Matrix (Fin 4) (Fin 4) ℝ`  and
 `ℍ[ℝ] ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℝ] Matrix (Fin 4) (Fin 4) ℝ`.
 
-The second follows from the first because quaternion conjugation is an `ℝ`-algebra isomorphism
-`ℍ[ℝ] ≃ₐ[ℝ] ℍ[ℝ]ᵐᵒᵖ` (Mathlib's `Quaternion.starAe`): the quaternions are their own opposite.
+The tensor-square form follows from the opposite form because quaternion conjugation is an
+`ℝ`-algebra isomorphism `ℍ[ℝ] ≃ₐ[ℝ] ℍ[ℝ]ᵐᵒᵖ` (Mathlib's `Quaternion.starAe`): the quaternions are
+their own opposite.
 
-Nothing below is a statement about `BrauerGroup ℝ`: the two main results are isomorphisms of
-`ℝ`-algebras, and the two examples closing the file are a degree computation and a nonexistence
-statement. Informally, the isomorphisms exhibit the Brauer class of `ℍ[ℝ]` as **self-inverse**; that
-the class is moreover not the identity, so that its order is exactly `2`, is
+For the second, `ℂ` is algebraically closed, so it splits `ℍ[ℝ]` already at its degree:
+`ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℂ] Matrix (Fin 2) (Fin 2) ℂ`. That is, the complexification of the quaternions is
+the full matrix algebra `M₂(ℂ)`.
+
+Nothing below is a statement about `BrauerGroup ℝ`: the main results are algebra isomorphisms, and
+the two examples closing the file are a degree computation and a nonexistence statement.
+Informally, the tensor-square isomorphisms exhibit the Brauer class of `ℍ[ℝ]` as **self-inverse**;
+that the class is moreover not the identity, so that its order is exactly `2`, is
 `TauCeti.Quaternion.orderOf_mk_eq_two` in `TauCeti/Algebra/BrauerGroup/Quaternion.lean`. Saying that
 `BrauerGroup ℝ ≃ ℤ/2` is a further and independent matter, needing the classification of real
 division algebras to know the class generates; that is

@@ -234,13 +234,13 @@ def realCliffordFormNegIsometry (p q : ℕ) :
         LinearEquiv.coe_coe, LinearEquiv.funCongrLeft_apply, LinearMap.funLeft_apply]
 
 /-- `realCliffordFormNegIsometry` reads each coordinate through the block swap `finAddFlip`. -/
+@[simp]
 theorem realCliffordFormNegIsometry_apply (p q : ℕ) (x : Fin (p + q) → ℝ) (i : Fin (q + p)) :
     realCliffordFormNegIsometry p q x i = x (finAddFlip i) := by
   simp [realCliffordFormNegIsometry, ← QuadraticMap.IsometryEquiv.coe_toLinearEquiv]
 
 /-- Negated negative coordinates become positive coordinates under
 `realCliffordFormNegIsometry`. -/
-@[simp]
 theorem realCliffordFormNegIsometry_pos_of_neg (p q : ℕ)
     (x : Fin (p + q) → ℝ) (i : Fin q) :
     realCliffordFormNegIsometry p q x (Fin.castAdd p i) = x (Fin.natAdd p i) := by
@@ -248,7 +248,6 @@ theorem realCliffordFormNegIsometry_pos_of_neg (p q : ℕ)
 
 /-- Negated positive coordinates become negative coordinates under
 `realCliffordFormNegIsometry`. -/
-@[simp]
 theorem realCliffordFormNegIsometry_neg_of_pos (p q : ℕ)
     (x : Fin (p + q) → ℝ) (i : Fin p) :
     realCliffordFormNegIsometry p q x (Fin.natAdd q i) = x (Fin.castAdd q i) := by

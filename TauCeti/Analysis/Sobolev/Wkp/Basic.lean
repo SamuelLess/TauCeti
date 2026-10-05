@@ -24,9 +24,14 @@ Consequently the highest field of `W^{k+1,p}` has type
 `Lᵖ(Ω; TauCeti.IteratedGradient E k)`.
 
 Every stage is a closed weak-derivative graph, hence complete.  No boundedness or boundary
-regularity of `Ω` is used.  The graph norm is obtained recursively from Euclidean product norms:
-at each positive order its square is the sum of the squared norm of the one-order-lower component
-and the squared norm of the highest weak derivative.
+regularity of `Ω` is used.  The norm of `W^{1,p}(Ω)` is that of `TauCeti.W1p`: the `Lᵖ` norm of
+the pointwise Euclidean norm of the value and the gradient.  Each later stage takes the Euclidean
+product norm of its two components, so at every order `k + 2` and for every `p` the squared norm is
+the sum of the squared norm of the one-order-lower component and the squared norm of the highest
+weak derivative.  At order one this identity holds for `p = 2` but not in general; it fails, for
+instance, for `sin` in `W^{1,∞}(ℝ)`.  The derivative fields above first order carry operator norms,
+so when `E` has dimension at least `2` the norm of `W^{k,2}(Ω)` with `k ≥ 2` is not induced by an
+inner product: it is a Banach-space norm, not the Hilbert-space norm of `H^k(Ω)`.
 
 ## Implementation notes
 
@@ -65,9 +70,8 @@ the two projections above first order as the components of the underlying graph 
 
 ## References
 
-This completes the arbitrary-order space and completeness part of Lane A.1, target 1, in
-`TauCetiRoadmap/PDE/README.md`.  The iterated weak-derivative definition and closed-graph
-completeness argument follow L. C. Evans, *Partial Differential Equations*, Chapter 5, §5.2.
+The iterated weak-derivative definition and closed-graph completeness argument follow
+L. C. Evans, *Partial Differential Equations*, Chapter 5, §5.2.
 -/
 
 public section
@@ -195,8 +199,8 @@ structure SobolevStage (mu : Measure E) [mu.IsAddHaarMeasure] (Omega : Opens E)
   /-- The continuous projection to the highest weak derivative field. -/
   iteratedGradientL : Space →L[ℝ] Lp (IteratedGradient E j) p (mu.restrict Omega)
 
-/-- The first stage of the arbitrary-order construction is `W1p`, with value and gradient as
-its lower-order and highest-derivative projections. -/
+/-- The first stage of the arbitrary-order construction is `W1p`, whose highest-derivative
+projection is the weak gradient. -/
 @[reducible, expose] noncomputable def firstSobolevStage : SobolevStage mu Omega p 0 where
   Space := W1p mu Omega p
   iteratedGradientL := W1p.gradientL
@@ -333,6 +337,7 @@ def valueL : (k : ℕ) → Wkp mu Omega p k →L[ℝ] Lp ℝ p (mu.restrict Omeg
 def value (k : ℕ) (u : Wkp mu Omega p k) : Lp ℝ p (mu.restrict Omega) :=
   valueL k u
 
+/-- Evaluating the continuous value projection equals `value`. -/
 @[simp]
 theorem valueL_apply (k : ℕ) (u : Wkp mu Omega p k) : valueL k u = value k u :=
   (rfl)
@@ -349,6 +354,7 @@ theorem value_smul (k : ℕ) (c : ℝ) (u : Wkp mu Omega p k) :
     value k (c • u) = c • value k u := by
   simpa only [← valueL_apply] using (valueL k).map_smul c u
 
+/-- At order zero, the value component of a Sobolev function is the function itself. -/
 @[simp]
 theorem value_zero (u : Wkp mu Omega p 0) : value 0 u = u :=
   by simp only [value, valueL, ContinuousLinearMap.id_apply]
@@ -444,6 +450,7 @@ def mk (k : ℕ) (u : Wkp mu Omega p (k + 1))
   exact WeakDerivStep.mk
     (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u D h
 
+/-- Forgetting the adjoined derivative of `mk k u D h` recovers `u`. -/
 @[simp]
 theorem lowerOrder_mk (k : ℕ) (u : Wkp mu Omega p (k + 1))
     (D : Lp (IteratedGradient E (k + 1)) p (mu.restrict Omega))
@@ -453,6 +460,7 @@ theorem lowerOrder_mk (k : ℕ) (u : Wkp mu Omega p (k + 1))
   exact WeakDerivStep.prev_mk
     (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u D h
 
+/-- The highest weak derivative of `mk k u D h` is the adjoined derivative `D`. -/
 @[simp]
 theorem iteratedGradient_mk (k : ℕ) (u : Wkp mu Omega p (k + 1))
     (D : Lp (IteratedGradient E (k + 1)) p (mu.restrict Omega))
@@ -531,7 +539,10 @@ theorem norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_add_two (k : 
     (sobolevStage (mu := mu) (Omega := Omega) (p := p) k).iteratedGradientL u
 
 /-- At exponent two, the squared graph norm at every positive order is the sum of the squared
-norm of the lower-order component and the squared norm of the highest weak derivative. -/
+norm of the lower-order component and the squared norm of the highest weak derivative.  The
+exponent matters only at order one, where the norm is that of `TauCeti.W1p`; from order two on the
+identity holds for every `p`
+(`TauCeti.Wkp.norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq_add_two`). -/
 theorem norm_sq_eq_norm_lowerOrder_sq_add_norm_iteratedGradient_sq (k : ℕ)
     (u : Wkp mu Omega 2 (k + 1)) :
     ‖u‖ ^ 2 = ‖lowerOrder k u‖ ^ 2 + ‖iteratedGradient k u‖ ^ 2 := by

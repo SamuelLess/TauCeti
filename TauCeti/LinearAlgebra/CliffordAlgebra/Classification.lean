@@ -7,12 +7,12 @@ module
 
 public import TauCeti.LinearAlgebra.CliffordAlgebra.EightPeriodicity
 
-import Mathlib.RingTheory.TensorProduct.Pi
 import Mathlib.Analysis.Complex.Polynomial.Basic
 import TauCeti.Algebra.CentralSimple.Quaternion
 import TauCeti.Algebra.CentralSimple.Splitting
 import TauCeti.LinearAlgebra.Matrix.TensorProduct
 import TauCeti.LinearAlgebra.CliffordAlgebra.RealForm.Four
+import TauCeti.RingTheory.TensorProduct.Pi
 
 /-!
 # Classification of real Clifford algebras
@@ -114,14 +114,6 @@ private noncomputable def realCliffordZeroZeroEquiv :
         simp))).trans
     CliffordAlgebraRing.equiv
 
-private def prodTensorAlgebraEquiv (R A₁ A₂ B : Type*) [CommSemiring R]
-    [Semiring A₁] [Semiring A₂] [Semiring B] [Algebra R A₁] [Algebra R A₂] [Algebra R B] :
-    (A₁ × A₂) ⊗[R] B ≃ₐ[R] (A₁ ⊗[R] B) × (A₂ ⊗[R] B) :=
-  (Algebra.TensorProduct.comm R _ _).trans <|
-    (Algebra.TensorProduct.prodRight R R B A₁ A₂).trans <|
-    AlgEquiv.prodCongr (Algebra.TensorProduct.comm R B A₁)
-      (Algebra.TensorProduct.comm R B A₂)
-
 private noncomputable def complexTensorQuaternionEquiv :
     ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℝ] Matrix (Fin 2) (Fin 2) ℂ := by
   have hdeg : Algebra.deg ℝ ℍ[ℝ] = 2 :=
@@ -172,7 +164,8 @@ private def matrixProdModelTensorEquiv {R S T A B D : Type*} [CommSemiring R]
     (coeff : A ⊗[R] B ≃ₐ[R] Matrix (Fin n) (Fin n) D) (h : m * n = k) :
     T ≃ₐ[R] Matrix (Fin k) (Fin k) D × Matrix (Fin k) (Fin k) D :=
   step.trans <| (Algebra.TensorProduct.congr model (AlgEquiv.refl : B ≃ₐ[R] B)).trans <|
-    (prodTensorAlgebraEquiv R (Matrix (Fin m) (Fin m) A) (Matrix (Fin m) (Fin m) A) B).trans <|
+    (Algebra.TensorProduct.prodLeft R (Matrix (Fin m) (Fin m) A) (Matrix (Fin m) (Fin m) A)
+      B).trans <|
       AlgEquiv.prodCongr (matrixTensorByCoefficientEquiv m coeff h)
         (matrixTensorByCoefficientEquiv m coeff h)
 

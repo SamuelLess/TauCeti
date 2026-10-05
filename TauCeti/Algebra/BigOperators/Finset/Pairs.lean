@@ -10,6 +10,7 @@ public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 public import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 public import Mathlib.Algebra.Order.BigOperators.Group.LocallyFinite
 public import Mathlib.Data.Fintype.Prod
+public import Mathlib.Data.Finset.NatAntidiagonal
 public import Mathlib.Order.Interval.Finset.Defs
 
 /-!
@@ -47,6 +48,7 @@ sign of the permutation.
   products of each tuple and their cross terms.
 * `TauCeti.prod_prod_Ioi_append_of_mul`: the cross term for a bimultiplicative pairing
   is the pairing of the products.
+* `TauCeti.sum_sum_Ioi_append_of_mul`: the same for a pairing turning products into sums.
 * `TauCeti.prod_prod_Ioi_scale`: scaling all entries of a pair product for a symmetric
   bimultiplicative pairing.
 -/
@@ -56,6 +58,27 @@ public section
 namespace TauCeti
 
 open Finset
+
+/-- A sum over bounded pairs of indices of total degree less than the bound equals the
+antidiagonal sum, provided the summands agree under the natural-index coercions. -/
+theorem sum_fin_product_eq_sum_antidiagonal {M : Type*} [AddCommMonoid M] {n d : ℕ}
+    (hd : d < n) (f : Fin n × Fin n → M) (g : ℕ × ℕ → M)
+    (hfg : ∀ l, (l.1 : ℕ) + (l.2 : ℕ) = d → f l = g (l.1, l.2)) :
+    (∑ l : Fin n × Fin n with (l.1 : ℕ) + (l.2 : ℕ) = d, f l) =
+      ∑ l ∈ antidiagonal d, g l := by
+  classical
+  refine Finset.sum_bij (fun l _ ↦ ((l.1 : ℕ), (l.2 : ℕ))) ?_ ?_ ?_ ?_
+  · intro l hl
+    exact Finset.mem_antidiagonal.mpr (Finset.mem_filter.mp hl).2
+  · intro l _ m _ hlm
+    exact Prod.ext (Fin.ext (Prod.mk.inj hlm).1) (Fin.ext (Prod.mk.inj hlm).2)
+  · intro l hl
+    have hl' := Finset.mem_antidiagonal.mp hl
+    refine ⟨(⟨l.1, by omega⟩, ⟨l.2, by omega⟩), ?_, rfl⟩
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+    exact hl'
+  · intro l hl
+    exact hfg l (Finset.mem_filter.mp hl).2
 
 /-- A product over weakly increasing pairs splits into the strictly increasing pairs and the
 diagonal. -/
@@ -173,6 +196,23 @@ theorem prod_prod_Ioi_append_of_mul {A M : Type*} [CommMonoid A] [CommMonoid M] 
       exact (map_prod (h₁ (p i)) q Finset.univ).symm
     _ = F (∏ i, p i) (∏ j, q j) :=
       (map_prod (h₂ (∏ j, q j)) p Finset.univ).symm
+
+/-- The pairwise sum of a concatenation for a pairing that turns products in either argument into
+sums. -/
+theorem sum_sum_Ioi_append_of_mul {A M : Type*} [CommMonoid A] [AddCommMonoid M] (F : A → A → M)
+    (hone_left : ∀ b, F 1 b = 0) (hone_right : ∀ a, F a 1 = 0)
+    (hmul_left : ∀ a b c, F (a * b) c = F a c + F b c)
+    (hmul_right : ∀ a b c, F a (b * c) = F a b + F a c)
+    {m n : ℕ} (p : Fin m → A) (q : Fin n → A) :
+    (∑ i, ∑ j ∈ Ioi i, F (Fin.append p q i) (Fin.append p q j)) =
+      (∑ i, ∑ j ∈ Ioi i, F (p i) (p j)) +
+        (∑ i, ∑ j ∈ Ioi i, F (q i) (q j)) +
+        F (∏ i, p i) (∏ j, q j) := by
+  apply Multiplicative.ofAdd.injective
+  simpa only [ofAdd_add, ofAdd_sum] using prod_prod_Ioi_append_of_mul
+    (fun a b => Multiplicative.ofAdd (F a b))
+    (fun b => by rw [hone_left, ofAdd_zero]) (fun a => by rw [hone_right, ofAdd_zero])
+    (fun a b c => by rw [hmul_left, ofAdd_add]) (fun a b c => by rw [hmul_right, ofAdd_add]) p q
 
 /-- Scaling every coefficient in a pairwise product for a symmetric bimultiplicative
 pairing. The self-pairing law supplies the correction for each coefficient pair. -/

@@ -229,23 +229,30 @@ def realCliffordFormNegIsometry (p q : ℕ) :
   map_app' x := by
     rw [realCliffordForm_apply, neg_apply, realCliffordForm_apply, ← Finset.sum_neg_distrib,
       ← (finAddFlip : Fin (q + p) ≃ Fin (p + q)).sum_comp]
-    exact Finset.sum_congr rfl fun i _ ↦ by rw [← neg_realCliffordWeight_finAddFlip, neg_mul]; rfl
+    exact Finset.sum_congr rfl fun i _ ↦ by
+      rw [← neg_realCliffordWeight_finAddFlip, neg_mul, LinearMap.toFun_eq_coe,
+        LinearEquiv.coe_coe, LinearEquiv.funCongrLeft_apply, LinearMap.funLeft_apply]
+
+/-- `realCliffordFormNegIsometry` reads each coordinate through the block swap `finAddFlip`. -/
+theorem realCliffordFormNegIsometry_apply (p q : ℕ) (x : Fin (p + q) → ℝ) (i : Fin (q + p)) :
+    realCliffordFormNegIsometry p q x i = x (finAddFlip i) := by
+  simp [realCliffordFormNegIsometry, ← QuadraticMap.IsometryEquiv.coe_toLinearEquiv]
 
 /-- Negated negative coordinates become positive coordinates under
 `realCliffordFormNegIsometry`. -/
 @[simp]
 theorem realCliffordFormNegIsometry_pos_of_neg (p q : ℕ)
     (x : Fin (p + q) → ℝ) (i : Fin q) :
-    realCliffordFormNegIsometry p q x (Fin.castAdd p i) = x (Fin.natAdd p i) :=
-  congrArg x (finAddFlip_apply_castAdd i p)
+    realCliffordFormNegIsometry p q x (Fin.castAdd p i) = x (Fin.natAdd p i) := by
+  rw [realCliffordFormNegIsometry_apply, finAddFlip_apply_castAdd]
 
 /-- Negated positive coordinates become negative coordinates under
 `realCliffordFormNegIsometry`. -/
 @[simp]
 theorem realCliffordFormNegIsometry_neg_of_pos (p q : ℕ)
     (x : Fin (p + q) → ℝ) (i : Fin p) :
-    realCliffordFormNegIsometry p q x (Fin.natAdd q i) = x (Fin.castAdd q i) :=
-  congrArg x (finAddFlip_apply_natAdd i q)
+    realCliffordFormNegIsometry p q x (Fin.natAdd q i) = x (Fin.castAdd q i) := by
+  rw [realCliffordFormNegIsometry_apply, finAddFlip_apply_natAdd]
 
 /-! ### Standard signature coordinate isometries -/
 

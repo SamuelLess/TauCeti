@@ -114,15 +114,6 @@ private noncomputable def realCliffordZeroZeroEquiv :
         simp))).trans
     CliffordAlgebraRing.equiv
 
-private noncomputable def complexTensorQuaternionEquiv :
-    ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℝ] Matrix (Fin 2) (Fin 2) ℂ := by
-  have hdeg : Algebra.deg ℝ ℍ[ℝ] = 2 :=
-    Algebra.deg_eq_of_finrank_eq_sq (by rw [Quaternion.finrank_eq_four]; norm_num)
-  let e : ℂ ⊗[ℝ] ℍ[ℝ] ≃ₐ[ℂ] Matrix (Fin 2) (Fin 2) ℂ :=
-    Classical.choice <| hdeg ▸
-      (Algebra.isSplittingField_of_isSepClosed ℝ ℍ[ℝ] ℂ).nonempty_algEquiv_matrix_deg ..
-  exact e.restrictScalars ℝ
-
 private def matrixTensorAlgebraEquiv (R A B : Type*) [CommSemiring R]
     [Semiring A] [Semiring B] [Algebra R A] [Algebra R B] (m : ℕ) :
     Matrix (Fin m) (Fin m) A ⊗[R] B ≃ₐ[R]
@@ -233,7 +224,8 @@ private noncomputable def realCliffordPositiveSixEquiv :
 private noncomputable def realCliffordZeroFiveEquiv :
     C 0 5 ≃ₐ[ℝ] Matrix (Fin 4) (Fin 4) ℂ :=
   matrixModelTensorEquiv (realCliffordQuaternionRecurrenceEquiv 0 3)
-    realCliffordPositiveThreeEquiv complexTensorQuaternionEquiv (by norm_num)
+    realCliffordPositiveThreeEquiv (Quaternion.complexTensorAlgEquivMatrix.restrictScalars ℝ)
+    (by norm_num)
 
 private noncomputable def realCliffordPositiveSevenEquiv :
     C 7 0 ≃ₐ[ℝ] Matrix (Fin 8) (Fin 8) ℂ :=
@@ -319,7 +311,7 @@ private theorem realClifford_negativeAxis_classification (q : ℕ) :
         (by simpa only [Nat.sub_zero, Nat.reducePow, mul_one, Nat.zero_add] using
           pow_half_sub_mul_pow n 0 0 (n + 1 + 1 - 2) (by omega))⟩
     · exact ⟨matrixModelTensorEquiv (realCliffordQuaternionRecurrenceEquiv 0 n) e
-        complexTensorQuaternionEquiv
+        (Quaternion.complexTensorAlgEquivMatrix.restrictScalars ℝ)
         (by simpa only [Nat.reducePow, Nat.zero_add] using
           pow_half_sub_mul_pow n 1 1 (n + 1) (by omega))⟩
     · exact ⟨matrixModelTensorEquiv (realCliffordQuaternionRecurrenceEquiv 0 n) e
@@ -335,7 +327,7 @@ private theorem realClifford_negativeAxis_classification (q : ℕ) :
         (by simpa only [Nat.reducePow, Nat.zero_add] using
           pow_half_sub_mul_pow n 2 2 (n + 1 + 1) (by omega))⟩
     · exact ⟨matrixModelTensorEquiv (realCliffordQuaternionRecurrenceEquiv 0 n) e
-        complexTensorQuaternionEquiv
+        (Quaternion.complexTensorAlgEquivMatrix.restrictScalars ℝ)
         (by simpa only [Nat.reducePow, Nat.zero_add] using
           pow_half_sub_mul_pow n 1 1 (n + 1) (by omega))⟩
 

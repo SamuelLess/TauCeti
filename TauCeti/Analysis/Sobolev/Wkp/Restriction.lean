@@ -235,6 +235,8 @@ theorem restrictL_one (hU : U ≤ Omega) :
   apply ContinuousLinearMap.ext
   intro u
   apply W1p.ext_value
+  -- `W1p.value_restrictL`'s left-hand side is typed at `W1p`, so `rw` does not find it in this
+  -- `Wkp … 1` goal; the equation is chained on instead.
   refine Eq.trans ?_ (W1p.value_restrictL hU u).symm
   simpa only [value_one] using value_restrictL hU 1 u
 

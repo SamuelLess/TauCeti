@@ -41,12 +41,16 @@ so that at a concrete order instance search stops at `(sobolevStage j).Space` an
 `TauCeti.SobolevStage` shortcut instances keyed there.  The shortcut instances are provided at both
 the bundled-stage and `Wkp` indexings so instance search need not rederive these structures
 through the recursion.  The identifications of `Wkp … 1` with `TauCeti.W1p` and of
-`Wkp … (k + 2)` with a `TauCeti.WeakDerivStep` are therefore definitional but not reducible: a
-lemma stated for `TauCeti.W1p` or `TauCeti.WeakDerivStep` must be given its argument explicitly
-when `rw` or `simp` applies it to such a term, since neither unfolds `TauCeti.sobolevStage`.
+`Wkp … (k + 2)` with a `TauCeti.WeakDerivStep` are therefore definitional but not reducible, and
+`rw` and `simp` do not unfold `TauCeti.sobolevStage` to match across them in either direction: a
+lemma stated for `TauCeti.W1p` or `TauCeti.WeakDerivStep` applied to a `Wkp … 1` or
+`Wkp … (k + 2)` term, and a `Wkp`-indexed lemma applied to a term typed as `TauCeti.W1p` or
+`TauCeti.WeakDerivStep`, must both be given their argument explicitly.
 The projections below are sealed instead, and are used through their characteristic equations
 `TauCeti.Wkp.lowerOrder_zero`, `TauCeti.Wkp.lowerOrder_succ`, `TauCeti.Wkp.iteratedGradient_zero`,
-`TauCeti.Wkp.iteratedGradient_succ`, `TauCeti.Wkp.value_zero`, and `TauCeti.Wkp.value_succ`.
+`TauCeti.Wkp.iteratedGradient_succ`, `TauCeti.Wkp.value_zero`, and `TauCeti.Wkp.value_succ`, and
+through `TauCeti.Wkp.lowerOrder_succ_coe` and `TauCeti.Wkp.iteratedGradient_succ_coe`, which give
+the two projections above first order as the components of the underlying graph element.
 
 ## Main declarations
 

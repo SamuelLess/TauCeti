@@ -259,21 +259,19 @@ jobs:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_USER: ${{ github.event.pull_request.user.login }}
-          SCOPE_BASE: ${{ steps.pr.outputs.mergebase }}
+          SCOPE_BASE: ${{ env.IS_BATCH == 'true' && steps.pr.outputs.base_ref || steps.pr.outputs.mergebase }}
           SCOPE_HEAD: ${{ steps.pr.outputs.sha }}
         run: |
-          if [ "${{ env.IS_BATCH }}" = "true" ]; then
-            # Complete immutable batch diff, including removals, using workflow-pinned
-            # tooling and an isolated object reader. Missing objects/metadata or unsafe
-            # line-format filenames fail closed; no truncated API file list is accepted.
-            if [ "${MERGEBASE_EXACT:-0}" != "1" ] || ! files=$(python3 \
-                gate/scripts/lint_scope_files.py pr "$SCOPE_BASE" "$SCOPE_HEAD" --policy); then
-              files=""
-              echo "INFRA=1" >> "$GITHUB_ENV"
-              echo "::warning::cannot determine the complete immutable batch scope — routing to human"
-            fi
-          else
-            files=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.num }}/files" --jq '.[].filename')
+          # Complete immutable diff, including removals, using workflow-pinned
+          # tooling and an isolated object reader. A batch's validated base is exact;
+          # ordinary PRs need an exact merge base to exclude unrelated main changes.
+          # Missing objects/metadata or unsafe line-format filenames fail closed.
+          if { [ "${{ env.IS_BATCH }}" != "true" ] && [ "${MERGEBASE_EXACT:-0}" != "1" ]; } \
+              || ! files=$(python3 gate/scripts/lint_scope_files.py \
+                   pr "$SCOPE_BASE" "$SCOPE_HEAD" --policy); then
+            files=""
+            echo "INFRA=1" >> "$GITHUB_ENV"
+            echo "::warning::cannot determine the complete immutable scope — routing to human"
           fi
           echo "changed files:"; echo "$files"
           # The root TauCeti.lean is allowed alongside TauCeti/: it is the (intentionally
@@ -332,12 +330,9 @@ jobs:
           # Whether THIS pull request changes the Lake pins, asked of the immutable commit this
           # run will post its statuses to, and of that commit's merge base.
           #
-          # Not from the file list above, for two reasons. That list describes the pull request's
-          # CURRENT head, while the statuses describe the head named by the event: a branch that
-          # advances between the two makes the answer describe a different commit, and a branch
-          # that advances and then comes back defeats the final head re-check as well. And the
-          # ordinary PR list is capped at 3000 entries, so a pin
-          # file sitting past the end of it would read as no pin change at all.
+          # Read tree entries independently of the complete filename diff. Besides
+          # detecting pin changes, this verifies that each head pin is an ordinary
+          # file: a symlink could reuse a blob without changing its bytes.
           #
           # Comparing blob SHAs at two immutable commits has neither problem, and asking the
           # merge base rather than the branch tip keeps the question "did this pull request
@@ -413,9 +408,7 @@ jobs:
         if: ${{ env.IS_BATCH != 'true' }}
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          # The file-count cap also backstops the scope guard above: the PR files API lists at
-          # most 3000 files, so a huge PR could hide an out-of-scope path from that listing.
-          # Failing here at 2000 files closes that gap before the API limit is reachable.
+          # Per-PR review-size policy remains independent of the complete local scope diff.
           read -r adds dels files < <(gh api "repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.num }}" \
             --jq '"\(.additions) \(.deletions) \(.changed_files)"')
           echo "diff size: +$adds / -$dels across $files files (cap: 2000 each)"

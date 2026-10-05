@@ -46,7 +46,8 @@ def f(status, filename):
 
 
 class LintScopeTest(unittest.TestCase):
-    def run_scope(self, env, responses, *, files=None, prepare=None, unmatched=False, policy=False):
+    def run_scope(self, env, responses, *, files=None, prepare=None, unmatched=False, policy=False,
+                  initial_files=None):
         with tempfile.TemporaryDirectory() as d:
             d = pathlib.Path(d)
             checkout = d / "candidate"
@@ -64,21 +65,23 @@ class LintScopeTest(unittest.TestCase):
                 path = checkout / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(contents)
-            for entry in files:
+            for name, contents in (initial_files or {}).items():
+                write(name, contents)
+            for index, entry in enumerate(files):
                 if entry["status"] in ("modified", "removed"):
                     write(entry["filename"], "old\n")
                 elif entry["status"] == "renamed":
-                    write("TauCeti/OldName.lean", "old\n")
+                    write(entry.get("previous_filename", f"TauCeti/OldName{index}.lean"), "old\n")
             git("add", ".")
             git("commit", "-qm", "base", "--allow-empty")
             base = git("rev-parse", "HEAD")
-            for entry in files:
+            for index, entry in enumerate(files):
                 if entry["status"] == "removed":
                     (checkout / entry["filename"]).unlink()
                 else:
                     write(entry["filename"], "new\n")
                 if entry["status"] == "renamed":
-                    (checkout / "TauCeti/OldName.lean").unlink()
+                    (checkout / entry.get("previous_filename", f"TauCeti/OldName{index}.lean")).unlink()
             git("add", ".")
             git("commit", "-qm", "head", "--allow-empty")
             head = git("rev-parse", "HEAD")
@@ -116,14 +119,15 @@ class LintScopeTest(unittest.TestCase):
                 run = next(s["run"] for s in wf["jobs"]["sandboxed-build"]["steps"]
                            if s.get("name", "").startswith("Scope guard"))
                 run = run[:run.index("# Whether THIS")]
-                run = (run.replace("${{ env.IS_BATCH }}", "true")
-                          .replace("${{ github.event_name }}", "repository_dispatch")
+                event = env.get("EVENT", "repository_dispatch")
+                run = (run.replace("${{ env.IS_BATCH }}", "true" if event in self.BATCH_EVENTS else "false")
+                          .replace("${{ github.event_name }}", event)
                           .replace("${{ github.repository }}", "o/r")
                           .replace("${{ steps.pr.outputs.num }}", "12"))
                 (d / "gate").symlink_to(ROOT, target_is_directory=True)
                 (d / "pr").symlink_to(checkout, target_is_directory=True)
-                full_env.update(MERGEBASE_EXACT="1", SCOPE_BASE=base, SCOPE_HEAD=head,
-                                PR_HEAD_REF="", PR_HEAD_REPO="", PR_USER="")
+                full_env.update({"MERGEBASE_EXACT": "1", "SCOPE_BASE": base, "SCOPE_HEAD": head,
+                                 "PR_HEAD_REF": "", "PR_HEAD_REPO": "", "PR_USER": "", **env})
                 command = ["bash", "-euo", "pipefail", "-c", run]
                 github_env.touch()
             out = subprocess.run(command, env=full_env, cwd=d, capture_output=True, text=True)
@@ -260,7 +264,7 @@ class LintScopeTest(unittest.TestCase):
     def test_diverged_pr_uses_exact_merge_base_not_base_tip(self):
         def diverge(checkout, git, base, head, env, responses):
             git("checkout", "--detach", base)
-            (checkout / "MainOnly.lean").write_text("unrelated main change\n")
+            (checkout / "TauCeti/Shared.lean").write_text("unrelated main change\n")
             git("add", ".")
             git("commit", "-qm", "base advanced")
             tip = git("rev-parse", "HEAD")
@@ -269,7 +273,8 @@ class LintScopeTest(unittest.TestCase):
             env["BASE"] = tip
         self.assertEqual(self.run_scope(self.PR_ENV,
                          {self.PR_COMPARE: {"files": []}, "repos/o/r/pulls/12": pr()},
-                         files=[f("added", "TauCeti/Tested.lean")], prepare=diverge),
+                         files=[f("added", "TauCeti/Tested.lean")], prepare=diverge,
+                         initial_files={"TauCeti/Shared.lean": "unchanged at tested head\n"}),
                          ["TauCeti.Tested"])
 
     def test_missing_objects_or_merge_base_fall_back_to_full_lint(self):
@@ -298,7 +303,7 @@ class LintScopeTest(unittest.TestCase):
         self.assertIn("TauCeti/α.lean", paths)
         self.assertTrue(paths)  # forces the axiom/dot audit fallback
 
-    def test_candidate_and_inherited_git_configuration_cannot_execute_helpers(self):
+    def test_candidate_and_inherited_git_configuration_cannot_influence_diff_or_leak_credentials(self):
         def poison(checkout, git, base, head, env, responses):
             marker = checkout.parent / "executed"
             command = f"touch {shlex.quote(str(marker))}"
@@ -335,6 +340,29 @@ class LintScopeTest(unittest.TestCase):
 
     def test_batch_scope_guard_fails_closed_for_newline_filenames(self):
         settings, _ = self.run_scope({}, {}, files=[f("added", "TauCeti/A\nB.lean")], policy=True)
+        self.assertIn("INFRA=1", settings)
+
+    def test_scope_guard_catches_renames_out_of_human_paths_for_prs_and_batches(self):
+        files = [{**f("renamed", "TauCeti/Moved.lean"), "previous_filename": "scripts/check.sh"},
+                 {**f("renamed", "TauCeti/MovedAgain.lean"), "previous_filename": "scripts/check2.sh"}]
+        for event in (*self.BATCH_EVENTS[:2], "pull_request_target", "workflow_dispatch"):
+            with self.subTest(event=event):
+                settings, output = self.run_scope({"EVENT": event}, {}, files=files, policy=True)
+                self.assertIn("OUT_OF_SCOPE=1", settings)
+                self.assertIn("scripts/check.sh", output)
+                self.assertIn("scripts/check2.sh", output)
+
+    def test_policy_requires_exact_pr_merge_base_but_not_a_redundant_batch_lookup(self):
+        files = [f("added", "TauCeti/A.lean")]
+        for event in (*self.BATCH_EVENTS[:2], "pull_request_target", "workflow_dispatch"):
+            with self.subTest(event=event):
+                settings, _ = self.run_scope({"EVENT": event, "MERGEBASE_EXACT": ""}, {},
+                                             files=files, policy=True)
+                self.assertEqual("INFRA=1" in settings, event not in self.BATCH_EVENTS)
+
+    def test_policy_fails_closed_when_objects_are_missing(self):
+        settings, _ = self.run_scope({"SCOPE_HEAD": "0" * 40}, {},
+                                     files=[f("added", "TauCeti/A.lean")], policy=True)
         self.assertIn("INFRA=1", settings)
 
     def test_missing_base_lints_everything(self):

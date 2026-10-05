@@ -30,8 +30,9 @@ product norm of its two components, so at every order `k + 2` and for every `p` 
 the sum of the squared norm of the one-order-lower component and the squared norm of the highest
 weak derivative.  At order one this identity holds for `p = 2` but not in general; it fails, for
 instance, for `sin` in `W^{1,∞}(ℝ)`.  The derivative fields above first order carry operator norms,
-so when `E` has dimension at least `2` the norm of `W^{k,2}(Ω)` with `k ≥ 2` is not induced by an
-inner product: it is a Banach-space norm, not the Hilbert-space norm of `H^k(Ω)`.
+so the norm of `W^{k,2}(Ω)` with `k ≥ 2` need not be induced by an inner product: on
+`Ω = (0,1)² ⊆ ℝ²`, for instance, `x²/2` and `y²/2` violate the parallelogram law.  It is a
+Banach-space norm, not in general the Hilbert-space norm of `H^k(Ω)`.
 
 ## Implementation notes
 

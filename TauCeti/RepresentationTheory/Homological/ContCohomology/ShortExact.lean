@@ -6,12 +6,12 @@ Authors: The Tau Ceti contributors
 module
 
 public import Mathlib.Algebra.Exact.Basic
-public import Mathlib.Topology.LocallyConstant.Basic
 public import TauCeti.Algebra.GroupAction.QuotientAddGroup
 public import TauCeti.RepresentationTheory.Homological.ContCohomology.LowDegree
 public import TauCeti.RepresentationTheory.Homological.ContCohomology.SmoothDiscrete.Basic
 public import TauCeti.Topology.Algebra.Group.Quotient.Basic
 public import TauCeti.Topology.Algebra.GroupAction.InternalHom.DoubleDual
+import TauCeti.Topology.Discrete
 
 /-!
 # Short exact sequences of discrete modules, and the low-degree connecting maps
@@ -30,13 +30,13 @@ the explicit low-degree complex of
 Discreteness of the coefficients is used twice, once at each of the two ends of the sequence.
 Discreteness of `C` gives surjectivity on cochains: a continuous cochain into `C` is locally
 constant, so composing it with *any* set-theoretic section of `B → C` is still continuous
-(`TauCeti.ContCohomology.exists_continuous_lift`). Discreteness of `B` gives exactness in the
-middle: every function out of `B` is continuous, so a continuous cochain into `B` that the
-projection kills retracts to a *continuous* cochain into `A`
+(`TauCeti.exists_continuous_lift`). Discreteness of `B` gives exactness in the middle: every
+function out of `B` is continuous, so the retraction onto the image of `incl` is continuous, and a
+continuous cochain into `B` that the projection kills retracts to a *continuous* cochain into `A`
 (`TauCeti.ContCohomology.DiscreteShortExact.exists_continuous_incl_comp_eq`, whence
-`C1_map_incl_eq_inf_ker`), and an injection into a discrete space reflects continuity
-(`TauCeti.ContCohomology.continuous_of_injective_comp`). Discreteness of `A` and of `B` is also
-what makes `incl` and `proj` continuous. For general
+`C1_map_incl_eq_inf_ker`). Cocycle conditions descend along `incl` because an injection into a
+discrete space reflects continuity (`TauCeti.continuous_of_injective_comp`). Discreteness of `A`
+and of `B` is also what makes `incl` and `proj` continuous. For general
 topological coefficients neither argument applies, since a set-theoretic section need not be
 continuous and a continuous cochain need not be locally constant; the cochain sequence can still
 be exact when suitable continuous lifts exist. Nothing below is asserted in that more general
@@ -71,11 +71,6 @@ here is about the same sequence and has to name the same two coefficient maps.
 
 ## Main statements
 
-* `TauCeti.ContCohomology.exists_continuous_lift`: a continuous cochain on any topological space
-  lifts along any surjection onto a discrete space. This is the degree-agnostic form of
-  surjectivity of `Cⁿ(G, B) → Cⁿ(G, C)`.
-* `TauCeti.ContCohomology.continuous_of_injective_comp`: an injection into a discrete space
-  reflects continuity. This is the degree-agnostic form of exactness in the middle.
 * `TauCeti.ContCohomology.DiscreteShortExact.compLeft_incl_injective`,
   `C1_map_incl_eq_inf_ker` and `C1_map_proj_eq_C1`: exactness of
   `0 → C¹(X, A) → C¹(X, B) → C¹(X, C) → 0` at its left, middle and right nodes, with
@@ -133,10 +128,10 @@ namespace TauCeti.ContCohomology
 
 universe u vA vB vC vN w
 
-/-! ### Cochain lifting and descent
+/-! ### Cochain lifting
 
-The two inputs from topology that make the continuous cochain sequences exact. Neither uses the
-group, the action or the sequence, so both are stated for bare maps of topological spaces. -/
+The canonical set-theoretic lift of a cochain along a surjection, from which the connecting maps
+below are built. Its continuity is `TauCeti.exists_continuous_lift`'s argument. -/
 
 section Lift
 
@@ -158,37 +153,15 @@ private theorem continuous_liftCochain (hp : Function.Surjective p) {f : X → C
     (hf : Continuous f) : Continuous (liftCochain hp f) :=
   (continuous_of_discreteTopology (f := Function.surjInv hp)).comp hf
 
-/-- **A continuous cochain lifts along any surjection onto a discrete space.** Discreteness of the
-target is the sufficient hypothesis used here: `f` is locally constant, so composing it with any
-set-theoretic section of `p` is continuous again. Stated on an arbitrary topological space and for
-a bare surjection, hence in every degree at once. -/
-theorem exists_continuous_lift (hp : Function.Surjective p) {f : X → C} (hf : Continuous f) :
-    ∃ e : X → B, Continuous e ∧ ∀ x, p (e x) = f x :=
-  ⟨liftCochain hp f, continuous_liftCochain hp hf, apply_liftCochain hp f⟩
-
 end Lift
-
-section Descent
-
-variable {X : Type w} [TopologicalSpace X] {A : Type vA} [TopologicalSpace A]
-  {B : Type vB} [TopologicalSpace B] [DiscreteTopology B]
-
-/-- **An injective map into a discrete space reflects continuity.** Continuity into the discrete
-`B` is local constancy, local constancy descends along an injection, and a locally constant map is
-continuous. -/
-theorem continuous_of_injective_comp {f : A → B} (hf : Function.Injective f) {a : X → A}
-    (h : Continuous fun x => f (a x)) : Continuous a :=
-  (IsLocallyConstant.desc a f ((IsLocallyConstant.iff_continuous _).2 h) hf).continuous
-
-end Descent
 
 /-- A short exact sequence `0 → A → B → C → 0` of discrete `G`-modules.
 
 Discreteness of the three modules is what makes the continuous cochain sequences exact:
 discreteness of `C` makes arbitrary set-theoretic lifts of continuous cochains continuous, and
-discreteness of `A` and `B` makes the inclusion reflect continuity, which is what retracts a
-continuous cochain killed by the projection. Continuity of the two maps is a further consequence
-of it, not data. -/
+discreteness of `B` makes the retraction onto the image of the inclusion continuous, which is
+what retracts a continuous cochain killed by the projection. Continuity of the two maps is a
+further consequence of it, not data. -/
 structure DiscreteShortExact (G : Type u) [Monoid G]
     (A : Type vA) [AddCommGroup A] [TopologicalSpace A] [DiscreteTopology A]
     [DistribMulAction G A]
@@ -564,7 +537,7 @@ theorem C1_map_incl_eq_inf_ker :
 
 variable (X) in
 /-- Exactness of `C¹(X, B) → C¹(X, C) → 0` at the right node: every continuous cochain into `C`
-lifts, by `TauCeti.ContCohomology.exists_continuous_lift`. -/
+lifts, by `TauCeti.exists_continuous_lift`. -/
 theorem C1_map_proj_eq_C1 : AddSubgroup.map (S.proj.compLeft X) (C1 X B) = C1 X C := by
   ext f
   refine ⟨?_, fun hf => ?_⟩

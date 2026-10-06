@@ -316,15 +316,14 @@ theorem length_spiderRelator : spiderRelator.length = 90 := by
 
 /-- The seventy-nine relators presenting `M × 2` have the source's total length `400`. -/
 theorem coxeterAndSpider_totalLength :
-    ((coxeterRelators coxeterMatrix ++ [spiderRelator]).map
-      fun r => r.toWord.length).sum = 400 := by
+    ((coxeterRelators coxeterMatrix ++ [spiderRelator]).map Relator.length).sum = 400 := by
   rw [coxeterRelators_def, coxeterRelatorsOfList_def]
   rw [List.map_append, List.sum_append, List.map_map]
-  simp_rw [Function.comp_def, length_toWord_coxeterRelator]
+  simp_rw [Function.comp_def, ← Relator.length_toWord, length_toWord_coxeterRelator]
   simp only [coxeterMatrix_apply]
   rw [edges_def]
   simp only [List.map_cons, List.map_nil, List.sum_cons, List.sum_nil, Nat.add_zero,
-    Relator.length_toWord, length_spiderRelator]
+    length_spiderRelator]
   decide
 
 /-- The central-involution relator `f₃₁₂` has sixty-three letters. -/
@@ -334,14 +333,14 @@ theorem length_centralInvolutionRelator : centralInvolutionRelator.length = 63 :
 
 /-- The compiled relators of the Monster presentation contain `463` signed letters in total. -/
 theorem presentation_totalLength : presentation.totalLength = 463 := by
-  have h : (relatorList.map fun r => r.toWord.length).sum = 463 := by
+  have h : (relatorList.map Relator.length).sum = 463 := by
     rw [relatorList_def, adjoinedRelators_def, ← List.singleton_append, ← List.append_assoc,
       List.map_append, List.sum_append]
     simp only [List.map_cons, List.map_nil, List.sum_cons, List.sum_nil, Nat.add_zero]
-    rw [coxeterAndSpider_totalLength, Relator.length_toWord, length_centralInvolutionRelator]
+    rw [coxeterAndSpider_totalLength, length_centralInvolutionRelator]
   rw [← GroupPresentation.sum_map_length_relatorLetters, presentation_relatorLetters,
     List.map_map]
-  simpa only [Function.comp_def, List.length_map] using h
+  simpa only [Function.comp_def, List.length_map, Relator.length_toWord] using h
 
 /-- Every expression in the Monster relator list compiles to a cyclically reduced word. -/
 theorem isCyclicallyReduced_toWord_of_mem_relatorList (r : Relator (Fin 12))

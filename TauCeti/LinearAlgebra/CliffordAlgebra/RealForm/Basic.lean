@@ -180,11 +180,18 @@ theorem posDef_realCliffordForm_zero (n : ℕ) : (realCliffordForm n 0).PosDef :
     rw [realCliffordWeight_of_lt (by omega), one_mul]
     exact mul_self_pos.mpr hi
 
-/-- A coordinate unit vector takes the signature weight of its coordinate: `1` at the first `p`
-coordinates and `-1` at the last `q`. -/
+-- Not `@[simp]`: the simp lemma `realCliffordForm_apply` rewrites the left side to a sum first, so
+-- the `simpNF` linter rejects this one.
+/-- A coordinate vector `Pi.single i x` takes the value `w * x ^ 2`, where `w` is the signature
+weight of its coordinate: `1` at the first `p` coordinates and `-1` at the last `q`. -/
+theorem realCliffordForm_single (p q : ℕ) (i : Fin (p + q)) (x : ℝ) :
+    realCliffordForm p q (Pi.single i x) = realCliffordWeight p q i * x ^ 2 := by
+  simp [realCliffordForm, Pi.single_apply, _root_.sq]
+
+/-- A coordinate unit vector takes the signature weight of its coordinate. -/
 theorem realCliffordForm_single_one (p q : ℕ) (i : Fin (p + q)) :
     realCliffordForm p q (Pi.single i 1) = realCliffordWeight p q i := by
-  simp [realCliffordForm, Pi.single_apply]
+  rw [realCliffordForm_single, one_pow, mul_one]
 
 /-- Every coordinate unit vector has value one for the compact real Clifford form. -/
 @[simp]

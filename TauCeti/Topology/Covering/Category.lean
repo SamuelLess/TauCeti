@@ -182,8 +182,8 @@ theorem w {p q : CoveringSpace X} (f : p ⟶ q) : f.hom.left ≫ q.proj = p.proj
 /-- The commuting triangle of a morphism of covering spaces, as an equality of the underlying
 functions. -/
 theorem proj_hom_comp_hom_left_hom {p q : CoveringSpace X} (f : p ⟶ q) :
-    q.proj.hom ∘ f.hom.left.hom = p.proj.hom :=
-  congrArg (fun g ↦ ⇑(TopCat.Hom.hom g)) (w f)
+    q.proj.hom ∘ f.hom.left.hom = p.proj.hom := by
+  rw [← TopCat.coe_comp, w f]
 
 /-- Construct a morphism of covering spaces from a continuous map over the base. -/
 def homMk {p q : CoveringSpace X} (f : (p : TopCat) ⟶ (q : TopCat))
@@ -379,6 +379,9 @@ theorem isoMk_inv_hom_left {p q : CoveringSpace.FullSubcategory X P}
     (e : (p : TopCat) ≅ (q : TopCat)) (w : e.hom ≫ q.proj = p.proj) :
     (isoMk e w).inv.hom.left = e.inv :=
   (rfl)
+
+-- `mk` asks for `P (Over.mk p.proj)`. `p.prop_obj : P p.obj` is accepted there because
+-- `Over.mk p.obj.hom` is `p.obj` by structure eta, at default transparency.
 
 /-- Reconstructing an object from its projection gives an isomorphic object. -/
 def mkProjIso (p : CoveringSpace.FullSubcategory X P) :

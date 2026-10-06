@@ -180,19 +180,17 @@ theorem posDef_realCliffordForm_zero (n : ℕ) : (realCliffordForm n 0).PosDef :
     rw [realCliffordWeight_of_lt (by omega), one_mul]
     exact mul_self_pos.mpr hi
 
+/-- A coordinate unit vector takes the signature weight of its coordinate: `1` at the first `p`
+coordinates and `-1` at the last `q`. -/
+theorem realCliffordForm_single_one (p q : ℕ) (i : Fin (p + q)) :
+    realCliffordForm p q (Pi.single i 1) = realCliffordWeight p q i := by
+  simp [realCliffordForm, Pi.single_apply]
+
 /-- Every coordinate unit vector has value one for the compact real Clifford form. -/
 @[simp]
 theorem realCliffordForm_zero_single_one (n : ℕ) (i : Fin n) :
     realCliffordForm n 0 (Pi.single i 1) = 1 := by
-  classical
-  rw [realCliffordForm_zero_eq_weightedSumSquares_one]
-  rw [QuadraticMap.weightedSumSquares_apply]
-  simp only [Pi.one_apply, one_smul]
-  rw [Finset.sum_eq_single i]
-  · simp
-  · intro b _ hb
-    simp [hb]
-  · simp
+  rw [realCliffordForm_single_one, realCliffordWeight_of_lt i.isLt]
 
 /-- The real Clifford algebra of signature `(p, q)` has dimension `2 ^ (p + q)`, as every Clifford
 algebra of a space of that dimension does. This is the count that forces the surjections built

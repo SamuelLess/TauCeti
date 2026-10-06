@@ -89,7 +89,7 @@ equivalences and their values, not their bare existence, that the Bott-periodici
 
 ## Main results
 
-* `QuadraticForm.equivalent_realSignatureForm_realCliffordForm`: the orthogonal-sum and coordinate
+* `TauCeti.equivalent_realSignatureForm_realCliffordForm`: the orthogonal-sum and coordinate
   presentations of the real normal form are isometric.
 * `TauCeti.nondegenerate_realCliffordForm`: the signature forms are nondegenerate.
 * `TauCeti.realCliffordForm_zero_eq_weightedSumSquares_one`: the compact signature form is the
@@ -140,7 +140,7 @@ theorem realCliffordWeight_of_le {p q : ℕ} {i : Fin (p + q)} (hi : p ≤ (i : 
 
 /-- The orthogonal-sum and coordinate presentations of the real normal form of signature `(p, q)`
 are isometric. -/
-theorem _root_.QuadraticForm.equivalent_realSignatureForm_realCliffordForm (p q : ℕ) :
+theorem equivalent_realSignatureForm_realCliffordForm (p q : ℕ) :
     (_root_.QuadraticForm.realSignatureForm p q).Equivalent (realCliffordForm p q) := by
   have hweight : realCliffordWeight p q ∘ finSumFinEquiv =
       Sum.elim (fun _ ↦ (1 : ℝ)) fun _ ↦ -1 := by
@@ -198,7 +198,7 @@ theorem posDef_realCliffordForm_zero (n : ℕ) : (realCliffordForm n 0).PosDef :
 
 /-- Every coordinate unit vector has value one for the compact real Clifford form. -/
 @[simp]
-theorem realCliffordForm_unitVector (n : ℕ) (i : Fin n) :
+theorem realCliffordForm_zero_single_one (n : ℕ) (i : Fin n) :
     realCliffordForm n 0 (Pi.single i 1) = 1 := by
   classical
   rw [realCliffordForm_zero_eq_weightedSumSquares_one]
@@ -507,7 +507,7 @@ def realCliffordSignSwitchStandardIsometry (p q : ℕ) :
     (QuadraticMap.IsometryEquiv.refl (QuadraticMap.sq (R := ℝ) (A := ℝ)))).trans
       (realCliffordPositiveSplitIsometry q p).symm
 
-private theorem signatureSwitchStandardIsometry_split (p q : ℕ)
+private theorem realCliffordSignSwitchStandardIsometry_split (p q : ℕ)
     (x : Fin (p + q) → ℝ) (r : ℝ) :
     realCliffordPositiveSplitIsometry q p
         (realCliffordSignSwitchStandardIsometry p q (x, r)) =
@@ -522,7 +522,7 @@ theorem realCliffordSignSwitchStandardIsometry_pos_of_neg (p q : ℕ)
     (x : Fin (p + q) → ℝ) (r : ℝ) (i : Fin q) :
     realCliffordSignSwitchStandardIsometry p q (x, r)
         (Fin.castAdd p (Fin.castSucc i)) = x (Fin.natAdd p i) := by
-  have h := congrFun (congrArg Prod.fst (signatureSwitchStandardIsometry_split p q x r))
+  have h := congrFun (congrArg Prod.fst (realCliffordSignSwitchStandardIsometry_split p q x r))
     (Fin.castAdd p i)
   simpa only [realCliffordPositiveSplitIsometry_fst_pos,
     realCliffordFormNegIsometry_pos_of_neg] using h
@@ -534,7 +534,7 @@ theorem realCliffordSignSwitchStandardIsometry_last_pos (p q : ℕ)
     (x : Fin (p + q) → ℝ) (r : ℝ) :
     realCliffordSignSwitchStandardIsometry p q (x, r)
         (Fin.castAdd p (Fin.last q)) = r := by
-  have h := congrArg Prod.snd (signatureSwitchStandardIsometry_split p q x r)
+  have h := congrArg Prod.snd (realCliffordSignSwitchStandardIsometry_split p q x r)
   simpa only [realCliffordPositiveSplitIsometry_snd] using h
 
 /-- Negated positive coordinates become negative coordinates under
@@ -544,7 +544,7 @@ theorem realCliffordSignSwitchStandardIsometry_neg_of_pos (p q : ℕ)
     (x : Fin (p + q) → ℝ) (r : ℝ) (i : Fin p) :
     realCliffordSignSwitchStandardIsometry p q (x, r)
         (Fin.natAdd (q + 1) i) = x (Fin.castAdd q i) := by
-  have h := congrFun (congrArg Prod.fst (signatureSwitchStandardIsometry_split p q x r))
+  have h := congrFun (congrArg Prod.fst (realCliffordSignSwitchStandardIsometry_split p q x r))
     (Fin.natAdd q i)
   simpa only [realCliffordPositiveSplitIsometry_fst_neg,
     realCliffordFormNegIsometry_neg_of_pos] using h

@@ -140,6 +140,9 @@ private theorem cyclesIsoInvariants_inv_comp_homologyπ_comp_homologyIsoNormQuot
   simp only [cyclesIsoInvariants, homologyIsoNormQuotient, Iso.trans_inv, Iso.trans_hom,
     Category.assoc, Iso.inv_hom_id_assoc, ShortComplex.moduleCatCyclesIso_inv_π_assoc]
   ext x
+  simp only [ModuleCat.hom_comp, ConcreteCategory.hom_ofHom, LinearMap.coe_comp,
+    Function.comp_apply, Submodule.mkQ_apply]
+  simp only [shortComplex, Submodule.Quotient.equiv]
   rfl
 
 end Zero

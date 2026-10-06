@@ -63,7 +63,7 @@ theorem not_isSquare_integerUnit_mul_uniformizer (u : 𝒪[K]ˣ) {π : Kˣ}
     (hπ : IsUniformizer (K := K) π) :
     ¬IsSquare (Units.map ((Subring.subtype 𝒪[K] : 𝒪[K] →+* K).toMonoidHom) u * π) := by
   intro hs
-  obtain ⟨n, hn⟩ := normalizedValuation_even_of_isSquare hs
+  obtain ⟨n, hn⟩ := even_toAdd_normalizedValuation_of_isSquare hs
   have hu : normalizedValuation K
       (Units.map ((Subring.subtype 𝒪[K] : 𝒪[K] →+* K).toMonoidHom) u) = 1 :=
     normalizedValuation_integerUnits u

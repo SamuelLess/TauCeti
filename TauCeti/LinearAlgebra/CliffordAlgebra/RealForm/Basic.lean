@@ -185,7 +185,7 @@ theorem posDef_realCliffordForm_zero (n : ℕ) : (realCliffordForm n 0).PosDef :
 /-- A coordinate vector `Pi.single i x` takes the value `w * x ^ 2`, where `w` is the signature
 weight of its coordinate: `1` at the first `p` coordinates and `-1` at the last `q`. -/
 @[simp high]
-theorem realCliffordForm_single (p q : ℕ) (i : Fin (p + q)) (x : ℝ) :
+theorem realCliffordForm_apply_single (p q : ℕ) (i : Fin (p + q)) (x : ℝ) :
     realCliffordForm p q (Pi.single i x) = realCliffordWeight p q i * x ^ 2 := by
   simp [realCliffordForm, Pi.single_apply, _root_.sq]
 
@@ -193,7 +193,7 @@ theorem realCliffordForm_single (p q : ℕ) (i : Fin (p + q)) (x : ℝ) :
 @[simp]
 theorem realCliffordForm_zero_single_one (n : ℕ) (i : Fin n) :
     realCliffordForm n 0 (Pi.single i 1) = 1 := by
-  rw [realCliffordForm_single, realCliffordWeight_of_lt i.isLt, one_pow, mul_one]
+  rw [realCliffordForm_apply_single, realCliffordWeight_of_lt i.isLt, one_pow, mul_one]
 
 /-- The real Clifford algebra of signature `(p, q)` has dimension `2 ^ (p + q)`, as every Clifford
 algebra of a space of that dimension does. This is the count that forces the surjections built

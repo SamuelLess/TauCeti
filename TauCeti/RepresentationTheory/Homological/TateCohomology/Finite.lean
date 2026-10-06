@@ -11,7 +11,11 @@ public import Mathlib.RepresentationTheory.Homological.TateCohomology.Basic
 # Finiteness of Tate cohomology
 
 Tate cohomology of a finite representation of a finite group is finite in every degree
-(`TauCeti.TateCohomology.finite_tateCohomology`).
+(`TauCeti.TateCohomology.finite_tateCohomology`). Its orders are then positive, which is what the
+Herbrand quotient of a finite cyclic group uses: a finite representation has Herbrand quotient one
+(`TauCeti.TateCohomology.herbrandQuotient_eq_one_of_finite`), and a finite kernel or cokernel does
+not change the quotient (`TauCeti.TateCohomology.herbrandQuotient_eq_of_shortExact_of_finite_X₁`
+and its relatives).
 -/
 
 public section

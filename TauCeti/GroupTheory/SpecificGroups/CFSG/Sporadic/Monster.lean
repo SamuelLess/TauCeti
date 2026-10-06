@@ -273,11 +273,10 @@ theorem presentation_expectedGeneratorCount : presentation.expectedGeneratorCoun
 theorem presentation_expectedRelatorCount : presentation.expectedRelatorCount = 80 := by
   rw [presentation]
 
+-- Not `@[simp]`: the right side is a `cast` from `List (Relator (Fin 12))`, which `simp` cannot
+-- see through, so rewriting with it would leave `simp` stuck; rewrite with it instead.
 /-- The relator expressions carried by the Monster presentation are exactly the transcribed
-relator list, whose decomposition is `relatorList_def`.
-
-Not `@[simp]`: the right side is a `cast` from `List (Relator (Fin 12))`, which `simp` cannot see
-through, so rewriting with it would leave `simp` stuck; rewrite with it instead. -/
+relator list, whose decomposition is `relatorList_def`. -/
 theorem presentation_transcribed : presentation.transcribed = cast (by simp) relatorList := by
   rfl
 

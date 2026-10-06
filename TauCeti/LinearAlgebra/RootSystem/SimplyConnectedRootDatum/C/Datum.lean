@@ -540,8 +540,7 @@ private lemma typeCRoot_false_mem (a b : Fin n) :
 
 private lemma typeCCoroot_false_mem (a b : Fin n) :
     typeCCoroot (a, b, false) ∈ AddSubmonoid.closure (range (typeCSimpleCoroot (n := n))) := by
-  rw [show typeCSimpleCoroot (n := n) = fun i : Fin n => coweight n i - coweight n (i + 1) from
-    funext typeCSimpleCoroot_eq]
+  rw [funext (typeCSimpleCoroot_eq (n := n))]
   have hmem (c : Fin n) : coweight n c ∈
       AddSubmonoid.closure (range fun i : Fin n => coweight n i - coweight n (i + 1)) := by
     simpa [coweight_eq_zero_of_le (n := n) le_rfl] using
@@ -613,12 +612,12 @@ is the set of the first `n` root indices, carrying the simple roots in Bourbaki 
 def typeCSimplyConnectedBase (n : ℕ) : (typeCSimplyConnectedRootDatum n).Base where
   support := typeCSimpleSupport n
   linearIndepOn_root := linearIndepOn_simpleSupport _ _ <| by
-    rw [show (typeCSimplyConnectedRootDatum n).root ∘ typeCSimpleIndex n = typeCSimpleRoot from
-      funext root_typeCSimpleIndex_eq]
+    rw [funext (f := (typeCSimplyConnectedRootDatum n).root ∘ typeCSimpleIndex n)
+      root_typeCSimpleIndex_eq]
     exact linearIndependent_typeCSimpleRoot n
   linearIndepOn_coroot := linearIndepOn_simpleSupport _ _ <| by
-    rw [show (typeCSimplyConnectedRootDatum n).coroot ∘ typeCSimpleIndex n = typeCSimpleCoroot from
-      funext coroot_typeCSimpleIndex_eq]
+    rw [funext (f := (typeCSimplyConnectedRootDatum n).coroot ∘ typeCSimpleIndex n)
+      coroot_typeCSimpleIndex_eq]
     exact linearIndependent_typeCSimpleCoroot n
   root_mem_or_neg_mem k := by
     rw [image_root_typeCSimpleSupport, root_typeCSimplyConnectedRootDatum]

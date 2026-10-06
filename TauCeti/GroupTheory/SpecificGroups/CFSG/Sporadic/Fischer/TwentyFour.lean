@@ -155,7 +155,7 @@ transcribed relation without unfolding a single body.
 ## References
 
 * H. K. Kim and G. O. Michler, *Construction of Fischer's sporadic group Fi₂₄' inside
-  GL₈₆₇₁(13)*, preprint (2009), <https://arxiv.org/abs/0906.1064>.
+  GL₈₆₇₁(13)*, preprint (2009), <https://arxiv.org/abs/0906.1064v1>.
   Lemma 6.2 reproduces the full presentation, proves that its commutator subgroup is simple, and
   gives the ten subgroup generators above; Theorem 6.3 identifies that subgroup with `Fi₂₄'`.
 * J. I. Hall and L. H. Soicher, *Presentations of some 3-transposition groups*, Communications in
@@ -486,9 +486,9 @@ structural property of the resulting `PresentedGroup` is asserted here. -/
 def fi24PrimePresentation : GroupPresentation where
   generatorNames := ["ab", "ac", "ad", "ae", "af", "ag", "ah", "ai", "aj", "ak", "al"]
   source := "H. K. Kim and G. O. Michler, Construction of Fischer's sporadic group Fi24' inside \
-    GL_8671(13), arXiv:0906.1064 (2009); presentation originally due to J. I. Hall and L. H. \
+    GL_8671(13), arXiv:0906.1064v1 (2009); presentation originally due to J. I. Hall and L. H. \
     Soicher"
-  sourceLocator := "Kim--Michler, Lemma 6.2 and Theorem 6.3, arXiv:0906.1064; Hall--Soicher, \
+  sourceLocator := "Kim--Michler, Lemma 6.2 and Theorem 6.3, arXiv:0906.1064v1; Hall--Soicher, \
     Presentations of some 3-transposition groups, Communications in Algebra 23 (1995), \
     2517-2559, doi:10.1080/00927879508825358"
   generatorConvention := "Source generators are a,b,c,d,e,f,g,h,i,j,k,l. Target indices 0 \
@@ -519,14 +519,14 @@ theorem fi24PrimePresentation_generatorNames :
 the citation itself, rather than only the row's name, to a downstream audit. -/
 theorem fi24PrimePresentation_source :
     fi24PrimePresentation.source = "H. K. Kim and G. O. Michler, Construction of Fischer's \
-      sporadic group Fi24' inside GL_8671(13), arXiv:0906.1064 (2009); presentation originally \
+      sporadic group Fi24' inside GL_8671(13), arXiv:0906.1064v1 (2009); presentation originally \
       due to J. I. Hall and L. H. Soicher" := by
   simp only [fi24PrimePresentation]
 
 /-- The locator recorded for `Fi₂₄'`, pointing at the presentation inside its source. -/
 theorem fi24PrimePresentation_sourceLocator :
     fi24PrimePresentation.sourceLocator = "Kim--Michler, Lemma 6.2 and Theorem 6.3, \
-      arXiv:0906.1064; Hall--Soicher, Presentations of some 3-transposition groups, \
+      arXiv:0906.1064v1; Hall--Soicher, Presentations of some 3-transposition groups, \
       Communications in Algebra 23 (1995), 2517-2559, doi:10.1080/00927879508825358" := by
   simp only [fi24PrimePresentation]
 

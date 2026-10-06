@@ -299,6 +299,12 @@ theorem length_relatorList : relatorList.length = 80 := by
   simp [relatorList_def, adjoinedRelators_def]
   norm_num [Nat.choose]
 
+/-- The Monster presentation carries eighty relator expressions. -/
+@[simp]
+theorem presentation_transcribed_length : presentation.transcribed.length = 80 := by
+  rw [presentation_transcribed]
+  exact length_relatorList
+
 /-- The generator and relator counts recorded for the Monster agree with the transcribed data. -/
 theorem presentation_matchesMetadata : presentation.matchesMetadata := by
   rw [GroupPresentation.matchesMetadata_iff]
@@ -306,8 +312,7 @@ theorem presentation_matchesMetadata : presentation.matchesMetadata := by
   · rw [GroupPresentation.generatorCount, presentation_generatorNames,
       presentation_expectedGeneratorCount]
     rfl
-  · rw [presentation_transcribed, presentation_expectedRelatorCount]
-    exact length_relatorList
+  · rw [presentation_transcribed_length, presentation_expectedRelatorCount]
 
 /-- The spider relator has ninety letters. -/
 @[simp]

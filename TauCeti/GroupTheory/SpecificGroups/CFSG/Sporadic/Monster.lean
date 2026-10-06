@@ -44,7 +44,7 @@ below reproduce that figure; the final central relator has length `63`, giving t
 
 ## Where each piece of the data comes from
 
-Ivanov defines `Yₚᵩᵣ` on p. 413, states the centrality of `f₃₁₂` in Lemma 3.2 on p. 419, and
+Ivanov defines `Y_pqr` on p. 413, states the centrality of `f₃₁₂` in Lemma 3.2 on p. 419, and
 identifies the quotient in Section 3.9 on pp. 430--431.
 
 Ivanov's definition on p. 413 takes the Coxeter group on the central node `a` together with the
@@ -97,7 +97,7 @@ This file asserts no order, finiteness, or simplicity result for the presented g
   presentation of `M × 2`,
   <https://webspace.maths.qmul.ac.uk/j.n.bray/web/Pres/Mnst.html>.
 * A. A. Ivanov, *Y-groups via Transitive Extension*, Journal of Algebra **218** (1999), 412--435,
-  especially the definition of `Yₚᵩᵣ` on p. 413, Lemma 3.2 on p. 419, and Section 3.9 on
+  especially the definition of `Y_pqr` on p. 413, Lemma 3.2 on p. 419, and Section 3.9 on
   pp. 430--431, <https://doi.org/10.1006/jabr.1999.7882>.
 -/
 
@@ -216,8 +216,7 @@ def presentation : GroupPresentation where
     (a*b_i*c_i*d_i*b_j*c_j*b_k)^9."
   transcriptionNotes := "The Coxeter matrix expands the displayed Y443 diagram to 78 relators. \
     Append Bray's spider relator to present M x 2, then Ivanov's f_312 to quotient its central \
-    factor and present M. The first 79 relators have the source's length 400; f_312 has length 63. \
-    The independent FiniteSimpleGroups permutation construction does not cover M."
+    factor and present M. The first 79 relators have the source's length 400; f_312 has length 63."
   expectedGeneratorCount := 12
   expectedRelatorCount := 80
   transcribed := relatorList
@@ -256,8 +255,7 @@ theorem presentation_generatorConvention : presentation.generatorConvention =
 theorem presentation_transcriptionNotes : presentation.transcriptionNotes =
     "The Coxeter matrix expands the displayed Y443 diagram to 78 relators. Append Bray's spider \
       relator to present M x 2, then Ivanov's f_312 to quotient its central factor and present M. \
-      The first 79 relators have the source's length 400; f_312 has length 63. The independent \
-      FiniteSimpleGroups permutation construction does not cover M." := by
+      The first 79 relators have the source's length 400; f_312 has length 63." := by
   rw [presentation]
 
 /-- The expected generator count recorded for the Monster presentation. -/

@@ -349,7 +349,7 @@ theorem HNegOne_induction_on {M : Rep R G} {C : tateCohomology M (-1) → Prop}
 /-- The cycles in degree `-1` of the Tate complex are the kernel of the norm. -/
 def HNegOneCyclesIso (M : Rep R G) :
     (tateComplex M).cycles (-1) ≅ ModuleCat.of R (ker M.ρ.norm) :=
-  NegOne.cyclesIso M ≪≫ (NegOne.shortComplex M).moduleCatCyclesIso
+  NegOne.cyclesIso M ≪≫ (NegOne.shortComplex M).moduleCatCyclesIso ≪≫ eqToIso (by rfl)
 
 /-- Under the degree `-1` identification, including a cycle into the Tate complex is the same as
 including the corresponding norm-zero element into the coefficient module. -/
@@ -357,7 +357,7 @@ including the corresponding norm-zero element into the coefficient module. -/
 theorem HNegOneCyclesIso_hom_comp_subtype (M : Rep R G) :
     (HNegOneCyclesIso M).hom ≫ ModuleCat.ofHom (ker M.ρ.norm).subtype =
       (tateComplex M).iCycles (-1) ≫ (chainsIso₀ M).hom := by
-  rw [HNegOneCyclesIso]
+  simp only [HNegOneCyclesIso, Iso.trans_hom, Category.assoc]
   exact (congrArg _ (NegOne.shortComplex M).moduleCatCyclesIso_hom_i).trans
     (ShortComplex.cyclesMap_i (NegOne.isoShortComplex M).hom)
 

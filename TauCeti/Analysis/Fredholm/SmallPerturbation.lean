@@ -30,7 +30,6 @@ The openness input is Mathlib's `ContinuousLinearEquiv.isOpen`; no implementatio
   are stable in a neighbourhood of a Fredholm operator.
 * `ContinuousLinearMap.IsFredholm.exists_pos_isFredholm_and_index_eq_of_norm_sub_lt`: the
   corresponding operator-norm `ε` statement.
-* `TauCeti.isOpen_setOf_isFredholm`: Fredholm operators form an open set.
 * `TauCeti.isOpen_setOf_isFredholm_index_eq`: Fredholm operators of a fixed index form an open
   set.
 
@@ -248,16 +247,6 @@ theorem _root_.ContinuousLinearMap.IsFredholm.exists_pos_isFredholm_and_index_eq
   obtain ⟨ε, hε, hball⟩ :=
     Metric.mem_nhds_iff.mp hT.eventually_isFredholm_and_index_eq
   exact ⟨ε, hε, fun S hS => hball (by simpa [dist_eq_norm] using hS)⟩
-
-omit [CompleteSpace F] in
-/-- The set of Fredholm operators from a Banach space to a normed space is open in the operator norm
-topology. -/
-theorem isOpen_setOf_isFredholm :
-    IsOpen {T : E →L[𝕜] F | ContinuousLinearMap.IsFredholm T} := by
-  rw [isOpen_iff_mem_nhds]
-  intro T hT
-  filter_upwards [hT.eventually_isFredholm_and_index_eq] with S hS
-  exact hS.1
 
 omit [CompleteSpace F] in
 /-- For every integer `n`, the set of Fredholm operators of index `n` is open in the operator

@@ -9,7 +9,7 @@ public import Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
 public import Mathlib.CategoryTheory.ObjectProperty.FullSubcategory
 public import Mathlib.Topology.Category.TopCat.Basic
 public import Mathlib.Topology.Covering.Basic
-public import TauCeti.CategoryTheory.Comma.Over
+public import Mathlib.CategoryTheory.Comma.Over.Basic
 
 /-!
 # The category of covering spaces over a fixed base
@@ -182,9 +182,8 @@ theorem w {p q : CoveringSpace X} (f : p ⟶ q) : f.hom.left ≫ q.proj = p.proj
 /-- The commuting triangle of a morphism of covering spaces, as an equality of the underlying
 functions. -/
 theorem proj_hom_comp_hom_left_hom {p q : CoveringSpace X} (f : p ⟶ q) :
-    q.proj.hom ∘ f.hom.left.hom = p.proj.hom := by
-  funext e
-  exact DFunLike.congr_fun (congrArg TopCat.Hom.hom (w f)) e
+    q.proj.hom ∘ f.hom.left.hom = p.proj.hom :=
+  congrArg (fun g ↦ ⇑(TopCat.Hom.hom g)) (w f)
 
 /-- Construct a morphism of covering spaces from a continuous map over the base. -/
 def homMk {p q : CoveringSpace X} (f : (p : TopCat) ⟶ (q : TopCat))
@@ -383,22 +382,19 @@ theorem isoMk_inv_hom_left {p q : CoveringSpace.FullSubcategory X P}
 
 /-- Reconstructing an object from its projection gives an isomorphic object. -/
 def mkProjIso (p : CoveringSpace.FullSubcategory X P) :
-    mk (P := P) p.proj p.isCoveringMap_proj
-      ((congrArg P (CostructuredArrow.eq_mk p.obj)).mp p.prop_obj) ≅ p :=
+    mk (P := P) p.proj p.isCoveringMap_proj p.prop_obj ≅ p :=
   isoMk (Iso.refl _)
 
 @[simp]
 theorem mkProjIso_hom_hom_left (p : CoveringSpace.FullSubcategory X P) :
     (mkProjIso p).hom.hom.left =
-      eqToHom (mk_coe (P := P) p.proj p.isCoveringMap_proj
-        ((congrArg P (CostructuredArrow.eq_mk p.obj)).mp p.prop_obj)) :=
+      eqToHom (mk_coe (P := P) p.proj p.isCoveringMap_proj p.prop_obj) :=
   (rfl)
 
 @[simp]
 theorem mkProjIso_inv_hom_left (p : CoveringSpace.FullSubcategory X P) :
     (mkProjIso p).inv.hom.left =
-      eqToHom (mk_coe (P := P) p.proj p.isCoveringMap_proj
-        ((congrArg P (CostructuredArrow.eq_mk p.obj)).mp p.prop_obj)).symm :=
+      eqToHom (mk_coe (P := P) p.proj p.isCoveringMap_proj p.prop_obj).symm :=
   (rfl)
 
 /-- A morphism is an isomorphism exactly when its map of total spaces is a homeomorphism. -/

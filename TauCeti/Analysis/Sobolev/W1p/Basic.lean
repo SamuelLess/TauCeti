@@ -293,6 +293,24 @@ private def toWeakDerivStepJet :
     (Sobolev1JetLp.valueL.prod
       (((innerSL ℝ (E := E)).compLpL p (mu.restrict Omega)).comp Sobolev1JetLp.gradientL))
 
+omit [OpensMeasurableSpace E] [mu.IsAddHaarMeasure] in
+/-- The first component of `toWeakDerivStepJet J` is the value of `J`. -/
+private theorem fst_toWeakDerivStepJet (J : Sobolev1JetLp mu Omega p) :
+    WithLp.fst (toWeakDerivStepJet J) = Sobolev1JetLp.value J := by
+  simp only [toWeakDerivStepJet, ContinuousLinearMap.comp_apply, ContinuousLinearEquiv.coe_coe,
+    WithLp.prodContinuousLinearEquiv_symm_apply, ContinuousLinearMap.prod_apply,
+    WithLp.toLp_fst, Sobolev1JetLp.valueL_apply]
+
+omit [OpensMeasurableSpace E] [mu.IsAddHaarMeasure] in
+/-- The second component of `toWeakDerivStepJet J` is the gradient of `J`, read as the field of
+functionals `x ↦ ⟪·, ∇u x⟫`. -/
+private theorem snd_toWeakDerivStepJet (J : Sobolev1JetLp mu Omega p) :
+    WithLp.snd (toWeakDerivStepJet J) =
+      (innerSL ℝ (E := E)).compLpL p (mu.restrict Omega) (Sobolev1JetLp.gradient J) := by
+  simp only [toWeakDerivStepJet, ContinuousLinearMap.comp_apply, ContinuousLinearEquiv.coe_coe,
+    WithLp.prodContinuousLinearEquiv_symm_apply, ContinuousLinearMap.prod_apply,
+    WithLp.toLp_snd, Sobolev1JetLp.gradientL_apply]
+
 /-- The first-order weak Sobolev subspace: the preimage of the closed weak-derivative graph
 `TauCeti.weakDerivStepSubmodule` over `Lᵖ(Ω)`, with the identity base, under the map reading the
 gradient of a jet as a field of functionals.  Its members are the `Lᵖ` value-gradient jets
@@ -332,16 +350,14 @@ theorem mem_w1pSubmodule_iff (J : Sobolev1JetLp mu Omega p) :
   have hsnd : (fun x => phi x • (WithLp.snd (toWeakDerivStepJet J) :
       Lp (E →L[ℝ] ℝ) p (mu.restrict Omega)) x v) =ᵐ[mu.restrict Omega]
       fun x => phi x * Sobolev1JetLp.candidateWeakFDeriv J x v := by
+    rw [snd_toWeakDerivStepJet]
     filter_upwards [(innerSL ℝ (E := E)).coeFn_compLpL (μ := mu.restrict Omega) (p := p)
       (Sobolev1JetLp.gradient J)] with x hx
-    simp only [toWeakDerivStepJet, ContinuousLinearMap.comp_apply, ContinuousLinearEquiv.coe_coe,
-      WithLp.prodContinuousLinearEquiv_symm_apply, ContinuousLinearMap.prod_apply,
-      WithLp.toLp_snd, Sobolev1JetLp.gradientL_apply, smul_eq_mul]
-    rw [hx]
-    rfl
+    rw [hx, smul_eq_mul, Sobolev1JetLp.candidateWeakFDeriv]
   rw [integral_add h1 h2, ← setIntegral_lineDeriv_smul_eq_integral_lineDeriv_smul,
-    ← setIntegral_smul_eq_integral_smul, integral_congr_ae hsnd]
-  rfl
+    ← setIntegral_smul_eq_integral_smul, integral_congr_ae hsnd, fst_toWeakDerivStepJet,
+    ContinuousLinearMap.id_apply]
+  simp only [smul_eq_mul]
 
 /-- The first-order, real-valued weak Sobolev space `W^{1,p}(Ω)`, represented by its value and
 weak gradient. -/

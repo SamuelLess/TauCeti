@@ -30,12 +30,13 @@ the explicit low-degree complex of
 Discreteness of the coefficients is used twice, once at each of the two ends of the sequence.
 Discreteness of `C` gives surjectivity on cochains: a continuous cochain into `C` is locally
 constant, so composing it with *any* set-theoretic section of `B → C` is still continuous
-(`TauCeti.ContCohomology.exists_continuous_lift`). Discreteness of `A` and of `B` gives exactness
-in the middle: an injection of discrete spaces reflects continuity
-(`TauCeti.ContCohomology.continuous_of_injective_comp`), so a continuous cochain into `B` that the
+(`TauCeti.ContCohomology.exists_continuous_lift`). Discreteness of `B` gives exactness in the
+middle: every function out of `B` is continuous, so a continuous cochain into `B` that the
 projection kills retracts to a *continuous* cochain into `A`
 (`TauCeti.ContCohomology.DiscreteShortExact.exists_continuous_incl_comp_eq`, whence
-`C1_map_incl_eq_inf_ker`); it is also what makes `incl` and `proj` continuous. For general
+`C1_map_incl_eq_inf_ker`), and an injection into a discrete space reflects continuity
+(`TauCeti.ContCohomology.continuous_of_injective_comp`). Discreteness of `A` and of `B` is also
+what makes `incl` and `proj` continuous. For general
 topological coefficients neither argument applies, since a set-theoretic section need not be
 continuous and a continuous cochain need not be locally constant; the cochain sequence can still
 be exact when suitable continuous lifts exist. Nothing below is asserted in that more general
@@ -73,8 +74,8 @@ here is about the same sequence and has to name the same two coefficient maps.
 * `TauCeti.ContCohomology.exists_continuous_lift`: a continuous cochain on any topological space
   lifts along any surjection onto a discrete space. This is the degree-agnostic form of
   surjectivity of `Cⁿ(G, B) → Cⁿ(G, C)`.
-* `TauCeti.ContCohomology.continuous_of_injective_comp`: an injection of discrete spaces reflects
-  continuity. This is the degree-agnostic form of exactness in the middle.
+* `TauCeti.ContCohomology.continuous_of_injective_comp`: an injection into a discrete space
+  reflects continuity. This is the degree-agnostic form of exactness in the middle.
 * `TauCeti.ContCohomology.DiscreteShortExact.compLeft_incl_injective`,
   `C1_map_incl_eq_inf_ker` and `C1_map_proj_eq_C1`: exactness of
   `0 → C¹(X, A) → C¹(X, B) → C¹(X, C) → 0` at its left, middle and right nodes, with
@@ -115,9 +116,9 @@ addition that the coefficients be discrete `G`-modules with a *continuous* actio
 `[ContinuousSMul G A]` and `[ContinuousSMul G B]` for `δ⁰`, and also `[ContinuousSMul G C]` for
 `δ¹`. Without it `B¹ ≤ Z¹` and `B² ≤ Z²` fail and the quotients `H1` and `H2` cannot be formed.
 `δ¹` asks moreover for a continuous multiplication on `G`, which is what carries continuity
-through `d¹`. Restricting the sequence to a subgroup (`DiscreteShortExact.restrict`), the dual
-sequence (`DiscreteShortExact.dual`, whose conjugation action needs inverses) and
-`DiscreteShortExact.toShortComplex` ask `G` to be a group. Profiniteness plays no part here.
+through `d¹`. Restricting the sequence to a subgroup (`DiscreteShortExact.restrict`) and the
+dual sequence (`DiscreteShortExact.dual`, whose conjugation action needs inverses) ask `G` to be a
+group. Profiniteness plays no part here.
 
 ## References
 
@@ -169,15 +170,15 @@ end Lift
 
 section Descent
 
-variable {X : Type w} [TopologicalSpace X] {A : Type vA} [TopologicalSpace A] [DiscreteTopology A]
+variable {X : Type w} [TopologicalSpace X] {A : Type vA} [TopologicalSpace A]
   {B : Type vB} [TopologicalSpace B] [DiscreteTopology B]
 
-/-- **An injective map of discrete spaces reflects continuity.** Continuity into the discrete `A`
-and `B` is local constancy, and local constancy descends along an injection. -/
+/-- **An injective map into a discrete space reflects continuity.** Continuity into the discrete
+`B` is local constancy, local constancy descends along an injection, and a locally constant map is
+continuous. -/
 theorem continuous_of_injective_comp {f : A → B} (hf : Function.Injective f) {a : X → A}
     (h : Continuous fun x => f (a x)) : Continuous a :=
-  (IsLocallyConstant.iff_continuous a).1 <|
-    IsLocallyConstant.desc a f ((IsLocallyConstant.iff_continuous _).2 h) hf
+  (IsLocallyConstant.desc a f ((IsLocallyConstant.iff_continuous _).2 h) hf).continuous
 
 end Descent
 
@@ -516,13 +517,6 @@ private theorem incl_retract {b : B} (hb : S.proj b = 0) : S.incl (S.retract b) 
 private theorem retract_zero : S.retract (0 : B) = 0 := by
   simpa using S.retract_incl 0
 
-/-- Retracting a continuous cochain that is killed by the projection leaves it continuous. -/
-private theorem continuous_retract_comp {X : Type*} [TopologicalSpace X] {φ : X → B}
-    (hφ : Continuous φ) (h0 : ∀ x, S.proj (φ x) = 0) :
-    Continuous fun x => S.retract (φ x) :=
-  continuous_of_injective_comp S.incl_injective <| by
-    simpa only [fun x => S.incl_retract (h0 x)] using hφ
-
 end Retract
 
 section Cochains
@@ -547,7 +541,7 @@ variable [TopologicalSpace X]
 `A`, obtained by retracting the cochain pointwise. -/
 theorem exists_continuous_incl_comp_eq {φ : X → B} (hφ : Continuous φ)
     (hzero : ∀ x, S.proj (φ x) = 0) : ∃ a : X → A, Continuous a ∧ ∀ x, S.incl (a x) = φ x :=
-  ⟨fun x => S.retract (φ x), S.continuous_retract_comp hφ hzero,
+  ⟨fun x => S.retract (φ x), (continuous_of_discreteTopology (f := S.retract)).comp hφ,
     fun x => S.incl_retract (hzero x)⟩
 
 variable (X) in
@@ -1031,7 +1025,7 @@ universe uS
 
 open CategoryTheory
 
-variable {G : Type uS} [Group G]
+variable {G : Type*} [Monoid G]
   {A : Type uS} [AddCommGroup A] [TopologicalSpace A] [DiscreteTopology A] [DistribMulAction G A]
   {B : Type uS} [AddCommGroup B] [TopologicalSpace B] [DiscreteTopology B] [DistribMulAction G B]
   {C : Type uS} [AddCommGroup C] [TopologicalSpace C] [DiscreteTopology C] [DistribMulAction G C]

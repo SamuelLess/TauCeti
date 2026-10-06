@@ -435,6 +435,8 @@ protected theorem mulEquivPresentedGroupCoxeterAppend_apply_of (i : Fin 11) :
       PresentedGroup.of i :=
   -- `Fin.cast` moves the index from `Fin 11` to `Fin presentation.generatorCount`, as in
   -- `TauCeti.Sporadic.Monster.mulEquivPresentedGroupCoxeterAppend_apply_of`.
-  GroupPresentation.mulEquivPresentedGroupCoxeterAppend_apply_of _ _ _ _ _
+  GroupPresentation.mulEquivPresentedGroupCoxeterAppend_apply_of _ _ _
+    (congrArg Subgroup.normalClosure
+      (congrArg Relator.relatorSet (presentation_transcribed.trans relatorList_def))) _
 
 end TauCeti.Sporadic.BabyMonster

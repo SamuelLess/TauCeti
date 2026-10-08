@@ -42,13 +42,7 @@ The pointwise identifications are assembled into a natural isomorphism of group-
 * T. A. Springer, *Linear Algebraic Groups*, Sections 2.4 and 6.3.
 * J. S. Milne, *Algebraic Groups* (2017), Chapters 12--13.
 * The quotient-points equivalence and functor proofs follow the pattern of
-  `TauCeti.Algebra.AlgebraicGroup.SpecialLinear.Basic`;
-  `TauCeti.Algebra.AlgebraicGroup.GeneralLinear.Borel` is their rank-two specialization.
-* The root-subgroup declarations generalize the rank-two construction formerly in
-  `TauCeti.Algebra.AlgebraicGroup.GeneralLinear.Borel` under the `GL2Borel` API.
-
-This advances Layer 5, "Lie--Kolchin; solvable groups", of the ReductiveGroups roadmap. It
-constructs the general-rank group scheme whose abstract point groups were already proved solvable.
+  `TauCeti.Algebra.AlgebraicGroup.SpecialLinear.Basic`.
 -/
 
 public section
@@ -156,11 +150,6 @@ theorem groupScheme_def :
 noncomputable abbrev inclusion : groupScheme R n ⟶ GeneralLinear.groupScheme R n :=
   GeneralLinear.weightParabolicInclusion R (weights n)
 
-/-- The upper-triangular inclusion into `GL_n` is a closed immersion. -/
-instance isClosedImmersion_inclusion :
-    AlgebraicGeometry.IsClosedImmersion (inclusion R n).hom.hom.left := by
-  infer_instance
-
 /-- The upper-triangular coordinate Hopf algebra, bundled with its finite-type property. -/
 noncomputable def finiteTypeCoordinateHopfAlgebra : FiniteTypeCommHopfAlgCat R :=
   GeneralLinear.weightParabolicFiniteTypeCoordinateHopfAlgebra R (weights n)
@@ -171,11 +160,6 @@ theorem finiteTypeCoordinateHopfAlgebra_obj :
     (finiteTypeCoordinateHopfAlgebra R n).obj = coordinateHopfAlgebra R n := by
   rw [finiteTypeCoordinateHopfAlgebra,
     GeneralLinear.weightParabolicFiniteTypeCoordinateHopfAlgebra_obj]
-
-/-- The structural morphism of the upper-triangular group scheme is locally of finite type. -/
-instance locallyOfFiniteType_groupScheme :
-    AlgebraicGeometry.LocallyOfFiniteType (groupScheme R n).X.hom := by
-  infer_instance
 
 section Points
 
@@ -429,8 +413,9 @@ theorem rootSubgroupPoints_mem (hij : i < j)
   rw [mem_definingPointsSubgroup_iff, GeneralLinear.pointsMulEquiv_rootSubgroupPoints]
   exact transvectionUnit_mem_upperTriangularGroup hij _
 
-/-- The coordinate morphism of the root subgroup `x_ij`, for `i < j`, into the standard
-upper-triangular coordinate Hopf algebra. -/
+/-- The coordinate morphism `O(B_n) → O(𝔾ₐ)` of the root subgroup `x_ij`, for `i < j`: the ambient
+coordinate morphism `O(GL_n) → O(𝔾ₐ)` descended to the standard upper-triangular coordinate Hopf
+algebra. Its direction is opposite to the represented group-scheme morphism `rootSubgroup`. -/
 noncomputable def rootSubgroupCoordinateMap (hij : i < j) :
     coordinateHopfAlgebra R n ⟶ AdditiveGroup.coordinateHopfAlgebra R :=
   CommHopfAlgCat.liftQuotient (definingHopfIdeal R n)

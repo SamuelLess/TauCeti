@@ -402,6 +402,12 @@ variable {Q : QuadraticMap R M N}
 theorem mem_specialOrthogonalGroup_iff {f : M ≃ₗ[R] M} :
     f ∈ specialOrthogonalGroup Q ↔ f ∈ orthogonalGroup Q ∧ LinearEquiv.det f = 1 := Iff.rfl
 
+/-- The determinant of an element of `SO(Q)` is one. -/
+@[simp]
+theorem det_coe_specialOrthogonalGroup (g : specialOrthogonalGroup Q) :
+    LinearEquiv.det (g : M ≃ₗ[R] M) = 1 :=
+  (mem_specialOrthogonalGroup_iff.mp g.2).2
+
 theorem specialOrthogonalGroup_le_orthogonalGroup (Q : QuadraticMap R M N) :
     specialOrthogonalGroup Q ≤ orthogonalGroup Q := inf_le_left
 
@@ -457,11 +463,11 @@ namespace QuadraticMap
 section Neg
 
 variable {R : Type u} {M : Type v} {N : Type w} [CommRing R] [AddCommGroup M] [Module R M]
-  [AddCommGroup N] [Module R N] (Q : QuadraticMap R M N)
+  [AddCommMonoid N] [Module R N] (Q : QuadraticMap R M N)
 
 /-- Negation `x ↦ -x` preserves every quadratic map. -/
 theorem neg_mem_orthogonalGroup : LinearEquiv.neg R ∈ TauCeti.QuadraticMap.orthogonalGroup Q :=
-  fun m ↦ Q.map_neg m
+  fun m ↦ by simpa using Q.map_smul (-1) m
 
 /-- The isometry `x ↦ -x`, as an element of the orthogonal group. On a free module of rank one
 over a domain, it and `1` are the only isometries of a nonzero quadratic map valued in a
@@ -536,8 +542,8 @@ theorem coe_specialOrthogonalToOrthogonal (g : TauCeti.QuadraticMap.specialOrtho
 theorem orthogonalDet_specialOrthogonalToOrthogonal
     (g : TauCeti.QuadraticMap.specialOrthogonalGroup Q) :
     orthogonalDet Q (specialOrthogonalToOrthogonal Q g) = 1 := by
-  rw [orthogonalDet_apply, coe_specialOrthogonalToOrthogonal]
-  exact (TauCeti.QuadraticMap.mem_specialOrthogonalGroup_iff.mp g.2).2
+  rw [orthogonalDet_apply, coe_specialOrthogonalToOrthogonal,
+    TauCeti.QuadraticMap.det_coe_specialOrthogonalGroup]
 
 theorem specialOrthogonalToOrthogonal_injective :
     Function.Injective (specialOrthogonalToOrthogonal Q) :=

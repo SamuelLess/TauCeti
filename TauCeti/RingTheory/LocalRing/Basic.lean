@@ -33,11 +33,10 @@ public section
 
 namespace TauCeti
 
-/-- An idempotent of a local ring is `0` or `1`: by Mathlib's
-`IsLocalRing.isUnit_or_isUnit_one_sub_self`, one of `a` and `1 - a` is a unit, and an idempotent
-unit is `1`. -/
+/-- An idempotent of a possibly noncommutative local ring is `0` or `1`. -/
 theorem IsLocalRing.eq_zero_or_eq_one_of_isIdempotentElem {R : Type*} [Ring R] [IsLocalRing R]
     {a : R} (ha : IsIdempotentElem a) : a = 0 ∨ a = 1 := by
+  -- One of `a` and `1 - a` is a unit, and an idempotent unit is `1`.
   rcases IsLocalRing.isUnit_or_isUnit_one_sub_self a with hu | hu
   · exact Or.inr (hu.mul_left_cancel (by rw [ha, mul_one]))
   · refine Or.inl ?_

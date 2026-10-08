@@ -33,14 +33,12 @@ public section
 
 namespace TauCeti
 
-/-- An idempotent of a local ring is `0` or `1`. Mathlib's
-`IsLocalRing.isUnit_or_isUnit_one_sub_self` is stated over a commutative ring, so the splitting of
-`1 = a + (1 - a)` is taken here from `IsLocalRing.isUnit_or_isUnit_of_isUnit_add`, which holds over
-any semiring. -/
+/-- An idempotent of a local ring is `0` or `1`: by Mathlib's
+`IsLocalRing.isUnit_or_isUnit_one_sub_self`, one of `a` and `1 - a` is a unit, and an idempotent
+unit is `1`. -/
 theorem IsLocalRing.eq_zero_or_eq_one_of_isIdempotentElem {R : Type*} [Ring R] [IsLocalRing R]
     {a : R} (ha : IsIdempotentElem a) : a = 0 ∨ a = 1 := by
-  have hsum : IsUnit (a + (1 - a)) := by simp
-  rcases IsLocalRing.isUnit_or_isUnit_of_isUnit_add hsum with hu | hu
+  rcases IsLocalRing.isUnit_or_isUnit_one_sub_self a with hu | hu
   · exact Or.inr (hu.mul_left_cancel (by rw [ha, mul_one]))
   · refine Or.inl ?_
     have hidem : IsIdempotentElem (1 - a) := IsIdempotentElem.one_sub ha
